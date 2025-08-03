@@ -1,0 +1,90 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  height: 100vh;
+}
+
+.container {
+  display: flex;
+  height: 100%;
+}
+
+.left {
+  flex: 2;
+  background: url('https://i.imgur.com/Lfb1cD1.jpeg') center/cover no-repeat;
+  padding: 40px;
+  color: #000;
+  display: flex;
+  align-items: center;
+}
+
+.left h1 {
+  font-size: 80px;
+  line-height: 1.1;
+  font-weight: 800;
+}
+
+.right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding-left: 40px;          /* you can increase/decrease this */
+  background-color: #ffffff;
+  margin-left: -80px; 
+}
+
+
+.login-box {
+  width: 80%;
+  text-align: center;
+}
+
+.login-box input {
+  width: 100%;
+  padding: 18px;
+  margin: 15px 0;
+  border-radius: 18px;
+  border: none;
+  background-color: #bcd0c7;
+  font-size: 18px;
+}
+
+.login-box button {
+  width: 100%;
+  padding: 18px;
+  margin: 20px 0;
+  border-radius: 60px;
+  border: none;
+  background-color: #bcd0c7;
+  font-size: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.login-box button:hover {
+  background-color: #9bb8aa;
+}
+
+.login-box button:active {
+  background-color: #7a9e8d;
+}
+
+.login-box a {
+  color: #8b2e2e;
+  text-decoration: underline;
+}
+body {
+  background: url('images/signin.webp') no-repeat center center fixed;
+  background-size: cover;
+}
+.login-box {
+  width: 80%;
+  text-align: center;
+  margin-left: 0px;   /* <— this shifts it towards the left */
+}
+
