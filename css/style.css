@@ -3,7 +3,7 @@ body {
     font-family: 'Roboto', sans-serif;
 }
 .top-bar {
-    background-color: #588b76;
+    background-color: #588b76; /* Primary green */
     color: white;
     padding: 10px 20px;
     font-size: 14px;
@@ -33,7 +33,7 @@ body {
     cursor: pointer;
 }
 .hero {
-    background: url('/images/donation.jpeg') no-repeat center center/cover;
+    background: url('../images/donation.jpeg') no-repeat center center/cover;
     color: white;
     text-align: left;
     padding: 100px 50px;
@@ -49,7 +49,7 @@ body {
 .hero-buttons {
     margin-top: 20px;
 }
-.hero-buttons button {
+.hero-buttons .donate-main {
     background-color: #588b76;
     color: white;
     padding: 10px 20px;
@@ -59,8 +59,12 @@ body {
     cursor: pointer;
 }
 .hero-buttons .read-more {
-    background-color: #d0ded8;
+    background-color: #f2b5a0; /* Soft, subtle red */
     color: #18392b;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
 }
 .sections {
     display: flex;
