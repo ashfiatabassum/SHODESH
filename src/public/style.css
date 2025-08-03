@@ -33,7 +33,7 @@ body {
     cursor: pointer;
 }
 .hero {
-    background: url('../images/donation.jpeg') no-repeat center center/cover;
+    background: url('images/donation.jpeg') no-repeat center center/cover;
     color: white;
     text-align: left;
     padding: 100px 50px;
