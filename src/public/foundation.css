@@ -1,0 +1,253 @@
+body, html {
+  margin: 0;
+  padding: 0;
+  font-family: "Roboto Condensed", sans-serif;
+}
+
+.desktop {
+  display: grid;
+  justify-items: center;
+  align-items: start;
+  min-height: 100vh;
+  width: 100vw;
+  background-color: #ffffff;
+}
+
+.overlap-group-wrapper {
+  background-color: #ffffff;
+  height: 1198px;
+  width: 1440px;
+}
+
+.overlap-group {
+  height: 1044px;
+  position: relative;
+  top: 35px;
+  width: 1403px;
+}
+
+
+.form-background {
+  background-color: #af3e3e;
+  height: 1150px;
+  left: 689px;
+  position: absolute;
+  top: 42px;
+  width: 692px;
+}
+
+.foundationbg {
+  height: 600px;
+  left: 20px;
+  object-fit: cover;
+  position: absolute;
+  top: 200px;
+  width: 650px;
+  display: block;
+}
+
+.rectangle {
+  background-color: #ffffff;
+  border-radius: 10px;
+  height: 54px;
+  left: 720px;
+  position: absolute;
+  top: 69px;
+  width: 633px;
+}
+
+.div {
+  background-color: #ffffff;
+  border-radius: 10px;
+  height: 54px;
+  left: 720px;
+  position: absolute;
+  top: 146px;
+  width: 633px;
+}
+
+.rectangle-2 { top: 69px; }
+.rectangle-3 { top: 146px; }
+.rectangle-4 { top: 223px; }
+.rectangle-5 { top: 300px; }
+.rectangle-6 { top: 377px; }
+.rectangle-7 { top: 454px; }
+.rectangle-8 { top: 531px; }
+.rectangle-9 { top: 608px; }
+.rectangle-10 { top: 685px; }
+.rectangle-11 { top: 762px; }
+.rectangle-12 { top: 839px; }
+.rectangle-13 { top: 916px; }
+.rectangle-14 { top: 993px; }
+
+.rectangle-2, .rectangle-3, .rectangle-4, .rectangle-5,
+.rectangle-6, .rectangle-7, .rectangle-8, .rectangle-9,
+.rectangle-10, .rectangle-11, .rectangle-12, .rectangle-13, .rectangle-14 {
+  background-color: #ffffff;
+  height: 54px;
+  left: 720px;
+  position: absolute;
+  width: 633px;
+  border-radius: 10px;
+}
+
+/* Input field styling */
+.rectangle input, .rectangle select,
+.div input, .div select,
+.rectangle-2 input, .rectangle-2 select,
+.rectangle-3 input, .rectangle-3 select,
+.rectangle-4 input, .rectangle-4 select,
+.rectangle-5 input, .rectangle-5 select,
+.rectangle-6 input, .rectangle-6 select,
+.rectangle-7 input, .rectangle-7 select,
+.rectangle-8 input, .rectangle-8 select,
+.rectangle-9 input, .rectangle-9 select,
+.rectangle-10 input, .rectangle-10 select,
+.rectangle-11 input, .rectangle-11 select,
+.rectangle-12 input, .rectangle-12 select,
+.rectangle-13 input, .rectangle-13 select,
+.rectangle-14 input, .rectangle-14 select {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0 15px;
+  font-size: 18px;
+  font-family: "Roboto Condensed", sans-serif;
+  font-weight: 500;
+  color: #000000;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+
+/* Focus effects for highlighting when clicked */
+.rectangle:focus-within, .div:focus-within,
+.rectangle-2:focus-within, .rectangle-3:focus-within,
+.rectangle-4:focus-within, .rectangle-5:focus-within,
+.rectangle-6:focus-within, .rectangle-7:focus-within,
+.rectangle-8:focus-within, .rectangle-9:focus-within,
+.rectangle-10:focus-within, .rectangle-11:focus-within,
+.rectangle-12:focus-within, .rectangle-13:focus-within,
+.rectangle-14:focus-within {
+  background-color: #e8f4fd;
+  box-shadow: 0 0 10px rgba(175, 62, 62, 0.5);
+}
+
+/* Placeholder styling */
+.rectangle input::placeholder, .div input::placeholder,
+.rectangle-2 input::placeholder, .rectangle-3 input::placeholder,
+.rectangle-4 input::placeholder, .rectangle-5 input::placeholder,
+.rectangle-6 input::placeholder, .rectangle-7 input::placeholder,
+.rectangle-8 input::placeholder, .rectangle-9 input::placeholder,
+.rectangle-10 input::placeholder, .rectangle-11 input::placeholder,
+.rectangle-12 input::placeholder, .rectangle-13 input::placeholder,
+.rectangle-14 input::placeholder {
+  color: #666666;
+  font-size: 16px;
+}
+
+.text-wrapper,
+.text-wrapper-2,
+.text-wrapper-3,
+.text-wrapper-4,
+.text-wrapper-5,
+.text-wrapper-6,
+.text-wrapper-7,
+.text-wrapper-8,
+.text-wrapper-9,
+.text-wrapper-10,
+.text-wrapper-11,
+.text-wrapper-12,
+.text-wrapper-13 {
+  position: absolute;
+  left: 755px;
+  font-size: 20px;
+  font-weight: 500;
+  color: #000000;
+  font-family: "Roboto Condensed", sans-serif;
+}
+
+.text-wrapper-12 {
+  top: 1070px;
+  left: 952px;
+  font-size: 28px;
+  cursor: pointer;
+  background-color: #ffffff;
+  color: #000000;
+  border: 2px solid #af3e3e;
+  padding: 15px 25px;
+  border-radius: 25px;
+  font-family: "Roboto Condensed", sans-serif;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.text-wrapper-12:hover {
+  background-color: #f0f0f0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.text-wrapper-12:active {
+  background-color: #e0e0e0;
+  transform: translateY(0);
+}
+
+.text-wrapper { top: 77px; }
+.text-wrapper-2 { top: 154px; }
+.text-wrapper-3 { top: 231px; }
+.text-wrapper-4 { top: 308px; }
+.text-wrapper-5 { top: 385px; }
+.text-wrapper-6 { top: 462px; }
+.text-wrapper-7 { top: 539px; }
+.text-wrapper-8 { top: 616px; }
+.text-wrapper-9 { top: 693px; }
+.text-wrapper-10 { top: 779px; }
+.text-wrapper-11 { top: 850px; }
+.text-wrapper-13 { top: 382px; left: 1058px; }
+
+.GET-YOUR-FOUNDATION {
+  color: #af3e3e;
+  font-size: 42px;
+  font-weight: 500;
+  position: absolute;
+  top: 0;
+  left: 35px;
+  width: 595px;
+  animation: pulse 2s ease-in-out infinite, colorChange 3s ease-in-out infinite;
+  text-shadow: 2px 2px 4px rgba(175, 62, 62, 0.3);
+  transition: transform 0.3s ease;
+}
+
+.GET-YOUR-FOUNDATION:hover {
+  transform: scale(1.05);
+  text-shadow: 3px 3px 6px rgba(175, 62, 62, 0.5);
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes colorChange {
+  0% {
+    color: #af3e3e;
+  }
+  33% {
+    color: #d64545;
+  }
+  66% {
+    color: #8b3131;
+  }
+  100% {
+    color: #af3e3e;
+  }
+}
