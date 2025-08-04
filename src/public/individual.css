@@ -1,0 +1,285 @@
+
+body, html {
+  margin: 0;
+  padding: 0;
+  font-family: "Roboto Condensed", sans-serif;
+}
+
+.desktop {
+  display: grid;
+  justify-items: center;
+  align-items: start;
+  min-height: 100vh;
+  width: 100vw;
+  background-color: #af3e3e;
+}
+
+.div {
+  position: relative;
+  width: 1440px;
+  height: 1658px;
+  background-color: #af3e3e;
+}
+
+.let-s-get-you {
+  position: absolute;
+  top: 46px;
+  left: 150px;
+  width: 1086px;
+  font-size: 96px;
+  font-weight: 700;
+  font-style: italic;
+  color: #ffffff;
+  white-space: nowrap;
+  animation: slideInGlow 2s ease-out, textPulse 3s ease-in-out infinite 2s;
+  text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+  transition: transform 0.3s ease, text-shadow 0.3s ease;
+}
+
+.let-s-get-you:hover {
+  transform: scale(1.03);
+  text-shadow: 5px 5px 10px rgba(0, 0, 0, 0.7);
+}
+
+@keyframes slideInGlow {
+  0% {
+    opacity: 0;
+    transform: translateX(-50px);
+    text-shadow: 0 0 0 rgba(255, 255, 255, 0);
+  }
+  50% {
+    opacity: 0.8;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+  }
+}
+
+@keyframes textPulse {
+  0% {
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+  }
+  50% {
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 255, 255, 0.6);
+  }
+  100% {
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+  }
+}
+
+.overlap-group {
+  position: absolute;
+  top: 244px;
+  left: 388px;
+  width: 664px;
+  height: 1206px;
+  background-color: #d9d9d9fa;
+}
+
+.overlap, .overlap-2, .overlap-3, .overlap-4, .overlap-5, .overlap-6,
+.phone-number-NID-wrapper, .date-of-birth-wrapper, .div-wrapper,
+.administrative-wrapper, .zip-code-wrapper, .bkash-number-wrapper,
+.bank-account-wrapper, .password-wrapper, .confirm-password-wrapper,
+.road-no-wrapper {
+  position: absolute;
+  background-color: #ffffff;
+  height: 56px;
+}
+
+.overlap {
+  top: 45px;
+  left: 20px;
+  width: 299px;
+}
+
+.overlap-5 {
+  top: 45px;
+  left: 346px;
+  width: 299px;
+}
+
+.overlap-2 {
+  top: 125px;
+  left: 20px;
+  width: 625px;
+}
+
+.phone-number-NID-wrapper {
+  top: 205px;
+  left: 20px;
+  width: 625px;
+}
+
+.date-of-birth-wrapper {
+  top: 285px;
+  left: 20px;
+  width: 625px;
+}
+
+.overlap-3 {
+  top: 365px;
+  left: 20px;
+  width: 299px;
+}
+
+.road-no-wrapper {
+  top: 365px;
+  left: 346px;
+  width: 299px;
+}
+
+.overlap-4 {
+  top: 445px;
+  left: 20px;
+  width: 625px;
+}
+
+.div-wrapper {
+  top: 525px;
+  left: 20px;
+  width: 625px;
+}
+
+.administrative-wrapper {
+  top: 605px;
+  left: 20px;
+  width: 625px;
+}
+
+.zip-code-wrapper {
+  top: 685px;
+  left: 20px;
+  width: 625px;
+}
+
+.bkash-number-wrapper {
+  top: 765px;
+  left: 20px;
+  width: 625px;
+}
+
+.bank-account-wrapper {
+  top: 845px;
+  left: 20px;
+  width: 625px;
+}
+
+.password-wrapper {
+  top: 925px;
+  left: 20px;
+  width: 625px;
+}
+
+.confirm-password-wrapper {
+  top: 1005px;
+  left: 20px;
+  width: 625px;
+}
+
+.first-name, .text-wrapper-2, .text-wrapper-3, .text-wrapper-4, .text-wrapper-5 {
+  position: absolute;
+  top: 15px;
+  left: 37px;
+  font-size: 20px;
+  font-weight: 500;
+  color: #000000;
+  white-space: nowrap;
+}
+
+.text-wrapper-2 { top: 13px; }
+.first-name { top: 17px; left: 38px; }
+.text-wrapper-5 { top: 17px; left: 37px; }
+
+.overlap-6 {
+  position: absolute;
+  top: 1099px;
+  left: 110px;
+  width: 447px;
+  height: 80px;
+  border-radius: 50px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-family: inherit;
+}
+
+.rectangle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 447px;
+  height: 80px;
+  background-color: rgba(175, 62, 62, 0.42);
+  border-radius: 50px;
+}
+
+.CREATE-ACCOUNT {
+  position: absolute;
+  top: 17px;
+  left: 114px;
+  font-size: 32px;
+  font-weight: 500;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+
+input[type="text"],
+input[type="email"],
+input[type="date"],
+input[type="password"],
+select {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  font-weight: 500;
+  color: #000000;
+  padding: 15px 37px;
+  box-sizing: border-box;
+  font-family: "Roboto Condensed", sans-serif;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="date"]:focus,
+input[type="password"]:focus,
+select:focus {
+  outline: none;
+  background-color: #f0f8ff;
+  box-shadow: 0 0 8px rgba(175, 62, 62, 0.5);
+}
+
+input::placeholder {
+  color: #666666;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+select {
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+select:invalid {
+  color: #666666;
+}
+
+
+.overlap-6:hover .rectangle {
+  background-color: rgba(175, 62, 62, 0.6);
+}
+
+.overlap-6:active .rectangle {
+  background-color: rgba(175, 62, 62, 0.8);
+}

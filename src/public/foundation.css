@@ -134,7 +134,7 @@ body, html {
   box-shadow: 0 0 10px rgba(175, 62, 62, 0.5);
 }
 
-/* Placeholder styling */
+
 .rectangle input::placeholder, .div input::placeholder,
 .rectangle-2 input::placeholder, .rectangle-3 input::placeholder,
 .rectangle-4 input::placeholder, .rectangle-5 input::placeholder,
