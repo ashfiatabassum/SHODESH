@@ -1,0 +1,114 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #fff;
+  color: #000;
+}
+
+
+.container {
+  position: relative;
+  width: 1440px;
+  min-height: 1024px;
+  margin: 0 auto;
+  background: url('images/donorbggg.png') no-repeat left top;
+  background-size: 800px auto;
+}
+
+
+.background-pattern {
+  display: none;
+}
+
+
+h1 {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  max-width: 1359px;
+  margin: 0 auto;
+  font-weight: 800;
+  font-size: 28px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  font-family: 'Rock Salt', cursive;
+  text-align: center;
+  color: #AF3E3E;
+}
+
+
+.form-card {
+  position: absolute;
+  top: 108px;
+  left: 800px;
+  width: 550px;
+  height: 700px;
+  background: rgba(175, 62, 62, 0.16); /* #af3e3e29 */
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+
+.row {
+  display: flex;
+  gap: 12px;
+}
+.half-width {
+  flex: 1;
+}
+
+.country-code {
+  flex: 0 0 140px; 
+}
+.phone-number {
+  flex: 1; 
+}
+
+
+input[type="text"],
+input[type="email"],
+input[type="date"],
+input[type="password"],
+input[type="tel"],
+select {
+  width: 100%;
+  height: 50px;
+  background: rgba(74, 151, 130, 0.26); 
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 400;
+  text-align: center;
+  outline-offset: 0;
+  outline-color: transparent;
+  transition: outline-color 0.3s;
+}
+input:focus,
+select:focus {
+  outline-color: #4a9782;
+}
+
+
+button {
+  width: 280px;
+  height: 45px;
+  background: rgba(74, 151, 130, 0.5); 
+  border: none;
+  border-radius: 50px;
+  font-size: 16px;
+  font-weight: 400;
+  color: black;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  align-self: flex-end;
+}
+button:hover {
+  background: rgba(74, 151, 130, 0.63); 
+}
