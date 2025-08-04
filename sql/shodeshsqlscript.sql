@@ -6,5 +6,6 @@ CREATE TABLE donations (
   amount DECIMAL(10,2) NOT NULL
 );
 
+SELECT DATABASE();
 
 SELECT * FROM donations;

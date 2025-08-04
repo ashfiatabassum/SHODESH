@@ -7,6 +7,8 @@
 
 body {
   height: 100vh;
+  background: url('./images/signin.webp') no-repeat center center fixed;
+  background-size: cover;
 }
 
 .container {
@@ -33,15 +35,16 @@ body {
   flex: 1;
   display: flex;
   align-items: center;
-  padding-left: 40px;          /* you can increase/decrease this */
+  padding-left: 40px;
   background-color: #ffffff;
-  margin-left: -80px; 
+  margin-left: -80px;
 }
 
-
 .login-box {
-  width: 80%;
+  width: 100%;
+  max-width: 350px;
   text-align: center;
+  margin: 0 auto;
 }
 
 .login-box input {
@@ -78,13 +81,3 @@ body {
   color: #8b2e2e;
   text-decoration: underline;
 }
-body {
-  background: url('images/signin.webp') no-repeat center center fixed;
-  background-size: cover;
-}
-.login-box {
-  width: 80%;
-  text-align: center;
-  margin-left: 0px;   /* <— this shifts it towards the left */
-}
-

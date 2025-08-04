@@ -6,10 +6,10 @@ const app = express();
 
 app.use(express.json());
 
-// Serve static files from src/public folder
-app.use(express.static(path.join(__dirname, 'public')));
+// ✅ Serve static files from src/public folder
+app.use(express.static(path.join(__dirname, 'src', 'public')));
 
-// Connect to MySQL
+// ✅ Connect to MySQL
 const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
@@ -25,7 +25,7 @@ db.connect(err => {
   console.log('Connected to MySQL');
 });
 
-// POST endpoint for donations
+// ✅ API endpoint for donations
 app.post('/donate', (req, res) => {
   const { amount } = req.body;
   const sql = 'INSERT INTO donations (amount) VALUES (?)';
@@ -38,9 +38,9 @@ app.post('/donate', (req, res) => {
   });
 });
 
-// Route for root to serve index.html from src/public
+// ✅ Root route
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'src', 'public', 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
