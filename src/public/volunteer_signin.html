@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Join as a Staff - Shodesh</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="volunteer_signin.css" />
+  </head>
+  <body>
+    <div class="volunteer-signin-container">
+      <div class="volunteer-signin-content">
+        <div class="volunteer-signin-header">
+          <div class="logo">
+            <h1>SHODESH</h1>
+          </div>
+          <div class="header-content">
+            <h2>Join as Staff</h2>
+            <p class="sub-text">
+              Join thousands of staff who are making a real difference in
+              communities across Bangladesh. Every action you take helps bridge
+              the gap between hope and reality for those in need.
+            </p>
+          </div>
+        </div>
+
+        <div class="volunteer-signin-form-container">
+          <div class="form-wrapper">
+            <h3>Sign In to Continue</h3>
+            <p class="form-subtitle">
+              Enter your credentials to start your staff journey
+            </p>
+
+            <form id="volunteerSigninForm" class="volunteer-signin-form">
+              <div class="input-group">
+                <label for="username">Username</label>
+                <input
+                  type="text"
+                  id="username"
+                  name="username"
+                  required
+                  placeholder="Enter your username"
+                />
+              </div>
+
+              <div class="input-group">
+                <label for="password">Password</label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  required
+                  placeholder="Enter your password"
+                />
+              </div>
+
+              <button type="submit" class="signin-submit-btn">Sign In</button>
+            </form>
+
+            <div class="signup-prompt">
+              <p>
+                Don't have an account?
+                <button class="signup-btn" onclick="handleSignup()">
+                  Sign Up
+                </button>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="volunteer_signin.js"></script>
+  </body>
+</html>
