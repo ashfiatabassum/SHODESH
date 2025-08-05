@@ -1,0 +1,240 @@
+/* Volunteer Page Specific Styles */
+
+.volunteer-hero {
+    background: linear-gradient(rgba(24, 57, 43, 0.8), rgba(88, 139, 118, 0.8)), url('images/jointeam.jpg') no-repeat center center/cover;
+    color: white;
+    text-align: center;
+    padding: 120px 50px;
+    position: relative;
+}
+
+.volunteer-content h1 {
+    font-size: 48px;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.volunteer-content p {
+    font-size: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+.volunteer-info-section {
+    padding: 60px 0;
+    background-color: #f8f9fa;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.info-card, .role-card {
+    background: white;
+    padding: 40px;
+    margin-bottom: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.info-card h2, .role-card h2 {
+    color: #18392b;
+    font-size: 32px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.info-card p, .role-card p {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #555;
+    margin-bottom: 20px;
+}
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.feature {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 8px;
+    border-left: 4px solid #588b76;
+}
+
+.feature h3 {
+    color: #18392b;
+    font-size: 20px;
+    margin-bottom: 15px;
+}
+
+.feature p {
+    color: #666;
+    font-size: 14px;
+    margin: 0;
+}
+
+.responsibilities {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+}
+
+.responsibility {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.responsibility h4 {
+    color: #18392b;
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.responsibility p {
+    color: #666;
+    font-size: 14px;
+    margin: 0;
+}
+
+.volunteer-benefits {
+    background: #d0ded8;
+    padding: 30px;
+    border-radius: 8px;
+    margin-top: 40px;
+}
+
+.volunteer-benefits h3 {
+    color: #18392b;
+    font-size: 24px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.volunteer-benefits ul {
+    list-style: none;
+    padding: 0;
+}
+
+.volunteer-benefits li {
+    background: white;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    border-left: 4px solid #588b76;
+    font-size: 16px;
+    color: #555;
+}
+
+.volunteer-benefits li:before {
+    content: "✓ ";
+    color: #588b76;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.apply-section {
+    background: linear-gradient(135deg, #588b76, #18392b);
+    color: white;
+    text-align: center;
+    padding: 60px 40px;
+    border-radius: 10px;
+    margin-top: 30px;
+}
+
+.apply-section h2 {
+    font-size: 36px;
+    margin-bottom: 20px;
+    color: white;
+}
+
+.apply-section p {
+    font-size: 18px;
+    margin-bottom: 30px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    color: #e8f5e8;
+}
+
+.apply-btn {
+    background-color: #f2b5a0;
+    color: #18392b;
+    font-size: 20px;
+    font-weight: bold;
+    padding: 15px 40px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(242, 181, 160, 0.3);
+}
+
+.apply-btn:hover {
+    background-color: #e8a085;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(242, 181, 160, 0.4);
+}
+
+.volunteer-footer {
+    background-color: #18392b;
+    color: white;
+    text-align: center;
+    padding: 30px 0;
+    margin-top: 50px;
+}
+
+.volunteer-footer p {
+    margin: 0;
+    font-size: 16px;
+    color: #d0ded8;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .volunteer-hero {
+        padding: 80px 20px;
+    }
+    
+    .volunteer-content h1 {
+        font-size: 36px;
+    }
+    
+    .volunteer-content p {
+        font-size: 18px;
+    }
+    
+    .info-card, .role-card {
+        padding: 25px;
+    }
+    
+    .info-card h2, .role-card h2 {
+        font-size: 28px;
+    }
+    
+    .features, .responsibilities {
+        grid-template-columns: 1fr;
+    }
+    
+    .apply-section {
+        padding: 40px 20px;
+    }
+    
+    .apply-section h2 {
+        font-size: 28px;
+    }
+    
+    .apply-btn {
+        font-size: 18px;
+        padding: 12px 30px;
+    }
+}
