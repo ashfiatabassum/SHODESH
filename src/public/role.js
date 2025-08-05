@@ -6,7 +6,7 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   const roles = [
-    { selector: ".overlap-group", name: "SEEKER", url: "indiviudal.html" },
+    { selector: ".overlap-group", name: "SEEKER", url: "individual.html" },
     { selector: ".overlap-2", name: "NON PROFIT ORGANIZATION", url: "foundation.html" },
     { selector: ".overlap-3", name: "DONOR", url: "donor.html" },
   ];
