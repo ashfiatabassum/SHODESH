@@ -10,16 +10,6 @@ body {
     display: flex;
     justify-content: space-between;
 }
-.search-btn {
-    background-color: #85aa9b;
-    color: white;
-    padding: 10px 20px;
-    margin-left: 10px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
 .navbar {
     background-color: white;
     display: flex;
