@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Staff Sign Up - Shodesh</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="volunteer_signup.css" />
+  </head>
+  <body>
+    <div class="volunteer-signup-container">
+      <div class="volunteer-signup-content">
+        <div class="signup-header">
+          <div class="logo">
+            <h1>SHODESH</h1>
+          </div>
+          <div class="header-text">
+            <h2>Create Your Staff Account</h2>
+            <p>
+              Join our community of changemakers and help build a better
+              Bangladesh
+            </p>
+          </div>
+        </div>
+
+        <div class="signup-form-container">
+          <div class="form-wrapper">
+            <form
+              id="volunteerSignupForm"
+              class="volunteer-signup-form"
+              enctype="multipart/form-data"
+            >
+              <div class="form-section">
+                <h3>Personal Information</h3>
+
+                <div class="form-row">
+                  <div class="input-group">
+                    <label for="firstName">First Name *</label>
+                    <input
+                      type="text"
+                      id="firstName"
+                      name="firstName"
+                      required
+                      placeholder="Enter your first name"
+                    />
+                  </div>
+                  <div class="input-group">
+                    <label for="lastName">Last Name *</label>
+                    <input
+                      type="text"
+                      id="lastName"
+                      name="lastName"
+                      required
+                      placeholder="Enter your last name"
+                    />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="input-group">
+                    <label for="username">Username *</label>
+                    <input
+                      type="text"
+                      id="username"
+                      name="username"
+                      required
+                      placeholder="Choose a unique username"
+                    />
+                  </div>
+                  <div class="input-group">
+                    <label for="mobileNumber">Mobile Number *</label>
+                    <input
+                      type="tel"
+                      id="mobileNumber"
+                      name="mobileNumber"
+                      required
+                      placeholder="01XXXXXXXXX"
+                      pattern="[0-9]{11}"
+                    />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="input-group">
+                    <label for="nid">National ID (NID) *</label>
+                    <input
+                      type="text"
+                      id="nid"
+                      name="nid"
+                      required
+                      placeholder="Enter your NID number"
+                      pattern="[0-9]{10,17}"
+                    />
+                  </div>
+                  <div class="input-group">
+                    <label for="gmail">Gmail Address *</label>
+                    <input
+                      type="email"
+                      id="gmail"
+                      name="gmail"
+                      required
+                      placeholder="your.email@gmail.com"
+                    />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="input-group">
+                    <label for="password">Password *</label>
+                    <input
+                      type="password"
+                      id="password"
+                      name="password"
+                      required
+                      placeholder="Create a strong password"
+                      minlength="8"
+                    />
+                  </div>
+                  <div class="input-group">
+                    <label for="confirmPassword">Confirm Password *</label>
+                    <input
+                      type="password"
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      required
+                      placeholder="Confirm your password"
+                    />
+                  </div>
+                </div>
+
+                <div class="input-group">
+                  <label>Date of Birth *</label>
+                  <div class="date-selector">
+                    <select id="birthDay" name="birthDay" required>
+                      <option value="">Day</option>
+                      <!-- Days will be populated by JavaScript -->
+                    </select>
+                    <select id="birthMonth" name="birthMonth" required>
+                      <option value="">Month</option>
+                      <option value="1">January</option>
+                      <option value="2">February</option>
+                      <option value="3">March</option>
+                      <option value="4">April</option>
+                      <option value="5">May</option>
+                      <option value="6">June</option>
+                      <option value="7">July</option>
+                      <option value="8">August</option>
+                      <option value="9">September</option>
+                      <option value="10">October</option>
+                      <option value="11">November</option>
+                      <option value="12">December</option>
+                    </select>
+                    <select id="birthYear" name="birthYear" required>
+                      <option value="">Year</option>
+                      <!-- Years will be populated by JavaScript -->
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-section">
+                <h3>Address Information</h3>
+
+                <div class="form-row">
+                  <div class="input-group">
+                    <label for="houseNo">House No *</label>
+                    <input
+                      type="text"
+                      id="houseNo"
+                      name="houseNo"
+                      required
+                      placeholder="House/Flat number"
+                    />
+                  </div>
+                  <div class="input-group">
+                    <label for="roadNo">Road No *</label>
+                    <input
+                      type="text"
+                      id="roadNo"
+                      name="roadNo"
+                      required
+                      placeholder="Road/Street name"
+                    />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="input-group">
+                    <label for="area">Area *</label>
+                    <input
+                      type="text"
+                      id="area"
+                      name="area"
+                      required
+                      placeholder="Area/Locality"
+                    />
+                  </div>
+                  <div class="input-group">
+                    <label for="zipCode">Zip Code *</label>
+                    <input
+                      type="text"
+                      id="zipCode"
+                      name="zipCode"
+                      required
+                      placeholder="Postal code"
+                      pattern="[0-9]{4}"
+                    />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="input-group">
+                    <label for="district">District *</label>
+                    <select id="district" name="district" required>
+                      <option value="">Select District</option>
+                      <option value="Dhaka">Dhaka</option>
+                      <option value="Chittagong">Chittagong</option>
+                      <option value="Sylhet">Sylhet</option>
+                      <option value="Rajshahi">Rajshahi</option>
+                      <option value="Khulna">Khulna</option>
+                      <option value="Barisal">Barisal</option>
+                      <option value="Rangpur">Rangpur</option>
+                      <option value="Mymensingh">Mymensingh</option>
+                      <option value="Comilla">Comilla</option>
+                      <option value="Gazipur">Gazipur</option>
+                      <option value="Narayanganj">Narayanganj</option>
+                      <option value="Feni">Feni</option>
+                      <option value="Brahmanbaria">Brahmanbaria</option>
+                      <option value="Tangail">Tangail</option>
+                      <option value="Jamalpur">Jamalpur</option>
+                      <option value="Sherpur">Sherpur</option>
+                      <option value="Netrokona">Netrokona</option>
+                      <option value="Kishoreganj">Kishoreganj</option>
+                      <option value="Manikganj">Manikganj</option>
+                      <option value="Munshiganj">Munshiganj</option>
+                      <option value="Faridpur">Faridpur</option>
+                      <option value="Gopalganj">Gopalganj</option>
+                      <option value="Madaripur">Madaripur</option>
+                      <option value="Shariatpur">Shariatpur</option>
+                      <option value="Rajbari">Rajbari</option>
+                      <option value="Narsingdi">Narsingdi</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div class="input-group">
+                    <label for="division">Administrative Division *</label>
+                    <select id="division" name="division" required>
+                      <option value="">Select Division</option>
+                      <option value="Dhaka">Dhaka</option>
+                      <option value="Chittagong">Chittagong</option>
+                      <option value="Sylhet">Sylhet</option>
+                      <option value="Rajshahi">Rajshahi</option>
+                      <option value="Khulna">Khulna</option>
+                      <option value="Barisal">Barisal</option>
+                      <option value="Rangpur">Rangpur</option>
+                      <option value="Mymensingh">Mymensingh</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-section">
+                <h3>Additional Information</h3>
+
+                <div class="input-group file-upload-group">
+                  <label for="cv">Upload CV *</label>
+                  <div class="file-upload-container">
+                    <input
+                      type="file"
+                      id="cv"
+                      name="cv"
+                      required
+                      accept=".pdf,.doc,.docx,.txt"
+                      class="file-input"
+                    />
+                    <label for="cv" class="file-upload-label">
+                      <span class="file-upload-text">Choose CV file</span>
+                      <span class="file-upload-button">Browse</span>
+                    </label>
+                    <div class="file-info"></div>
+                  </div>
+                  <small class="file-help"
+                    >Accepted formats: PDF, DOC, DOCX, TXT (Max 5MB)</small
+                  >
+                </div>
+
+                <div class="input-group checkbox-group">
+                  <input type="checkbox" id="terms" name="terms" required />
+                  <label for="terms"
+                    >I agree to the
+                    <a href="#" target="_blank">Terms and Conditions</a> and
+                    <a href="#" target="_blank">Privacy Policy</a> *</label
+                  >
+                </div>
+
+                <div class="input-group checkbox-group">
+                  <input type="checkbox" id="newsletter" name="newsletter" />
+                  <label for="newsletter"
+                    >I want to receive updates and newsletters about staff
+                    opportunities</label
+                  >
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="signup-submit-btn">
+                  Create Account
+                </button>
+              </div>
+            </form>
+
+            <div class="signin-link">
+              <p>
+                Already have an account?
+                <a href="volunteer_signin.html">Sign In</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="volunteer_signup.js"></script>
+  </body>
+</html>
