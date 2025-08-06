@@ -38,7 +38,7 @@ CREATE TABLE FOUNDATION(
   foundation_license VARCHAR(12) NOT NULL,
   mobile VARCHAR(11) NOT NULL CHECK (mobile REGEXP '^0[0-9]{10}$'),
   email VARCHAR(100) NOT NULL CHECK (email REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}$'),
-  passw VARCHAR(255) NOT NULL CHECK (LENGTH(passw) >= 6),
+  password VARCHAR(255) NOT NULL CHECK (LENGTH(password) >= 6),
   house_no VARCHAR(7),
   road_no VARCHAR(4) CHECK (road_no REGEXP '^[0-9]{1,4}$'),
   area VARCHAR(30) CHECK (area REGEXP '^[A-Za-z ]+$'),
