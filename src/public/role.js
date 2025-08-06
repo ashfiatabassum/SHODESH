@@ -1,134 +1,187 @@
-// No interactive behavior was provided in the React component,
-// but you can add any JavaScript here if you want to add
-// click handlers or other behavior for the buttons/rectangles.
+// Simple loading animation function
+// Global flag to track if user is returning from another page
+let isReturningFromPage = false;
 
-// Example: add click event listeners for each role div to navigate somewhere
+// Function to hide loading screens
+function hideLoadingScreens() {
+    const loadingElements = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 9999"]');
+    loadingElements.forEach(element => {
+        element.remove();
+    });
+}
 
-document.addEventListener("DOMContentLoaded", () => {
-  const roles = [
-    { selector: ".overlap-group", name: "SEEKER", url: "individual.html" },
-    { selector: ".overlap-2", name: "NON PROFIT ORGANIZATION", url: "foundation.html" },
-    { selector: ".overlap-3", name: "DONOR", url: "donor.html" },
-  ];
-
-  roles.forEach(({ selector, url, name }) => {
-    const el = document.querySelector(selector);
-    if (el) {
-      el.style.cursor = "pointer";
-      el.addEventListener("click", () => {
-        // Create beautiful loading overlay
-        createLoadingOverlay(name);
-        
-        // Navigate after animation
-        setTimeout(() => {
-          window.location.href = url;
-        }, 1000);
-      });
+// Detect if user is returning from another page
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+        // User used back button
+        isReturningFromPage = true;
+        hideLoadingScreens();
     }
-  });
 });
 
-// Beautiful loading overlay function
-function createLoadingOverlay(roleName) {
-  // Create loading overlay
-  const overlay = document.createElement('div');
-  overlay.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: linear-gradient(45deg, 
-      rgba(74, 151, 130, 0.9) 0%, 
-      rgba(175, 62, 62, 0.9) 50%,
-      rgba(74, 151, 130, 0.9) 100%
-    );
-    background-size: 400% 400%;
-    z-index: 10000;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    animation: overlayFadeIn 0.5s ease-out, gradientShift 3s ease-in-out infinite;
-  `;
-  
-  // Create loading text
-  const loadingText = document.createElement('div');
-  loadingText.style.cssText = `
-    color: white;
-    font-size: 3vw;
-    font-weight: 700;
-    font-family: "Roboto Condensed", Helvetica, sans-serif;
-    animation: loadingPulse 1s ease-in-out infinite;
-    margin-bottom: 20px;
-    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
-  `;
-  loadingText.textContent = `Loading ${roleName}...`;
-  
-  // Create animated dots
-  const dotsContainer = document.createElement('div');
-  dotsContainer.style.cssText = `
-    display: flex;
-    gap: 10px;
-  `;
-  
-  for (let i = 0; i < 3; i++) {
-    const dot = document.createElement('div');
-    dot.style.cssText = `
-      width: 15px;
-      height: 15px;
-      background: white;
-      border-radius: 50%;
-      animation: dotBounce 1.4s ease-in-out infinite;
-      animation-delay: ${i * 0.2}s;
-    `;
-    dotsContainer.appendChild(dot);
-  }
-  
-  // Create spinning loader
-  const spinner = document.createElement('div');
-  spinner.style.cssText = `
-    width: 50px;
-    height: 50px;
-    border: 4px solid rgba(255, 255, 255, 0.3);
-    border-top: 4px solid white;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-top: 30px;
-  `;
-  
-  overlay.appendChild(loadingText);
-  overlay.appendChild(dotsContainer);
-  overlay.appendChild(spinner);
-  document.body.appendChild(overlay);
-  
-  // Add animation styles if they don't exist
-  if (!document.querySelector('#loading-animations')) {
-    const style = document.createElement('style');
-    style.id = 'loading-animations';
-    style.textContent = `
-      @keyframes overlayFadeIn {
-        0% { opacity: 0; transform: scale(0.8); }
-        100% { opacity: 1; transform: scale(1); }
-      }
-      @keyframes gradientShift {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-      }
-      @keyframes loadingPulse {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.7; transform: scale(1.05); }
-      }
-      @keyframes dotBounce {
-        0%, 80%, 100% { transform: scale(0); }
-        40% { transform: scale(1); }
-      }
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-    `;
-    document.head.appendChild(style);
-  }
+// Check referrer on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const referrer = document.referrer;
+    if (referrer.includes('individual.html') || 
+        referrer.includes('foundation.html') || 
+        referrer.includes('donor.html')) {
+        isReturningFromPage = true;
+    }
+});
+
+// Simple loading animation function (your existing function stays here)
+function showSimpleLoading(buttonText) {
+    // ... your existing code ...
 }
+function showSimpleLoading(buttonText) {
+    // Create simple loading overlay
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        color: white;
+        font-family: Arial, sans-serif;
+    `;
+    
+    // Loading text
+    const loadingText = document.createElement('div');
+    loadingText.style.cssText = `
+        font-size: 24px;
+        margin-bottom: 20px;
+        font-weight: bold;
+    `;
+    loadingText.textContent = `Loading ${buttonText}...`;
+    
+    // Simple spinner
+    const spinner = document.createElement('div');
+    spinner.style.cssText = `
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    `;
+    
+    // Add CSS animation
+    if (!document.querySelector('#simple-loading-style')) {
+        const style = document.createElement('style');
+        style.id = 'simple-loading-style';
+        style.textContent = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    overlay.appendChild(loadingText);
+    overlay.appendChild(spinner);
+    document.body.appendChild(overlay);
+    
+    return overlay;
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    console.log("Role selection page loaded");
+    
+    // Seeker button
+    const seekerButton = document.querySelector('.overlap-group');
+    if (seekerButton) {
+        seekerButton.addEventListener('click', function() {
+            console.log("Seeker button clicked");
+            
+            // Only show loading if NOT returning from another page
+            if (!isReturningFromPage) {
+                const loadingOverlay = showSimpleLoading("Seeker");
+                setTimeout(() => {
+                    window.location.href = "individual.html";
+                }, 1000);
+            } else {
+                // Direct navigation without loading
+                window.location.href = "individual.html";
+                isReturningFromPage = false; // Reset flag
+            }
+        });
+        seekerButton.style.cursor = "pointer";
+        
+        // Hover effect
+        seekerButton.addEventListener('mouseenter', function() {
+            this.style.transform = "scale(1.05)";
+            this.style.transition = "transform 0.2s ease";
+        });
+        seekerButton.addEventListener('mouseleave', function() {
+            this.style.transform = "scale(1)";
+        });
+    }
+    
+    // Non-Profit Organization button
+    const nonProfitButton = document.querySelector('.overlap-2');
+    if (nonProfitButton) {
+        nonProfitButton.addEventListener('click', function() {
+            console.log("Non-Profit Organization button clicked");
+            
+            // Only show loading if NOT returning from another page
+            if (!isReturningFromPage) {
+                const loadingOverlay = showSimpleLoading("Non-Profit Organization");
+                setTimeout(() => {
+                    window.location.href = "foundation.html";
+                }, 1000);
+            } else {
+                // Direct navigation without loading
+                window.location.href = "foundation.html";
+                isReturningFromPage = false; // Reset flag
+            }
+        });
+        nonProfitButton.style.cursor = "pointer";
+        
+        // Hover effect
+        nonProfitButton.addEventListener('mouseenter', function() {
+            this.style.transform = "scale(1.05)";
+            this.style.transition = "transform 0.2s ease";
+        });
+        nonProfitButton.addEventListener('mouseleave', function() {
+            this.style.transform = "scale(1)";
+        });
+    }
+    
+    // Donor button
+    const donorButton = document.querySelector('.overlap-3');
+    if (donorButton) {
+        donorButton.addEventListener('click', function() {
+            console.log("Donor button clicked");
+            
+            // Only show loading if NOT returning from another page
+            if (!isReturningFromPage) {
+                const loadingOverlay = showSimpleLoading("Donor");
+                setTimeout(() => {
+                    window.location.href = "donor.html";
+                }, 1000);
+            } else {
+                // Direct navigation without loading
+                window.location.href = "donor.html";
+                isReturningFromPage = false; // Reset flag
+            }
+        });
+        donorButton.style.cursor = "pointer";
+        
+        // Hover effect
+        donorButton.addEventListener('mouseenter', function() {
+            this.style.transform = "scale(1.05)";
+            this.style.transition = "transform 0.2s ease";
+        });
+        donorButton.addEventListener('mouseleave', function() {
+            this.style.transform = "scale(1)";
+        });
+    }
+});
