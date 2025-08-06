@@ -13,20 +13,23 @@
 
   <h1 id="headingText"></h1>
 
-  <form id="signupForm" class="form-card" onsubmit="return false;">
+  <form id="signupForm" class="form-card" onsubmit="return validateForm();">
     <div class="row">
-      <input type="text" placeholder="First name" required class="half-width" />
-      <input type="text" placeholder="Last name" required class="half-width" />
+      <input type="text" id="firstName" placeholder="First name" required class="half-width" />
+      <input type="text" id="lastName" placeholder="Last name" required class="half-width" />
     </div>
 
-    <input type="text" placeholder="Username" required />
+    <input type="text" id="username" placeholder="Username" required />
 
-    <input type="date" placeholder="Date of Birth" required />
+    <div class="date-input-wrapper">
+      <input type="date" id="dateOfBirth" required />
+      <label for="dateOfBirth" class="date-placeholder">Date of Birth</label>
+    </div>
 
-    <input type="email" placeholder="Email" required />
+    <input type="email" id="email" placeholder="Email" required />
 
     <div class="row">
-      <select required class="country-code">
+      <select id="countryCode" required class="country-code">
         <option value="" disabled selected>Code</option>
         <option value="+1">+1 (US/CA)</option>
         <option value="+44">+44 (UK)</option>
@@ -55,10 +58,10 @@
         <option value="+355">+355 (AL)</option>
         <option value="+213">+213 (DZ)</option>
       </select>
-      <input type="tel" placeholder="Phone Number" required class="phone-number" />
+      <input type="tel" id="phoneNumber" placeholder="Phone Number" required class="phone-number" pattern="[0-9]+" title="Please enter only digits" />
     </div>
 
-    <select required>
+    <select id="country" required>
       <option value="" disabled selected>Select Country</option>
       <option>Afghanistan</option>
       <option>Albania</option>
@@ -91,8 +94,8 @@
 
     </select>
 
-    <input type="password" placeholder="Password" required />
-    <input type="password" placeholder="Confirm Password" required />
+    <input type="password" id="password" placeholder="Password" required minlength="6" />
+    <input type="password" id="confirmPassword" placeholder="Confirm Password" required minlength="6" />
 
     <button type="submit" id="createAccountBtn">Create my Account</button>
   </form>

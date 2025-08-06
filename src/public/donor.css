@@ -1,3 +1,4 @@
+/* Reset & base */
 * {
   box-sizing: border-box;
 }
@@ -8,7 +9,7 @@ body {
   color: #000;
 }
 
-
+/* Container */
 .container {
   position: relative;
   width: 1440px;
@@ -18,12 +19,12 @@ body {
   background-size: 800px auto;
 }
 
-
+/* Background pattern placeholder - REMOVED */
 .background-pattern {
   display: none;
 }
 
-
+/* Heading */
 h1 {
   position: absolute;
   top: 20px;
@@ -31,47 +32,48 @@ h1 {
   right: 0;
   max-width: 1359px;
   margin: 0 auto;
-  font-weight: 800;
-  font-size: 28px;
+  font-weight: 900;
+  font-size: 31px;
   line-height: 1.2;
   letter-spacing: 0;
-  font-family: 'Rock Salt', cursive;
+  font-family: 'Roboto Condensed', Helvetica, sans-serif;
   text-align: center;
   color: #AF3E3E;
 }
 
-
+/* Form card */
 .form-card {
   position: absolute;
   top: 108px;
-  left: 800px;
-  width: 550px;
-  height: 700px;
-  background: rgba(175, 62, 62, 0.16); /* #af3e3e29 */
-  border-radius: 10px;
-  padding: 20px;
+  left: 750px;
+  width: 650px;
+  height: 850px;
+  background: #005000; /* #af3e3e29 */
+  border-radius: 15px;
+  padding: 30px;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 20px;
 }
 
-
+/* Two column row */
 .row {
   display: flex;
-  gap: 12px;
+  gap: 18px;
 }
 .half-width {
   flex: 1;
 }
 
+/* Country code and phone number styling */
 .country-code {
-  flex: 0 0 140px; 
+  flex: 0 0 160px; /* Fixed width for country code */
 }
 .phone-number {
-  flex: 1; 
+  flex: 1; /* Takes remaining space */
 }
 
-
+/* Inputs & selects */
 input[type="text"],
 input[type="email"],
 input[type="date"],
@@ -79,36 +81,76 @@ input[type="password"],
 input[type="tel"],
 select {
   width: 100%;
-  height: 50px;
-  background: rgba(74, 151, 130, 0.26); 
+  height: 65px;
+  background: white; /* #4a978242 */
   border: none;
-  border-radius: 6px;
-  font-size: 16px;
+  border-radius: 8px;
+  font-size: 20px;
   font-weight: 400;
   text-align: center;
   outline-offset: 0;
   outline-color: transparent;
   transition: outline-color 0.3s;
+  padding: 0 15px;
 }
 input:focus,
 select:focus {
   outline-color: #4a9782;
 }
 
+/* Placeholder text styling */
+input::placeholder {
+  font-size: 18px;
+  color: #666;
+}
 
+/* Custom date input styling */
+.date-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.date-input-wrapper input[type="date"] {
+  width: 100%;
+  color: transparent;
+}
+
+.date-input-wrapper input[type="date"]:focus,
+.date-input-wrapper input[type="date"]:valid {
+  color: #000;
+}
+
+.date-placeholder {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 20px;
+  color: #666;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.date-input-wrapper input[type="date"]:focus + .date-placeholder,
+.date-input-wrapper input[type="date"]:valid + .date-placeholder {
+  opacity: 0;
+}
+
+/* Button */
 button {
-  width: 280px;
-  height: 45px;
-  background: rgba(74, 151, 130, 0.5); 
+  width: 320px;
+  height: 55px;
+  background: rgba(248, 248, 248, 0.5); /* #4a978280 */
   border: none;
   border-radius: 50px;
-  font-size: 16px;
-  font-weight: 400;
+  font-size: 20px;
+  font-weight: 500;
   color: black;
   cursor: pointer;
   transition: background-color 0.3s;
   align-self: flex-end;
+  margin-top: 10px;
 }
 button:hover {
-  background: rgba(74, 151, 130, 0.63); 
+  background: rgba(74, 151, 130, 0.63); /* #4a9782a0 */
 }
