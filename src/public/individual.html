@@ -11,32 +11,49 @@
     <div class="div">
       <div class="let-s-get-you">LET’S GET YOU STARTED</div>
       <div class="overlap-group">
-        <div class="overlap">
-          <input type="text" placeholder="First Name" required />
+        <!-- Name fields in a row -->
+        <div class="name-row">
+          <div class="overlap">
+            <input type="text" id="firstName" placeholder="First Name" required />
+          </div>
+          <div class="overlap-5">
+            <input type="text" id="lastName" placeholder="Last Name" required />
+          </div>
         </div>
-        <div class="overlap-5">
-          <input type="text" placeholder="Last Name" required />
-        </div>
+        
+        <!-- Email field -->
         <div class="overlap-2">
-          <input type="email" placeholder="Email Address" required />
+          <input type="email" id="email" placeholder="Email Address" required />
         </div>
+        
+        <!-- Phone/NID field -->
         <div class="phone-number-NID-wrapper">
-          <input type="text" placeholder="Phone Number / NID" required />
+          <input type="text" id="phoneNID" placeholder="Phone Number / NID" required />
         </div>
+        
+        <!-- Date of birth field -->
         <div class="date-of-birth-wrapper">
-          <input type="date" placeholder="Date of Birth" required />
+          <input type="date" id="dateOfBirth" placeholder="Date of Birth" required />
         </div>
-        <div class="overlap-3">
-          <input type="text" placeholder="House No" required />
+        
+        <!-- Address fields in a row -->
+        <div class="address-row">
+          <div class="overlap-3">
+            <input type="text" id="houseNo" placeholder="House No" required />
+          </div>
+          <div class="road-no-wrapper">
+            <input type="text" id="roadNo" placeholder="Road No" required />
+          </div>
         </div>
-        <div class="road-no-wrapper">
-          <input type="text" placeholder="Road No" required />
-        </div>
+        
+        <!-- Area field -->
         <div class="overlap-4">
-          <input type="text" placeholder="Area" required />
+          <input type="text" id="area" placeholder="Area" required />
         </div>
+        
+        <!-- District field -->
         <div class="div-wrapper">
-          <select required>
+          <select id="district" required>
             <option value="" disabled selected>Select District</option>
             <option>Bagerhat</option>
             <option>Bandarban</option>
@@ -104,8 +121,10 @@
             <option>Thakurgaon</option>
           </select>
         </div>
+        
+        <!-- Division field -->
         <div class="administrative-wrapper">
-          <select required>
+          <select id="division" required>
             <option value="" disabled selected>Select Division</option>
             <option>Barisal</option>
             <option>Chittagong</option>
@@ -117,22 +136,32 @@
             <option>Sylhet</option>
           </select>
         </div>
+        
+        <!-- ZIP Code field -->
         <div class="zip-code-wrapper">
-          <input type="text" placeholder="ZIP Code" required />
+          <input type="text" id="zipCode" placeholder="ZIP Code" required pattern="[0-9]+" title="Please enter only digits" />
         </div>
+        
+        <!-- Bkash Number field -->
         <div class="bkash-number-wrapper">
-          <input type="text" placeholder="Bkash Number" required />
+          <input type="text" id="bkashNumber" placeholder="Bkash Number" required pattern="[0-9]+" title="Please enter only digits" />
         </div>
+        
+        <!-- Bank Account field -->
         <div class="bank-account-wrapper">
-          <input type="text" placeholder="Bank Account" required />
+          <input type="text" id="bankAccount" placeholder="Bank Account" required />
         </div>
+        
+        <!-- Password fields -->
         <div class="password-wrapper">
-          <input type="password" placeholder="Password" required />
+          <input type="password" id="password" placeholder="Password" required minlength="6" />
         </div>
         <div class="confirm-password-wrapper">
-          <input type="password" placeholder="Confirm Password" required />
+          <input type="password" id="confirmPassword" placeholder="Confirm Password" required minlength="6" />
         </div>
-        <button type="button" class="overlap-6" onclick="window.location.href='success.html'">
+        
+        <!-- Submit button -->
+        <button type="button" class="overlap-6" onclick="validateAndSubmit()">
           <div class="rectangle"></div>
           <div class="CREATE-ACCOUNT">CREATE ACCOUNT</div>
         </button>
