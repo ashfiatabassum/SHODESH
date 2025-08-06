@@ -30,33 +30,32 @@ body {
     color: #1a3c2f;
 }
 
-.tagline {
-    font-size: 24px;
-    font-weight: 500;
-    color: #1a3c2f;
-    text-align: center;
-    margin: 20px 0;
-    font-style: normal;
-}
-
 .nav-links a {
     text-decoration: none;
     color: #1a3c2f;
-    font-weight: 500;
+    font-weight: bold;
     margin-left: 25px;
     transition: color 0.3s ease;
+}
+
+.nav-links a:visited,
+.nav-links a:active,
+.nav-links a:focus {
+    color: #1a3c2f;
+    outline: none;
 }
 
 .nav-links a:hover {
     color: #4a7c59;
 }
 
+/* Button styles (consistent with homepage) */
 .search-btn, .signin-btn {
     background-color: #4a7c59;
     color: white;
     padding: 10px 20px;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     margin-left: 15px;
     cursor: pointer;
     font-weight: 500;
@@ -68,6 +67,34 @@ body {
     transform: translateY(-2px);
 }
 
+.join-btn {
+    background-color: #f2b5a0;
+    color: #18392b;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    margin-left: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.join-btn:hover {
+    background-color: #e6a892;
+    transform: translateY(-2px);
+}
+
+/* Tagline styling */
+.tagline {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a3c2f;
+    margin-bottom: 20px;
+    margin-top: -10px;
+    text-align: center;
+}
+
+/* Search input and container */
 .search-container {
     padding: 50px 20px;
     text-align: center;
@@ -98,21 +125,20 @@ body {
 }
 
 .filter-buttons button {
-    background: linear-gradient(180deg, #d4e0da 0%, #c5d5ce 100%);
+    background-color: #d4e0da;
     color: #1a3c2f;
-    border: 1px solid #4a7c59;
-    padding: 14px 28px;
-    font-size: 15px;
-    font-weight: 600;
-    border-radius: 10px;
+    border: none;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 8px;
     cursor: pointer;
-    transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .filter-buttons button:hover {
-    background: linear-gradient(180deg, #b6ccc3 0%, #a8bdb4 100%);
+    background-color: #b6ccc3;
     transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .search-results {

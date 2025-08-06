@@ -1,29 +1,45 @@
-/* Volunteer Page Specific Styles */
-
 .volunteer-hero {
     background: linear-gradient(rgba(24, 57, 43, 0.8), rgba(88, 139, 118, 0.8)), url('images/jointeam.jpg') no-repeat center center/cover;
+    background-color: #4a7c59; /* Fallback */
     color: white;
     text-align: center;
-    padding: 120px 50px;
+    padding: 50px 20px;
     position: relative;
 }
+.search-btn, .signin-btn {
+    background-color: #4a7c59;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    margin-left: 15px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
 
+.search-btn:hover, .signin-btn:hover {
+    background-color: #3b664a;
+    transform: translateY(-2px);
+}
 .volunteer-content h1 {
-    font-size: 48px;
-    margin-bottom: 20px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .volunteer-content p {
-    font-size: 20px;
+    font-size: 18px;
     max-width: 600px;
     margin: 0 auto;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    line-height: 1.5;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .volunteer-info-section {
-    padding: 60px 0;
-    background-color: #f8f9fa;
+    padding: 50px 0;
+    background: linear-gradient(180deg, #f4f7f5 0%, #e8ece9 100%);
 }
 
 .container {
@@ -32,91 +48,78 @@
     padding: 0 20px;
 }
 
-.info-card, .role-card {
+.info-card, .role-card, .apply-section {
     background: white;
-    padding: 40px;
+    padding: 30px;
     margin-bottom: 30px;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.info-card h2, .role-card h2 {
-    color: #18392b;
-    font-size: 32px;
-    margin-bottom: 20px;
+.info-card:hover, .role-card:hover, .apply-section:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.info-card h2, .role-card h2, .apply-section h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a3c2f;
+    margin-bottom: 15px;
     text-align: center;
 }
 
-.info-card p, .role-card p {
+.info-card p, .role-card p, .apply-section p {
     font-size: 16px;
+    color: #5a6a62;
     line-height: 1.6;
-    color: #555;
-    margin-bottom: 20px;
-}
-
-.features {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
-    margin-top: 40px;
-}
-
-.feature {
-    background: #f8f9fa;
-    padding: 25px;
-    border-radius: 8px;
-    border-left: 4px solid #588b76;
-}
-
-.feature h3 {
-    color: #18392b;
-    font-size: 20px;
     margin-bottom: 15px;
 }
 
-.feature p {
-    color: #666;
-    font-size: 14px;
-    margin: 0;
-}
-
-.responsibilities {
+.features, .responsibilities {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 25px;
-    margin-top: 30px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
 }
 
-.responsibility {
-    background: #f8f9fa;
-    padding: 20px;
+.feature, .responsibility {
+    padding: 15px;
+    border: 1px solid #e0e6e3;
     border-radius: 8px;
-    border: 1px solid #e9ecef;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.responsibility h4 {
-    color: #18392b;
+.feature:hover, .responsibility:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.feature h3, .responsibility h4 {
     font-size: 18px;
+    font-weight: 600;
+    color: #1a3c2f;
     margin-bottom: 10px;
 }
 
-.responsibility p {
-    color: #666;
+.feature p, .responsibility p {
     font-size: 14px;
-    margin: 0;
+    color: #5a6a62;
 }
 
 .volunteer-benefits {
-    background: #d0ded8;
-    padding: 30px;
+    background: linear-gradient(180deg, #d4e0da 0%, #c5d5ce 100%);
+    padding: 20px;
     border-radius: 8px;
-    margin-top: 40px;
+    margin-top: 20px;
 }
 
 .volunteer-benefits h3 {
-    color: #18392b;
-    font-size: 24px;
-    margin-bottom: 20px;
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a3c2f;
+    margin-bottom: 15px;
     text-align: center;
 }
 
@@ -126,115 +129,74 @@
 }
 
 .volunteer-benefits li {
-    background: white;
-    padding: 15px;
+    font-size: 15px;
+    color: #5a6a62;
     margin-bottom: 10px;
-    border-radius: 5px;
-    border-left: 4px solid #588b76;
-    font-size: 16px;
-    color: #555;
+    position: relative;
+    padding-left: 20px;
 }
 
 .volunteer-benefits li:before {
-    content: "✓ ";
-    color: #588b76;
-    font-weight: bold;
-    margin-right: 10px;
+    content: '✔';
+    color: #4a7c59;
+    position: absolute;
+    left: 0;
 }
 
 .apply-section {
-    background: linear-gradient(135deg, #588b76, #18392b);
-    color: white;
     text-align: center;
-    padding: 60px 40px;
-    border-radius: 10px;
-    margin-top: 30px;
-}
-
-.apply-section h2 {
-    font-size: 36px;
-    margin-bottom: 20px;
-    color: white;
-}
-
-.apply-section p {
-    font-size: 18px;
-    margin-bottom: 30px;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-    color: #e8f5e8;
+    background: white;
 }
 
 .apply-btn {
-    background-color: #f2b5a0;
-    color: #18392b;
-    font-size: 20px;
-    font-weight: bold;
-    padding: 15px 40px;
+    background: linear-gradient(180deg, #f2b5a0 0%, #e8a590 100%);
+    color: #1a3c2f;
+    padding: 14px 28px;
+    font-size: 16px;
+    font-weight: 600;
     border: none;
-    border-radius: 50px;
+    border-radius: 10px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(242, 181, 160, 0.3);
+    transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
 }
 
 .apply-btn:hover {
-    background-color: #e8a085;
+    background: linear-gradient(180deg, #e8a590 0%, #df9b87 100%);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(242, 181, 160, 0.4);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .volunteer-footer {
-    background-color: #18392b;
+    background-color: #1a3c2f;
     color: white;
     text-align: center;
-    padding: 30px 0;
-    margin-top: 50px;
+    padding: 20px;
 }
 
 .volunteer-footer p {
     margin: 0;
-    font-size: 16px;
-    color: #d0ded8;
+    font-size: 14px;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
     .volunteer-hero {
-        padding: 80px 20px;
+        padding: 50px 20px;
     }
-    
+
     .volunteer-content h1 {
-        font-size: 36px;
-    }
-    
-    .volunteer-content p {
-        font-size: 18px;
-    }
-    
-    .info-card, .role-card {
-        padding: 25px;
-    }
-    
-    .info-card h2, .role-card h2 {
         font-size: 28px;
     }
-    
+
+    .volunteer-content p {
+        font-size: 16px;
+    }
+
+    .info-card, .role-card, .apply-section {
+        padding: 20px;
+    }
+
     .features, .responsibilities {
         grid-template-columns: 1fr;
-    }
-    
-    .apply-section {
-        padding: 40px 20px;
-    }
-    
-    .apply-section h2 {
-        font-size: 28px;
-    }
-    
-    .apply-btn {
-        font-size: 18px;
-        padding: 12px 30px;
     }
 }

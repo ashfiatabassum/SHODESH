@@ -28,25 +28,28 @@
             <a href="#">Contact</a>
             <a href="search.html"><button class="search-btn">Search</button></a>
             <a href="signin.html"><button class="signin-btn">Sign In</button></a>
+            <a href="volunteer.html"><button class="join-btn">Join Our Team</button></a>
         </div>
     </div>
 
     <!-- Search Section -->
-    <div class="search-container">
-        <div class="tagline">Empowering Communities, Transforming Lives</div>
-        <input type="text" id="searchInput" class="search-bar" placeholder="Search for campaigns (e.g., Education, Flood Relief)...">
-        <div class="loading" id="loading">Loading...</div>
+    <!-- Search Section -->
+<div class="search-container">
+    <div class="tagline"><strong>Empowering Communities, Transforming Lives</strong></div>
+    <input type="text" id="searchInput" class="search-bar" placeholder="Search for campaigns (e.g., Education, Flood Relief)...">
+    <div class="loading" id="loading">Loading...</div>
 
-        <!-- Filter Buttons -->
-        <div class="filter-buttons">
-            <button onclick="filterCampaigns('near')">Near You</button>
-            <button onclick="filterCampaigns('trending')">Trending</button>
-            <button onclick="filterCampaigns('nonprofit')">Nonprofits</button>
-        </div>
-
-        <!-- Search Results -->
-        <div class="search-results" id="searchResults"></div>
+    <!-- Filter Buttons -->
+    <div class="filter-buttons">
+        <button onclick="filterCampaigns('near')">Near You</button>
+        <button onclick="filterCampaigns('trending')">Trending</button>
+        <button onclick="filterCampaigns('nonprofit')">Nonprofits</button>
     </div>
+
+    <!-- Search Results -->
+    <div class="search-results" id="searchResults"></div>
+</div>
+
 
     <!-- JavaScript -->
     <script>
