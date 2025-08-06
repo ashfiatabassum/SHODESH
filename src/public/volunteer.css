@@ -22,6 +22,24 @@
     background-color: #3b664a;
     transform: translateY(-2px);
 }
+
+.donate-btn {
+    background-color: #e53e3e;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    margin-left: 15px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 2px 4px rgba(229, 62, 62, 0.3);
+}
+.donate-btn:hover {
+    background-color: #c53030;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(229, 62, 62, 0.4);
+}
 .volunteer-content h1 {
     font-size: 36px;
     font-weight: 700;
