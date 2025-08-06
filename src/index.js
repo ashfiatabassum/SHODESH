@@ -6,14 +6,14 @@ const app = express();
 
 app.use(express.json());
 
-// ✅ Serve static files from src/public folder
-app.use(express.static(path.join(__dirname, 'src', 'public')));
+// Serve static files from public folder
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ✅ Connect to MySQL
 const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: 'mirpurdohs832',  // change if needed
+  password: 'nanjiba@282002',  // change if needed
   database: 'shodesh'
 });
 
@@ -38,9 +38,9 @@ app.post('/donate', (req, res) => {
   });
 });
 
-// ✅ Root route
+// Route for root to serve index.html from public
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
