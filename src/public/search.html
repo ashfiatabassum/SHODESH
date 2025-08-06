@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search Campaigns - Shodesh</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>Discover Campaigns - SHODESH</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="search.css">
 </head>
 <body>
@@ -28,28 +29,134 @@
             <a href="#">Contact</a>
             <a href="resources.html">Resources</a>
             <a href="search.html"><button class="search-btn">Search</button></a>
+            <a href="browse.html"><button class="donate-btn">Donate</button></a>
             <a href="signin.html"><button class="signin-btn">Sign In</button></a>
             <a href="volunteer.html"><button class="join-btn">Join Our Team</button></a>
         </div>
     </div>
 
-    <!-- Search Section -->
-    <!-- Search Section -->
-<div class="search-container">
-    <div class="tagline"><strong>Empowering Communities, Transforming Lives</strong></div>
-    <input type="text" id="searchInput" class="search-bar" placeholder="Search for campaigns (e.g., Education, Flood Relief)...">
-    <div class="loading" id="loading">Loading...</div>
-
-    <!-- Filter Buttons -->
-    <div class="filter-buttons">
-        <button onclick="filterCampaigns('near')">Near You</button>
-        <button onclick="filterCampaigns('trending')">Trending</button>
-        <button onclick="filterCampaigns('nonprofit')">Nonprofits</button>
+    <!-- Hero Search Section -->
+    <div class="search-hero">
+        <div class="search-hero-content">
+            <h1>Discover Campaigns That Matter</h1>
+            <p class="hero-subtitle">Find and support causes that align with your values and make a real difference</p>
+            
+            <!-- Enhanced Search Bar -->
+            <div class="search-container">
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search for campaigns (e.g., Education, Medical, Emergency)...">
+                    <button class="search-submit-btn" onclick="performSearch()">
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+                
+                <!-- Quick Search Tags -->
+                <div class="quick-tags">
+                    <span class="tag-label">Popular:</span>
+                    <button class="quick-tag" onclick="quickSearch('Medical')">Medical</button>
+                    <button class="quick-tag" onclick="quickSearch('Education')">Education</button>
+                    <button class="quick-tag" onclick="quickSearch('Emergency')">Emergency</button>
+                    <button class="quick-tag" onclick="quickSearch('Food')">Food Aid</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Search Results -->
-    <div class="search-results" id="searchResults"></div>
-</div>
+    <!-- Filter and Results Section -->
+    <div class="main-content">
+        <div class="container">
+            <!-- Statistics Section -->
+            <div class="stats-section">
+                <div class="stat-card">
+                    <div class="stat-number">1,247</div>
+                    <div class="stat-label">Active Campaigns</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">৳45.2M</div>
+                    <div class="stat-label">Raised This Month</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">12,580</div>
+                    <div class="stat-label">Lives Impacted</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">64</div>
+                    <div class="stat-label">Districts Covered</div>
+                </div>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="filter-section">
+                <div class="filter-header">
+                    <h2>Explore Campaigns</h2>
+                    <div class="view-toggle">
+                        <button class="view-btn active" onclick="toggleView('grid')">
+                            <i class="fas fa-th-large"></i>
+                        </button>
+                        <button class="view-btn" onclick="toggleView('list')">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label>Category:</label>
+                        <select id="categoryFilter" onchange="applyFilters()">
+                            <option value="">All Categories</option>
+                            <option value="medical">Medical</option>
+                            <option value="education">Education</option>
+                            <option value="emergency">Emergency</option>
+                            <option value="food">Food Aid</option>
+                            <option value="environment">Environment</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Location:</label>
+                        <select id="locationFilter" onchange="applyFilters()">
+                            <option value="">All Locations</option>
+                            <option value="dhaka">Dhaka</option>
+                            <option value="chittagong">Chittagong</option>
+                            <option value="sylhet">Sylhet</option>
+                            <option value="rajshahi">Rajshahi</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Sort by:</label>
+                        <select id="sortFilter" onchange="applyFilters()">
+                            <option value="recent">Most Recent</option>
+                            <option value="trending">Trending</option>
+                            <option value="urgent">Most Urgent</option>
+                            <option value="funded">Well Funded</option>
+                        </select>
+                    </div>
+                    
+                    <button class="clear-filters" onclick="clearFilters()">
+                        <i class="fas fa-times"></i> Clear All
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading Animation -->
+            <div class="loading-container" id="loading">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <p>Finding campaigns for you...</p>
+                </div>
+            </div>
+
+            <!-- Search Results -->
+            <div class="results-section">
+                <div class="results-header" id="resultsHeader">
+                    <span class="results-count">Showing <span id="resultCount">6</span> campaigns</span>
+                </div>
+                <div class="search-results grid-view" id="searchResults"></div>
+            </div>
+        </div>
+    </div>
 
 
     <!-- JavaScript -->
