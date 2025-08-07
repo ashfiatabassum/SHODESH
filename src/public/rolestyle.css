@@ -59,7 +59,7 @@
 }
 
 .desktop .rectangle {
-  background-color: rgba(74, 151, 130, 0.5);
+  background-color: #4a7c59;
   border-radius: 20px;
   height: 10.5vh;
   left: 0;
@@ -70,7 +70,7 @@
 }
 
 .desktop .text-wrapper-2 {
-  color: #000000;
+  color: #ffffff;
   font-family: "Roboto Condensed", Helvetica, sans-serif;
   font-weight: 600;
   font-size: 2.2vw;
@@ -94,7 +94,7 @@
 }
 
 .desktop .rectangle-2 {
-  background-color: rgba(74, 151, 130, 0.5);
+  background-color: #4a7c59;
   border-radius: 20px;
   height: 10.5vh;
   left: 0;
@@ -105,7 +105,7 @@
 }
 
 .desktop .text-wrapper-3 {
-  color: #000000;
+  color: #ffffff;
   font-family: "Roboto Condensed", Helvetica, sans-serif;
   font-weight: 600;
   font-size: 2.2vw;
@@ -129,7 +129,7 @@
 }
 
 .desktop .text-wrapper-4 {
-  color: #000000;
+  color: #ffffff;
   font-family: "Roboto Condensed", Helvetica, sans-serif;
   font-weight: 600;
   font-size: 2.2vw;
@@ -153,7 +153,7 @@
 }
 
 .desktop .text-wrapper-5 {
-  color: #000000;
+  color: #ffffff;
   font-family: "Roboto Condensed", Helvetica, sans-serif;
   font-weight: 600;
   font-size: 2.2vw;
