@@ -1,9 +1,6 @@
 /* individual.css */
 body, html {
-  /*margin: 0;
-  padding: 0;
-  font-family: "Roboto Condensed", sans-serif;*/
-    margin: 0;
+  margin: 0;
   padding: 0;
   font-family: "Roboto Condensed", sans-serif;
   /* Add background image */
@@ -14,6 +11,7 @@ body, html {
   background-attachment: fixed;
   position: relative;
 }
+
 body::before {
   content: '';
   position: fixed;
@@ -26,7 +24,7 @@ body::before {
     rgba(74, 124, 89, 0.6) 0%,
     rgba(74, 124, 89, 0.2) 100%
   );
-  z-index: 0; /* Changed from -1 to 0 */
+  z-index: 0;
   pointer-events: none;
 }
 
@@ -102,19 +100,21 @@ body::before {
   }
 }
 
+/* UPDATED: Form container with increased height for labels */
 .overlap-group {
   position: relative;
   width: 840px;
-  min-height: 1400px;
+  min-height: 1600px; /* Increased from 1400px to accommodate labels */
   background-color: #d9d9d9fa;
   border-radius: 15px;
-  padding: 20px;
+  padding: 30px; /* Increased padding */
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 30px; /* Increased gap for better spacing */
 }
 
+/* UPDATED: Container styling with margin for labels */
 .overlap, .overlap-2, .overlap-3, .overlap-4, .overlap-5, .overlap-6,
 .phone-number-NID-wrapper, .date-of-birth-wrapper, .div-wrapper,
 .administrative-wrapper, .zip-code-wrapper, .bkash-number-wrapper,
@@ -126,6 +126,7 @@ body::before {
   border-radius: 8px;
   transition: all 0.3s ease;
   width: 100%;
+  margin-top: 20px; /* Added margin for label space */
 }
 
 .overlap, .overlap-2, .overlap-3, .overlap-4, .overlap-5,
@@ -147,11 +148,12 @@ body::before {
   }
 }
 
-/* Row layouts for better alignment */
+/* UPDATED: Row layouts with label space */
 .name-row, .address-row {
   display: flex;
   gap: 20px;
   width: 100%;
+  margin-top: 20px; /* Added margin for label space */
 }
 
 .name-row .overlap,
@@ -161,6 +163,29 @@ body::before {
   flex: 1;
 }
 
+/* NEW: Label styling for individual form */
+.field-label {
+  position: absolute;
+  top: -25px; /* Positioned above the input box */
+  left: 15px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #333333;
+  font-family: "Roboto Condensed", sans-serif;
+  background: transparent;
+  z-index: 2;
+  display: block;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8); /* White shadow for better readability */
+}
+
+/* NEW: Red asterisk styling */
+.required {
+  color: #ff0000;
+  font-weight: bold;
+  margin-left: 3px;
+  font-size: 16px;
+}
+
 /* Input and Select Styling */
 input, select {
   width: 100%;
@@ -168,22 +193,23 @@ input, select {
   border: none;
   outline: none;
   background: transparent;
-  font-size: 24px;
+  font-size: 20px; /* Reduced from 24px */
   color: #000000;
   padding: 15px 20px;
   box-sizing: border-box;
+  font-family: "Roboto Condensed", sans-serif;
 }
 
 input::placeholder {
   color: #666666;
-  font-size: 22px;
+  font-size: 18px; /* Reduced from 22px */
   opacity: 0.8;
 }
 
 select {
   cursor: pointer;
   color: #000000;
-  font-size: 24px;
+  font-size: 20px; /* Reduced from 24px */
 }
 
 select option {
@@ -242,10 +268,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 input[type="date"]:invalid::before {
   content: "Date of Birth";
   color: #666666;
-  font-size: 22px;
+  font-size: 18px; /* Reduced from 22px */
   position: absolute;
   left: 20px;
-  top: 23px;
+  top: 25px;
   pointer-events: none;
 }
 
@@ -253,87 +279,7 @@ input[type="date"]:focus:invalid::before {
   display: none;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .let-s-get-you {
-    font-size: 50px;
-    margin: 20px;
-    top: 15px;
-  }
-  
-  .overlap-group {
-    width: 95%;
-    margin: 20px auto;
-    padding: 15px;
-  }
-  
-  .name-row, .address-row {
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  input, select {
-    font-size: 18px;
-    padding: 12px 15px;
-  }
-  
-  input::placeholder {
-    font-size: 16px;
-  }
-  
-  .overlap-6 {
-    width: 400px;
-  }
-  
-  .CREATE-ACCOUNT {
-    font-size: 30px;
-  }
-}
-
-@media (max-width: 480px) {
-  .let-s-get-you {
-    font-size: 32px;
-    top: 10px;
-  }
-  
-  .overlap-group {
-    width: 98%;
-    padding: 10px;
-  }
-  
-  input, select {
-    font-size: 16px;
-    padding: 10px 12px;
-  }
-  
-  input::placeholder {
-    font-size: 14px;
-  }
-  
-  .overlap-6 {
-    width: 300px;
-    height: 70px;
-  }
-  
-  .CREATE-ACCOUNT {
-    font-size: 24px;
-  }
-}
-
-.first-name, .text-wrapper-2, .text-wrapper-3, .text-wrapper-4, .text-wrapper-5 {
-  position: absolute;
-  top: 15px;
-  left: 37px;
-  font-size: 20px;
-  font-weight: 500;
-  color: #000000;
-  white-space: nowrap;
-}
-
-.text-wrapper-2 { top: 13px; }
-.first-name { top: 17px; left: 38px; }
-.text-wrapper-5 { top: 17px; left: 37px; }
-
+/* Button styling */
 .overlap-6 {
   position: relative;
   width: 500px;
@@ -380,7 +326,7 @@ input[type="date"]:focus:invalid::before {
   z-index: 1;
 }
 
-/* Input and Select Styling */
+/* Enhanced input and select styling */
 input[type="text"],
 input[type="email"],
 input[type="date"],
@@ -393,7 +339,7 @@ select {
   height: 100%;
   border: none;
   background: transparent;
-  font-size: 24px;
+  font-size: 20px; /* Reduced from 24px */
   font-weight: 500;
   color: #000000;
   padding: 20px 25px;
@@ -422,12 +368,6 @@ select:hover {
   box-shadow: 0 0 8px rgba(175, 62, 62, 0.3);
 }
 
-input::placeholder {
-  color: #666666;
-  font-size: 22px;
-  font-weight: 500;
-}
-
 select {
   cursor: pointer;
   appearance: none;
@@ -437,6 +377,27 @@ select {
 
 select:invalid {
   color: #666666;
+}
+
+/* NEW: Enhanced focus effects with label color change */
+.overlap:focus-within .field-label,
+.overlap-2:focus-within .field-label,
+.overlap-3:focus-within .field-label,
+.overlap-4:focus-within .field-label,
+.overlap-5:focus-within .field-label,
+.phone-number-NID-wrapper:focus-within .field-label,
+.date-of-birth-wrapper:focus-within .field-label,
+.div-wrapper:focus-within .field-label,
+.administrative-wrapper:focus-within .field-label,
+.zip-code-wrapper:focus-within .field-label,
+.bkash-number-wrapper:focus-within .field-label,
+.bank-account-wrapper:focus-within .field-label,
+.password-wrapper:focus-within .field-label,
+.confirm-password-wrapper:focus-within .field-label,
+.road-no-wrapper:focus-within .field-label {
+  color: #4a7c59;
+  font-weight: 800;
+  transform: scale(1.05);
 }
 
 /* Add animated focus glow to parent containers */
@@ -465,64 +426,117 @@ select:invalid {
   transform: translateY(-2px);
 }
 
-/* Custom alert styles for better user feedback */
-.custom-alert {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: linear-gradient(135deg, #ff4757, #ff3838);
-  color: white;
-  padding: 16px 20px;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(255, 71, 87, 0.3);
-  z-index: 10000;
-  opacity: 0;
-  transform: translateY(-20px);
-  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  max-width: 400px;
-  min-width: 300px;
+/* Enhanced button hover effects */
+.overlap-6:hover .rectangle {
+  background-color: #5a8c69;
 }
 
-.custom-alert.success-alert {
-  background: linear-gradient(135deg, #2ed573, #1dd1a1);
-  box-shadow: 0 8px 32px rgba(46, 213, 115, 0.3);
+.overlap-6:active .rectangle {
+  background-color: #3a6249;
 }
 
-.alert-content {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+/* UPDATED: Responsive Design with label considerations */
+@media (max-width: 768px) {
+  .let-s-get-you {
+    font-size: 50px;
+    margin: 20px;
+    top: 15px;
+  }
+  
+  .overlap-group {
+    width: 95%;
+    margin: 20px auto;
+    padding: 20px;
+    min-height: 1700px; /* Increased for mobile with labels */
+    gap: 25px;
+  }
+  
+  .name-row, .address-row {
+    flex-direction: column;
+    gap: 25px; /* Increased gap for mobile */
+  }
+  
+  .field-label {
+    font-size: 14px;
+    top: -22px;
+  }
+  
+  .required {
+    font-size: 14px;
+  }
+  
+  input, select {
+    font-size: 16px;
+    padding: 12px 15px;
+  }
+  
+  input::placeholder {
+    font-size: 14px;
+  }
+  
+  .overlap-6 {
+    width: 400px;
+  }
+  
+  .CREATE-ACCOUNT {
+    font-size: 30px;
+  }
 }
 
-.alert-icon {
+@media (max-width: 480px) {
+  .let-s-get-you {
+    font-size: 32px;
+    top: 10px;
+  }
+  
+  .overlap-group {
+    width: 98%;
+    padding: 15px;
+    min-height: 1800px; /* Further increased for small screens */
+    gap: 20px;
+  }
+  
+  .field-label {
+    font-size: 12px;
+    top: -20px;
+  }
+  
+  .required {
+    font-size: 12px;
+  }
+  
+  input, select {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+  
+  input::placeholder {
+    font-size: 12px;
+  }
+  
+  .overlap-6 {
+    width: 300px;
+    height: 70px;
+  }
+  
+  .CREATE-ACCOUNT {
+    font-size: 24px;
+  }
+}
+
+/* Legacy text wrapper positioning (keeping for compatibility) */
+.first-name, .text-wrapper-2, .text-wrapper-3, .text-wrapper-4, .text-wrapper-5 {
+  position: absolute;
+  top: 15px;
+  left: 37px;
   font-size: 20px;
-  flex-shrink: 0;
-}
-
-.alert-message {
-  flex: 1;
-  font-size: 16px;
   font-weight: 500;
-  line-height: 1.4;
+  color: #000000;
+  white-space: nowrap;
+  display: none; /* Hidden since we're using proper labels now */
 }
 
-.alert-close {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 20px;
-  cursor: pointer;
-  padding: 0;
-  margin-left: 8px;
-  opacity: 0.8;
-  transition: opacity 0.2s ease;
-}
-
-.alert-close:hover {
-  opacity: 1;
-}
-
-/* Enhanced field validation styles */
+/* Validation and interaction effects */
 .overlap input[data-invalid="true"],
 .overlap-2 input[data-invalid="true"],
 .overlap-3 input[data-invalid="true"],
@@ -539,96 +553,6 @@ select:invalid {
   75% { transform: translateX(5px); }
 }
 
-/* Floating label effect for better interactivity */
-.form-field {
-  position: relative;
-  margin-bottom: 20px;
-}
-
-.form-field input:focus + .floating-label,
-.form-field input:not(:placeholder-shown) + .floating-label {
-  transform: translateY(-25px) scale(0.8);
-  color: #6c63ff;
-}
-
-.floating-label {
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: white;
-  padding: 0 8px;
-  color: #666;
-  pointer-events: none;
-  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  font-size: 16px;
-}
-
-/* Enhanced button hover effects */
-.overlap-6:hover .rectangle {
-  background-color: #5a8c69;
-}
-
-.overlap-6:active .rectangle {
-  background-color: #3a6249;
-}
-
-/* Dynamic pulse animation for form container */
-.box {
-  animation: gentlePulse 4s ease-in-out infinite;
-}
-
-@keyframes gentlePulse {
-  0%, 100% { 
-    box-shadow: 
-      0 8px 32px rgba(108, 99, 255, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  }
-  50% { 
-    box-shadow: 
-      0 12px 40px rgba(108, 99, 255, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  }
-}
-
-/* Interactive field focusing effects */
-.overlap:focus-within,
-.overlap-2:focus-within,
-.overlap-3:focus-within,
-.overlap-4:focus-within,
-.overlap-5:focus-within,
-.phone-number-NID-wrapper:focus-within,
-.date-of-birth-wrapper:focus-within,
-.div-wrapper:focus-within,
-.administrative-wrapper:focus-within,
-.zip-code-wrapper:focus-within,
-.bkash-number-wrapper:focus-within,
-.bank-account-wrapper:focus-within,
-.password-wrapper:focus-within,
-.confirm-password-wrapper:focus-within,
-.road-no-wrapper:focus-within {
-  transform: scale(1.02) translateY(-2px);
-  box-shadow: 
-    0 8px 25px rgba(108, 99, 255, 0.3),
-    0 0 0 3px rgba(108, 99, 255, 0.1);
-  z-index: 10;
-  position: relative;
-}
-
-/* Enhanced typing animations */
-.overlap input:focus,
-.overlap-2 input:focus,
-.overlap-3 input:focus,
-.overlap-4 input:focus,
-.overlap-5 input:focus {
-  animation: typing-glow 2s ease-in-out infinite;
-}
-
-@keyframes typing-glow {
-  0%, 100% { box-shadow: inset 0 0 5px rgba(108, 99, 255, 0.2); }
-  50% { box-shadow: inset 0 0 15px rgba(108, 99, 255, 0.4); }
-}
-
 /* Success state animations */
 .overlap.success,
 .overlap-2.success,
@@ -643,26 +567,4 @@ select:invalid {
   0% { transform: scale(1); }
   50% { transform: scale(1.05); }
   100% { transform: scale(1); }
-}
-
-/* Loading state for form submission */
-.loading .text-wrapper {
-  position: relative;
-  overflow: hidden;
-}
-
-.loading .text-wrapper::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-  animation: loading-shimmer 1.5s infinite;
-}
-
-@keyframes loading-shimmer {
-  0% { left: -100%; }
-  100% { left: 100%; }
 }
