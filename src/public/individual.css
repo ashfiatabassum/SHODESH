@@ -1,8 +1,33 @@
 /* individual.css */
 body, html {
-  margin: 0;
+  /*margin: 0;
+  padding: 0;
+  font-family: "Roboto Condensed", sans-serif;*/
+    margin: 0;
   padding: 0;
   font-family: "Roboto Condensed", sans-serif;
+  /* Add background image */
+  background-image: url('images/individualsignup.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  position: relative;
+}
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(74, 124, 89, 0.6) 0%,
+    rgba(74, 124, 89, 0.2) 100%
+  );
+  z-index: 0; /* Changed from -1 to 0 */
+  pointer-events: none;
 }
 
 .desktop {
@@ -11,17 +36,19 @@ body, html {
   align-items: start;
   min-height: 100vh;
   width: 100vw;
-  background-color: #4a7c59;
+  background-color: transparent;
+  z-index: 1;
 }
 
 .div {
   position: relative;
   width: 100vw;
   min-height: 100vh;
-  background-color: #4a7c59;
+  background-color: transparent;
   display: flex;
   flex-direction: column;
   align-items: center;
+  z-index: 2;
 }
 
 .let-s-get-you {
@@ -338,7 +365,7 @@ input[type="date"]:focus:invalid::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(76, 175, 80, 0.42);
+  background-color: #4a7c59;
   border-radius: 50px;
   transition: all 0.3s ease;
 }
@@ -539,11 +566,11 @@ select:invalid {
 
 /* Enhanced button hover effects */
 .overlap-6:hover .rectangle {
-  background-color: rgba(76, 175, 80, 0.6);
+  background-color: #5a8c69;
 }
 
 .overlap-6:active .rectangle {
-  background-color: rgba(76, 175, 80, 0.8);
+  background-color: #3a6249;
 }
 
 /* Dynamic pulse animation for form container */
