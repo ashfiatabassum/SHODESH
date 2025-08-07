@@ -15,12 +15,12 @@ body, html {
 
 .overlap-group-wrapper {
   background-color: #ffffff;
-  height: 1198px;
+  height: 1298px; /* Increased height to accommodate new field */
   width: 1440px;
 }
 
 .overlap-group {
-  height: 1044px;
+  height: 1144px; /* Increased height */
   position: relative;
   top: 35px;
   width: 1403px;
@@ -28,12 +28,12 @@ body, html {
 
 /* Form background container */
 .form-background {
-  background-color: #007958;
-  height: 1300px;
+  background-color: #4a7c59;
+  height: 1400px; /* Increased height */
   left: 689px;
   position: absolute;
   top: 42px;
-  width: 692px;
+  width: 697px;
 }
 
 .foundationbg {
@@ -81,12 +81,13 @@ body, html {
 .rectangle-10 { top: 839px; }
 .rectangle-11 { top: 916px; }
 .rectangle-12 { top: 993px; }
-.rectangle-13 { top: 1070px; }
-.rectangle-14 { top: 1147px; }
+.rectangle-12-5 { top: 1070px; } /* New field positioned after rectangle-12 */
+.rectangle-13 { top: 1147px; } /* Moved down */
+.rectangle-14 { top: 1224px; } /* Moved down */
 
 .rectangle-2, .rectangle-3, .rectangle-4, .rectangle-5,
 .rectangle-6, .rectangle-7, .rectangle-8, .rectangle-9,
-.rectangle-10, .rectangle-11, .rectangle-12, .rectangle-13, .rectangle-14 {
+.rectangle-10, .rectangle-11, .rectangle-12, .rectangle-12-5, .rectangle-13, .rectangle-14 {
   background-color: #ffffff;
   height: 54px;
   left: 720px;
@@ -111,6 +112,7 @@ body, html {
 .rectangle-10 input, .rectangle-10 select,
 .rectangle-11 input, .rectangle-11 select,
 .rectangle-12 input, .rectangle-12 select,
+.rectangle-12-5 input, .rectangle-12-5 select, /* Added new field */
 .rectangle-13 input, .rectangle-13 select,
 .rectangle-14 input, .rectangle-14 select {
   width: 100%;
@@ -134,8 +136,8 @@ body, html {
 .rectangle-6:focus-within, .rectangle-7:focus-within,
 .rectangle-8:focus-within, .rectangle-9:focus-within,
 .rectangle-10:focus-within, .rectangle-11:focus-within,
-.rectangle-12:focus-within, .rectangle-13:focus-within,
-.rectangle-14:focus-within {
+.rectangle-12:focus-within, .rectangle-12-5:focus-within, /* Added new field */
+.rectangle-13:focus-within, .rectangle-14:focus-within {
   background-color: #fff9e6 !important;
   border: 3px solid #af3e3e !important;
   box-shadow: 
@@ -153,8 +155,8 @@ body, html {
 .rectangle-6:hover, .rectangle-7:hover,
 .rectangle-8:hover, .rectangle-9:hover,
 .rectangle-10:hover, .rectangle-11:hover,
-.rectangle-12:hover, .rectangle-13:hover,
-.rectangle-14:hover {
+.rectangle-12:hover, .rectangle-12-5:hover, /* Added new field */
+.rectangle-13:hover, .rectangle-14:hover {
   background-color: #fafafa;
   border: 2px solid #d4a5a5;
   box-shadow: 0 4px 12px rgba(175, 62, 62, 0.2);
@@ -168,8 +170,8 @@ body, html {
 .rectangle-6 input::placeholder, .rectangle-7 input::placeholder,
 .rectangle-8 input::placeholder, .rectangle-9 input::placeholder,
 .rectangle-10 input::placeholder, .rectangle-11 input::placeholder,
-.rectangle-12 input::placeholder, .rectangle-13 input::placeholder,
-.rectangle-14 input::placeholder {
+.rectangle-12 input::placeholder, .rectangle-12-5 input::placeholder, /* Added new field */
+.rectangle-13 input::placeholder, .rectangle-14 input::placeholder {
   color: #666666;
   font-size: 16px;
 }
@@ -181,16 +183,16 @@ body, html {
 .rectangle-6:focus-within input, .rectangle-7:focus-within input,
 .rectangle-8:focus-within input, .rectangle-9:focus-within input,
 .rectangle-10:focus-within input, .rectangle-11:focus-within input,
-.rectangle-12:focus-within input, .rectangle-13:focus-within input,
-.rectangle-14:focus-within input,
+.rectangle-12:focus-within input, .rectangle-12-5:focus-within input, /* Added new field */
+.rectangle-13:focus-within input, .rectangle-14:focus-within input,
 .rectangle:focus-within select, .div:focus-within select,
 .rectangle-2:focus-within select, .rectangle-3:focus-within select,
 .rectangle-4:focus-within select, .rectangle-5:focus-within select,
 .rectangle-6:focus-within select, .rectangle-7:focus-within select,
 .rectangle-8:focus-within select, .rectangle-9:focus-within select,
 .rectangle-10:focus-within select, .rectangle-11:focus-within select,
-.rectangle-12:focus-within select, .rectangle-13:focus-within select,
-.rectangle-14:focus-within select {
+.rectangle-12:focus-within select, .rectangle-12-5:focus-within select, /* Added new field */
+.rectangle-13:focus-within select, .rectangle-14:focus-within select {
   color: #af3e3e;
   font-weight: 600;
 }
@@ -217,13 +219,13 @@ body, html {
 }
 
 .text-wrapper-12 {
-  top: 1230px;
+  top: 1330px; /* Moved down to accommodate new field */
   left: 952px;
   font-size: 28px;
   color : white;
   cursor: pointer;
-  background-color: rgba(4, 91, 4, 0.325);
-  color: #000000;
+  background-color: #39e36c8d;
+  color: #ffffff;
   border: 2px solid #3eaf4433;
   padding: 15px 25px;
   border-radius: 25px;
@@ -264,7 +266,7 @@ body, html {
   position: absolute;
   top: 0;
   left: 35px;
-  width: 660px;
+  width: 500px;
   animation: pulse 2s ease-in-out infinite, colorChange 3s ease-in-out infinite;
   text-shadow: 2px 2px 4px rgba(175, 62, 62, 0.3);
   transition: transform 0.3s ease;
@@ -366,12 +368,6 @@ select {
   padding-right: 40px;
 }
 
-/* REMOVED - This was causing the red arrow on focus
-.rectangle:focus-within select, .rectangle-7:focus-within select, .rectangle-8:focus-within select {
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23af3e3e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
-}
-*/
-
 select option {
   padding: 10px;
   background: white;
@@ -436,7 +432,8 @@ select option {
   .rectangle, .div,
   .rectangle-2, .rectangle-3, .rectangle-4, .rectangle-5,
   .rectangle-6, .rectangle-7, .rectangle-8, .rectangle-9,
-  .rectangle-10, .rectangle-11, .rectangle-12, .rectangle-13, .rectangle-14 {
+  .rectangle-10, .rectangle-11, .rectangle-12, .rectangle-12-5,
+  .rectangle-13, .rectangle-14 {
     width: 80%;
     left: 10%;
   }
@@ -448,7 +445,7 @@ select option {
   
   .GET-YOUR-FOUNDATION {
     font-size: 24px;
-    width: 100%;
+    width: 50%;
     left: 0;
     text-align: center;
   }
