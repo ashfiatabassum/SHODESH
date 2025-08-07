@@ -15,12 +15,12 @@ body, html {
 
 .overlap-group-wrapper {
   background-color: #ffffff;
-  height: 1298px; /* Increased height to accommodate new field */
+  height: 1750px; /* Increased height for more gaps */
   width: 1440px;
 }
 
 .overlap-group {
-  height: 1144px; /* Increased height */
+  height: 1700px; /* Increased height */
   position: relative;
   top: 35px;
   width: 1403px;
@@ -29,7 +29,7 @@ body, html {
 /* Form background container */
 .form-background {
   background-color: #4a7c59;
-  height: 1400px; /* Increased height */
+  height: 1730px; /* Adjusted to end just after button */
   left: 689px;
   position: absolute;
   top: 42px;
@@ -52,8 +52,8 @@ body, html {
   height: 54px;
   left: 720px;
   position: absolute;
-  top: 69px;
-  width: 633px;
+  top: 115px; /* Increased to accommodate larger labels */
+  width: 630px; /* Reduced to fit inside form */
   border: 2px solid transparent;
   transition: all 0.3s ease;
 }
@@ -64,26 +64,27 @@ body, html {
   height: 54px;
   left: 720px;
   position: absolute;
-  top: 146px;
-  width: 633px;
+  top: 215px; /* Increased gap */
+  width: 630px; /* Reduced to fit inside form */
   border: 2px solid transparent;
   transition: all 0.3s ease;
 }
 
-.rectangle-2 { top: 223px; }
-.rectangle-3 { top: 300px; }
-.rectangle-4 { top: 377px; }
-.rectangle-5 { top: 454px; }
-.rectangle-6 { top: 531px; }
-.rectangle-7 { top: 608px; }
-.rectangle-8 { top: 685px; }
-.rectangle-9 { top: 762px; }
-.rectangle-10 { top: 839px; }
-.rectangle-11 { top: 916px; }
-.rectangle-12 { top: 993px; }
-.rectangle-12-5 { top: 1070px; } /* New field positioned after rectangle-12 */
-.rectangle-13 { top: 1147px; } /* Moved down */
-.rectangle-14 { top: 1224px; } /* Moved down */
+/* Increased gaps between input boxes - Now 100px gaps */
+.rectangle-2 { top: 315px; }   /* +100px gap */
+.rectangle-3 { top: 415px; }   /* +100px gap */
+.rectangle-4 { top: 515px; }   /* +100px gap */
+.rectangle-5 { top: 615px; }   /* +100px gap */
+.rectangle-6 { top: 715px; }   /* +100px gap */
+.rectangle-7 { top: 815px; }   /* +100px gap */
+.rectangle-8 { top: 915px; }   /* +100px gap */
+.rectangle-9 { top: 1015px; }  /* +100px gap */
+.rectangle-10 { top: 1115px; } /* +100px gap */
+.rectangle-11 { top: 1215px; } /* +100px gap */
+.rectangle-12 { top: 1315px; } /* +100px gap */
+.rectangle-12-5 { top: 1415px; } /* +100px gap */
+.rectangle-13 { top: 1515px; } /* +100px gap */
+.rectangle-14 { top: 1615px; } /* +100px gap */
 
 .rectangle-2, .rectangle-3, .rectangle-4, .rectangle-5,
 .rectangle-6, .rectangle-7, .rectangle-8, .rectangle-9,
@@ -92,7 +93,7 @@ body, html {
   height: 54px;
   left: 720px;
   position: absolute;
-  width: 633px;
+  width: 630px; /* Reduced to fit inside form */
   border-radius: 10px;
   border: 2px solid transparent;
   transition: all 0.3s ease;
@@ -112,7 +113,7 @@ body, html {
 .rectangle-10 input, .rectangle-10 select,
 .rectangle-11 input, .rectangle-11 select,
 .rectangle-12 input, .rectangle-12 select,
-.rectangle-12-5 input, .rectangle-12-5 select, /* Added new field */
+.rectangle-12-5 input, .rectangle-12-5 select,
 .rectangle-13 input, .rectangle-13 select,
 .rectangle-14 input, .rectangle-14 select {
   width: 100%;
@@ -129,14 +130,14 @@ body, html {
   box-sizing: border-box;
 }
 
-/* Enhanced focus effects - Much more prominent when clicked */
+/* Enhanced focus effects */
 .rectangle:focus-within, .div:focus-within,
 .rectangle-2:focus-within, .rectangle-3:focus-within,
 .rectangle-4:focus-within, .rectangle-5:focus-within,
 .rectangle-6:focus-within, .rectangle-7:focus-within,
 .rectangle-8:focus-within, .rectangle-9:focus-within,
 .rectangle-10:focus-within, .rectangle-11:focus-within,
-.rectangle-12:focus-within, .rectangle-12-5:focus-within, /* Added new field */
+.rectangle-12:focus-within, .rectangle-12-5:focus-within,
 .rectangle-13:focus-within, .rectangle-14:focus-within {
   background-color: #fff9e6 !important;
   border: 3px solid #af3e3e !important;
@@ -148,14 +149,14 @@ body, html {
   z-index: 10;
 }
 
-/* Hover effects for better interactivity */
+/* Hover effects */
 .rectangle:hover, .div:hover,
 .rectangle-2:hover, .rectangle-3:hover,
 .rectangle-4:hover, .rectangle-5:hover,
 .rectangle-6:hover, .rectangle-7:hover,
 .rectangle-8:hover, .rectangle-9:hover,
 .rectangle-10:hover, .rectangle-11:hover,
-.rectangle-12:hover, .rectangle-12-5:hover, /* Added new field */
+.rectangle-12:hover, .rectangle-12-5:hover,
 .rectangle-13:hover, .rectangle-14:hover {
   background-color: #fafafa;
   border: 2px solid #d4a5a5;
@@ -170,7 +171,7 @@ body, html {
 .rectangle-6 input::placeholder, .rectangle-7 input::placeholder,
 .rectangle-8 input::placeholder, .rectangle-9 input::placeholder,
 .rectangle-10 input::placeholder, .rectangle-11 input::placeholder,
-.rectangle-12 input::placeholder, .rectangle-12-5 input::placeholder, /* Added new field */
+.rectangle-12 input::placeholder, .rectangle-12-5 input::placeholder,
 .rectangle-13 input::placeholder, .rectangle-14 input::placeholder {
   color: #666666;
   font-size: 16px;
@@ -183,7 +184,7 @@ body, html {
 .rectangle-6:focus-within input, .rectangle-7:focus-within input,
 .rectangle-8:focus-within input, .rectangle-9:focus-within input,
 .rectangle-10:focus-within input, .rectangle-11:focus-within input,
-.rectangle-12:focus-within input, .rectangle-12-5:focus-within input, /* Added new field */
+.rectangle-12:focus-within input, .rectangle-12-5:focus-within input,
 .rectangle-13:focus-within input, .rectangle-14:focus-within input,
 .rectangle:focus-within select, .div:focus-within select,
 .rectangle-2:focus-within select, .rectangle-3:focus-within select,
@@ -191,7 +192,7 @@ body, html {
 .rectangle-6:focus-within select, .rectangle-7:focus-within select,
 .rectangle-8:focus-within select, .rectangle-9:focus-within select,
 .rectangle-10:focus-within select, .rectangle-11:focus-within select,
-.rectangle-12:focus-within select, .rectangle-12-5:focus-within select, /* Added new field */
+.rectangle-12:focus-within select, .rectangle-12-5:focus-within select,
 .rectangle-13:focus-within select, .rectangle-14:focus-within select {
   color: #af3e3e;
   font-weight: 600;
@@ -218,11 +219,11 @@ body, html {
   font-family: "Roboto Condensed", sans-serif;
 }
 
+/* Button placement - positioned within the form with padding from last input */
 .text-wrapper-12 {
-  top: 1330px; /* Moved down to accommodate new field */
-  left: 952px;
+  top: 1695px; /* Positioned 80px below last input field */
+  left: 850px;
   font-size: 28px;
-  color : white;
   cursor: pointer;
   background-color: #39e36c8d;
   color: #ffffff;
@@ -246,18 +247,19 @@ body, html {
   transform: translateY(0);
 }
 
-.text-wrapper { top: 77px; }
-.text-wrapper-2 { top: 154px; }
-.text-wrapper-3 { top: 231px; }
-.text-wrapper-4 { top: 308px; }
-.text-wrapper-5 { top: 385px; }
-.text-wrapper-6 { top: 462px; }
-.text-wrapper-7 { top: 539px; }
-.text-wrapper-8 { top: 616px; }
-.text-wrapper-9 { top: 693px; }
-.text-wrapper-10 { top: 779px; }
-.text-wrapper-11 { top: 850px; }
-.text-wrapper-13 { top: 382px; left: 1058px; }
+/* Updated label positions to match new input positions */
+.text-wrapper { top: 102px; }
+.text-wrapper-2 { top: 202px; }
+.text-wrapper-3 { top: 302px; }
+.text-wrapper-4 { top: 402px; }
+.text-wrapper-5 { top: 502px; }
+.text-wrapper-6 { top: 602px; }
+.text-wrapper-7 { top: 702px; }
+.text-wrapper-8 { top: 802px; }
+.text-wrapper-9 { top: 902px; }
+.text-wrapper-10 { top: 1002px; }
+.text-wrapper-11 { top: 1102px; }
+.text-wrapper-13 { top: 502px; left: 1058px; }
 
 .GET-YOUR-FOUNDATION {
   color: #af3e3e;
@@ -304,7 +306,7 @@ body, html {
   }
 }
 
-/* Enhanced file input styling to match the new focus effects */
+/* Enhanced file input styling */
 .div input[type="file"] {
   width: 100%;
   height: 100%;
@@ -357,7 +359,7 @@ body, html {
   font-family: "Roboto Condensed", sans-serif;
 }
 
-/* Select dropdown enhancement - ARROW STAYS GRAY */
+/* Select dropdown enhancement */
 select {
   cursor: pointer;
   appearance: none;
@@ -375,7 +377,7 @@ select option {
   font-family: "Roboto Condensed", sans-serif;
 }
 
-/* Error and success states for validation */
+/* Error and success states */
 .error {
   border: 3px solid #dc3545 !important;
   background-color: #ffeaea !important;
@@ -392,6 +394,22 @@ select option {
 .loading {
   opacity: 0.7;
   pointer-events: none;
+}
+
+/* Label styling - CORRECTED AND ENLARGED */
+.field-label {
+  position: absolute;
+  top: -30px; /* Moved further up */
+  left: 20px; /* Adjusted positioning */
+  font-size: 18px; /* Increased from 14px */
+  font-weight: 700; /* Made bolder */
+  color: #ffffff;
+  font-family: "Roboto Condensed", sans-serif;
+  background: transparent;
+  padding: 2px 8px; /* Added more padding */
+  z-index: 2;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7); /* Enhanced shadow */
+  letter-spacing: 0.5px; /* Added letter spacing */
 }
 
 /* Responsive adjustments */
@@ -419,7 +437,7 @@ select option {
     width: 90%;
     left: 5%;
     height: auto;
-    min-height: 800px;
+    min-height: 1700px; /* Increased for mobile */
   }
   
   .foundationbg {
@@ -449,4 +467,15 @@ select option {
     left: 0;
     text-align: center;
   }
+  
+  .field-label {
+    font-size: 16px; /* Slightly smaller on mobile */
+  }
+}
+/* Red asterisk styling for required fields */
+.required {
+  color: #ff0000;
+  font-weight: bold;
+  margin-left: 3px;
+  font-size: 16px;
 }

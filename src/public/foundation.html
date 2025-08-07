@@ -16,27 +16,35 @@
 
         <form id="foundationForm" onsubmit="return validateForm(event)">
           <div class="rectangle">
-            <input type="text" id="foundationName" placeholder="Foundation Name" required />
+            <label for="foundationName" class="field-label">Foundation Name <span class="required">*</span></label>
+            <input type="text" id="foundationName" placeholder="Name of your organization" required />
           </div>
           <div class="div">
-            <input type="file" id="certificate" accept=".pdf" required />
+            <label for="certificate" class="field-label">Foundation Certificate (PDF) <span class="required">*</span></label>
+            <input type="file" id="certificate" placeholder="Only pdf format is accepted" accept=".pdf" required />
           </div>
           <div class="rectangle-2">
-            <input type="email" id="email" placeholder="Email" required />
+            <label for="email" class="field-label">Email <span class="required">*</span></label>
+            <input type="email" id="email" placeholder="xxxx@xxxx.com" required />
           </div>
           <div class="rectangle-3">
-            <input type="text" id="phone" placeholder="Phone Number" required />
+            <label for="phone" class="field-label">Phone Number <span class="required">*</span></label>
+            <input type="text" id="phone" placeholder="01XXXXXXXXX" required />
           </div>
           <div class="rectangle-4">
-            <input type="text" id="houseNo" placeholder="House No." required />
+            <label for="houseNo" class="field-label">House No. <span class="required">*</span></label>
+            <input type="text" id="houseNo" placeholder="" required />
           </div>
           <div class="rectangle-5">
-            <input type="text" id="roadNo" placeholder="Road No." required />
+            <label for="roadNo" class="field-label">Road No. <span class="required">*</span></label>
+            <input type="text" id="roadNo" placeholder="" required />
           </div>
           <div class="rectangle-6">
-            <input type="text" id="area" placeholder="Area" required />
+            <label for="area" class="field-label">Area <span class="required">*</span></label>
+            <input type="text" id="area" placeholder="" required />
           </div>
           <div class="rectangle-7">
+            <label for="district" class="field-label">District <span class="required">*</span></label>
             <select id="district" required>
               <option value="" disabled selected>Select District</option>
               <option>Bagerhat</option>
@@ -106,6 +114,7 @@
             </select>
           </div>
           <div class="rectangle-8">
+            <label for="division" class="field-label">Division <span class="required">*</span></label>
             <select id="division" required>
               <option value="" disabled selected>Select Division</option>
               <option>Barisal</option>
@@ -119,26 +128,32 @@
             </select>
           </div>
           <div class="rectangle-9">
+            <label for="zipCode" class="field-label">Zip Code <span class="required">*</span></label>
             <input type="text" id="zipCode" placeholder="Zip Code" required />
           </div>
           <div class="rectangle-10">
+            <label for="bkash" class="field-label">Bkash Number <span class="required">*</span></label>
             <input type="text" id="bkash" placeholder="Bkash Number" required />
           </div>
           <div class="rectangle-11">
+            <label for="bankAccount" class="field-label">Bank Account Number <span class="required">*</span></label>
             <input type="text" id="bankAccount" placeholder="Bank Account Number" required />
           </div>
           <div class="rectangle-12">
+            <label for="foundationLicense" class="field-label">Foundation License <span class="required">*</span></label>
             <input type="text" id="foundationLicense" placeholder="Foundation License" required />
           </div>
-           <!-- ADD THIS NEW SECTION HERE -->
           <div class="rectangle-12-5">
-            <input type="text" id="goalvision" placeholder="Describe your vision and goals" required />
+            <label for="goalvision" class="field-label">Vision and Goals <span class="required">*</span></label>
+            <input type="text" id="goalvision" placeholder="Describe the vision and goals of your organization." required />
           </div>
           <div class="rectangle-13">
-            <input type="password" id="password" placeholder="Password" required />
+            <label for="password" class="field-label">Password <span class="required">*</span></label>
+            <input type="password" id="password" placeholder="Must be atleast 6 characters long." required />
           </div>
           <div class="rectangle-14">
-            <input type="password" id="confirmPassword" placeholder="Confirm Password" required />
+            <label for="confirmPassword" class="field-label">Confirm Password <span class="required">*</span></label>
+            <input type="password" id="confirmPassword" placeholder="" required />
           </div>
 
           <button class="text-wrapper-12" type="submit">CREATE ACCOUNT</button>
