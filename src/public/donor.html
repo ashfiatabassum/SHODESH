@@ -5,6 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Desktop 3 - Create Account</title>
 <link rel="stylesheet" href="donor.css" />
+<style>
+  .division-field {
+    display: none;
+    margin-top: 0;
+  }
+  
+  .division-field.show {
+    display: block;
+  }
+  
+  .division-field select {
+    width: 100%;
+    height: 65px;
+    background: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 20px;
+    font-weight: 400;
+    text-align: center;
+    outline-offset: 0;
+    outline-color: transparent;
+    transition: outline-color 0.3s;
+    padding: 0 15px;
+  }
+</style>
 </head>
 <body>
 <div class="container">
@@ -94,6 +119,22 @@
 
     </select>
 
+    <!-- ADD THIS DIVISION FIELD HERE -->
+    <div class="division-field" id="divisionField">
+      <select id="division" name="division">
+        <option value="" disabled selected>Select Division</option>
+        <option value="Barisal">Barisal</option>
+        <option value="Chittagong">Chittagong</option>
+        <option value="Dhaka">Dhaka</option>
+        <option value="Khulna">Khulna</option>
+        <option value="Mymensingh">Mymensingh</option>
+        <option value="Rajshahi">Rajshahi</option>
+        <option value="Rangpur">Rangpur</option>
+        <option value="Sylhet">Sylhet</option>
+      </select>
+    </div>
+
+
     <input type="password" id="password" placeholder="Password" required minlength="6" />
     <input type="password" id="confirmPassword" placeholder="Confirm Password" required minlength="6" />
 
@@ -102,5 +143,28 @@
 </div>
 
 <script src="donor.js"></script>
+
+<!-- ADD THIS SCRIPT HERE -->
+<script>
+// JavaScript to show/hide division field based on country selection
+document.addEventListener('DOMContentLoaded', function() {
+    const countrySelect = document.getElementById('country');
+    const divisionField = document.getElementById('divisionField');
+    const divisionSelect = document.getElementById('division');
+    
+    countrySelect.addEventListener('change', function() {
+        const selectedCountry = this.value;
+        
+        if (selectedCountry === 'Bangladesh') {
+            divisionField.classList.add('show');
+            divisionSelect.setAttribute('required', 'required');
+        } else {
+            divisionField.classList.remove('show');
+            divisionSelect.removeAttribute('required');
+            divisionSelect.value = ''; // Clear selection when hidden
+        }
+    });
+});
+</script>
 </body>
 </html>

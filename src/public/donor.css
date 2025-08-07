@@ -1,4 +1,3 @@
-/* Reset & base */
 * {
   box-sizing: border-box;
 }
@@ -48,7 +47,7 @@ h1 {
   left: 750px;
   width: 650px;
   height: 850px;
-  background: #005000; /* #af3e3e29 */
+  background: #4a7c59; /* #af3e3e29 */
   border-radius: 15px;
   padding: 30px;
   display: flex;
@@ -153,4 +152,7 @@ button {
 }
 button:hover {
   background: rgba(74, 151, 130, 0.63); /* #4a9782a0 */
-}
+} 
+
+
+
