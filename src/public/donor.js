@@ -84,7 +84,7 @@ function validateForm() {
 
     // If all validations pass, show success message and redirect
     alert('Account created successfully!');
-    window.location.href = 'success.html';
+    window.location.href = 'profiledonor.html';
     return false; // Prevent default form submission
 }
 

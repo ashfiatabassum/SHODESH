@@ -12,7 +12,7 @@ body {
 .container {
   position: relative;
   width: 1440px;
-  min-height: 1024px;
+  min-height: 1350px; /* Increased container height */
   margin: 0 auto;
   background: url('images/donorbggg.png') no-repeat left top;
   background-size: 800px auto;
@@ -40,25 +40,27 @@ h1 {
   color: #AF3E3E;
 }
 
-/* Form card */
+/* Form card - INCREASED HEIGHT TO FIT ALL CONTENT WITHOUT SCROLL */
 .form-card {
   position: absolute;
   top: 108px;
   left: 750px;
   width: 650px;
-  height: 850px;
-  background: #4a7c59; /* #af3e3e29 */
+  height: 1200px; /* Increased significantly to fit all content */
+  background: #4a7c59;
   border-radius: 15px;
   padding: 30px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 15px;
+  /* Removed overflow-y: auto - no scroll needed */
 }
 
 /* Two column row */
 .row {
   display: flex;
   gap: 18px;
+  margin-bottom: 20px;
 }
 .half-width {
   flex: 1;
@@ -80,11 +82,11 @@ input[type="password"],
 input[type="tel"],
 select {
   width: 100%;
-  height: 65px;
-  background: white; /* #4a978242 */
+  height: 55px;
+  background: white;
   border: none;
   border-radius: 8px;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 400;
   text-align: center;
   outline-offset: 0;
@@ -99,7 +101,7 @@ select:focus {
 
 /* Placeholder text styling */
 input::placeholder {
-  font-size: 18px;
+  font-size: 16px;
   color: #666;
 }
 
@@ -107,6 +109,7 @@ input::placeholder {
 .date-input-wrapper {
   position: relative;
   width: 100%;
+  margin-bottom: 20px;
 }
 
 .date-input-wrapper input[type="date"] {
@@ -124,7 +127,7 @@ input::placeholder {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 20px;
+  font-size: 18px;
   color: #666;
   pointer-events: none;
   transition: opacity 0.3s;
@@ -137,22 +140,153 @@ input::placeholder {
 
 /* Button */
 button {
+  
   width: 320px;
-  height: 55px;
-  background: rgba(248, 248, 248, 0.5); /* #4a978280 */
+  height: 80px;
+  background: rgba(248, 248, 248, 0.5);
   border: none;
   border-radius: 50px;
-  font-size: 20px;
-  font-weight: 500;
-  color: black;
+  font-size: 18px;
+  font-weight: 800;
+  color: white;
   cursor: pointer;
   transition: background-color 0.3s;
   align-self: flex-end;
-  margin-top: 10px;
+  margin-top: 15px;
 }
 button:hover {
-  background: rgba(74, 151, 130, 0.63); /* #4a9782a0 */
+  background: rgba(74, 151, 130, 0.63);
 } 
 
+/* Label styling for donor form */
+.field-label {
+  position: relative;
+  top: -5px;
+  left: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+  font-family: "Roboto", sans-serif;
+  background: transparent;
+  margin-bottom: 6px;
+  display: block;
+  z-index: 1;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
 
+/* Red asterisk styling */
+.required {
+  color: #ff0000;
+  font-weight: bold;
+  margin-left: 3px;
+  font-size: 15px;
+}
 
+/* Input field containers with proper spacing */
+.input-container {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.input-container input,
+.input-container select {
+  margin-top: 3px;
+}
+
+/* Date input wrapper adjustments */
+.date-input-wrapper .field-label {
+  margin-bottom: 6px;
+}
+
+.date-input-wrapper .date-placeholder {
+  display: none;
+}
+
+/* Row container adjustments */
+.row .input-container {
+  margin-bottom: 0;
+}
+
+/* Half width input containers in rows */
+.input-container.half-width {
+  flex: 1;
+}
+
+/* Country code and phone number containers */
+.input-container.country-code {
+  flex: 0 0 160px;
+  margin-right: 15px;
+}
+
+.input-container.phone-number {
+  flex: 1;
+}
+
+/* Division field styling with label */
+.division-field {
+  display: none;
+  margin-bottom: 20px;
+}
+
+.division-field.show {
+  display: block;
+}
+
+.division-field .field-label {
+  margin-bottom: 6px;
+}
+
+.division-field select {
+  margin-top: 3px;
+  height: 55px; /* Match other selects */
+}
+
+/* Form spacing adjustments */
+.form-card > *:not(.row):not(.input-container):not(.date-input-wrapper):not(.division-field) {
+  margin-bottom: 20px;
+}
+
+/* Button spacing */
+#createAccountBtn {
+  margin-top: 10px;
+}
+
+/* Responsive adjustments for labels */
+@media (max-width: 768px) {
+  .container {
+    min-height: 1400px; /* Increased for mobile */
+  }
+  
+  .field-label {
+    font-size: 13px;
+  }
+  
+  .form-card {
+    left: 20px;
+    width: calc(100% - 40px);
+    height: auto;
+    min-height: 1250px; /* Increased min-height for mobile */
+  }
+  
+  .input-container.half-width {
+    flex: 1;
+  }
+  
+  .input-container.country-code {
+    flex: 0 0 120px;
+  }
+  
+  .input-container.phone-number {
+    flex: 1;
+  }
+  
+  input[type="text"],
+  input[type="email"],
+  input[type="date"],
+  input[type="password"],
+  input[type="tel"],
+  select {
+    height: 50px; /* Smaller on mobile */
+    font-size: 16px;
+  }
+}
