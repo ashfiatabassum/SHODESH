@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const mysql = require('mysql2');
+const db = require('./config/db');
 
 const app = express();
 
@@ -11,22 +11,6 @@ app.use(express.json());
 const publicPath = path.join(__dirname, 'public');
 app.use(express.static(publicPath));
 console.log('📁 Static files served from:', publicPath);
-
-// ✅ Connect to MySQL
-const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '', // Change if needed
-  database: 'shodesh'
-});
-
-db.connect(err => {
-  if (err) {
-    console.error('❌ MySQL connection failed:', err);
-    return;
-  }
-  console.log('✅ Connected to MySQL');
-});
 
 // ✅ API: Handle donations
 app.post('/donate', (req, res) => {
