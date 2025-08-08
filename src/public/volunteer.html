@@ -30,10 +30,14 @@
     <a href="search.html">Search</a>
     <a href="browse.html">Categories</a>
     <a href="signin.html">Sign In</a>
-    <a href="volunteer.html">Join Our Team</a>
+    <a href="volunteer.html" class="volunteer-link">Join Our Team</a>
   </div>
 </div>
 <style>
+    .nav-links a.active {
+    color: #d32f2f !important; /* Red color for active */
+    text-decoration: underline;
+  }
   .nav-links a, .nav-links button {
     color: #176b3a;
     text-decoration: none;
@@ -195,5 +199,12 @@
     </footer>
 
     <script src="volunteer.js"></script>
+    <script>
+      if (
+    window.location.pathname.endsWith("volunteer.html")
+  ) {
+    document.querySelector('.volunteer-link').classList.add('active');
+  }
+    </script>
   </body>
 </html>

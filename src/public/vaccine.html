@@ -82,7 +82,7 @@
     <a href="about.html" class="about-link">About</a>
     <a href="#">Gallery</a>
     <a href="#">Contact</a>
-    <a href="resources.html">Resources</a>
+    <a href="resources.html" class="resources-link">Resources</a>
     <a href="search.html">Search</a>
     <a href="browse.html">Categories</a>
     <a href="signin.html">Sign In</a>
@@ -110,6 +110,11 @@
     text-decoration: underline;
     background: none;
     box-shadow: none;
+  }
+ 
+  .nav-links a.active {
+    color: #d32f2f !important; /* Red color for active */
+    text-decoration: underline;
   }
 </style>
     <div class="vaccine-title">VACCINE INFORMATIONS</div>
@@ -284,6 +289,14 @@
         <li>🛠️ Adjust or add outreach dates if coverage targets are not met.</li>
       </ul>
     </div>
+    <script>
+  // Highlight Resources link only on resources page
+  if (
+    window.location.pathname.endsWith("resources.html")
+  ) {
+    document.querySelector('.resources-link').classList.add('active');
+  }
+</script>
     <footer class="resources-footer">
       <div class="container">
         <p>&copy; 2025 Shodesh. Keeping Bangladesh safe and connected.</p>

@@ -25,12 +25,16 @@
     <a href="#">Contact</a>
     <a href="resources.html">Resources</a>
     <a href="search.html">Search</a>
-    <a href="browse.html">Categories</a>
+    <a href="browse.html" class="categories-link">Categories</a>
     <a href="signin.html">Sign In</a>
     <a href="volunteer.html">Join Our Team</a>
   </div>
 </div>
 <style>
+     .nav-links a.active {
+    color: #d32f2f !important; /* Red color for active */
+    text-decoration: underline;
+  }
   .nav-links a, .nav-links button {
     color: #176b3a;
     text-decoration: none;
@@ -63,7 +67,14 @@
             </div>
         </div>
     </header>
-
+    <script>
+ // Highlight Categories link only on browse page
+  if (
+    window.location.pathname.endsWith("browse.html")
+  ) {
+    document.querySelector('.categories-link').classList.add('active');
+  }
+</script>
     <!-- Categories Section -->
     <main class="categories-section">
         <div class="container">

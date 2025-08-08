@@ -94,6 +94,10 @@
     box-shadow: none;
     display: inline;
   }
+    .nav-links a.active {
+    color: #d32f2f !important; /* Red color for active */
+    text-decoration: underline;
+  }
   .nav-links a:hover, .nav-links button:hover {
     color: #219150;
     text-decoration: underline;
@@ -116,7 +120,7 @@
     <a href="about.html" class="about-link">About</a>
     <a href="#">Gallery</a>
     <a href="#">Contact</a>
-    <a href="resources.html">Resources</a>
+    <a href="resources.html" class="resources-link">Resources</a>
     <a href="search.html">Search</a>
     <a href="browse.html">Categories</a>
     <a href="signin.html">Sign In</a>
@@ -156,6 +160,12 @@
         container.appendChild(card);
       });
     });
+     // Highlight Resources link only on resources page
+  if (
+    window.location.pathname.endsWith("resources.html")
+  ) {
+    document.querySelector('.resources-link').classList.add('active');
+  }
     // ...existing code...
   </script>
 </body>

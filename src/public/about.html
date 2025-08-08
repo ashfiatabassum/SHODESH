@@ -55,6 +55,10 @@
     background: none;
     box-shadow: none;
   }
+  .nav-links a.active {
+    color: #d32f2f !important; /* Red color for active */
+    text-decoration: underline;
+  }
     </style>
   </head>
   <body>
@@ -67,7 +71,7 @@
   <div class="logo"><strong>SHODESH</strong></div>
   <div class="nav-links">
     <a href="index.html">Home</a>
-    <a href="about.html" class="about-link">About</a>
+     <a href="about.html" class="about-link">About</a>
     <a href="#">Gallery</a>
     <a href="#">Contact</a>
     <a href="resources.html">Resources</a>
@@ -136,7 +140,14 @@
       <img src="images/shodesh2.png" alt="Shodesh Banner 2">
       <img src="images/shodesh3.png" alt="Shodesh Banner 3">
     </div>
-
+<script>
+  // Highlight About link only on about page
+  if (
+    window.location.pathname.endsWith("about.html")
+  ) {
+    document.querySelector('.about-link').classList.add('active');
+  }
+</script>
     <!-- Footer with volunteer page graphics -->
     <footer class="volunteer-footer">
       <div class="container">

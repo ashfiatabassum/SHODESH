@@ -182,7 +182,7 @@
    <div class="navbar">
   <div class="logo"><strong>SHODESH</strong></div>
   <div class="nav-links">
-    <a href="index.html">Home</a>
+   <a href="index.html" class="home-link">Home</a>
     <a href="about.html" class="about-link">About</a>
     <a href="#">Gallery</a>
     <a href="#">Contact</a>
@@ -254,7 +254,10 @@
   </div>
 </footer>
 <style>
-
+.nav-links a.active {
+    color: #d32f2f !important; /* Red color for active Home */
+    text-decoration: underline;
+  }
 
       .photo-grid {
         position: relative;
@@ -459,3 +462,13 @@
     width: 100%;
   }
     </style>  
+    <script>
+  // Highlight Home link only on homepage
+  if (
+    window.location.pathname.endsWith("index.html") ||
+    window.location.pathname === "/" ||
+    window.location.pathname === "/SHODESH/" // adjust if your homepage is at a subfolder
+  ) {
+    document.querySelector('.home-link').classList.add('active');
+  }
+</script>
