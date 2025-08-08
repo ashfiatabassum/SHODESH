@@ -7,6 +7,21 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="style.css" />
     <style>
+        .jumping-banner {
+    display: block;
+    margin: 0 auto;
+     width: 50%; 
+    animation: jump 1s infinite;
+}
+
+@keyframes jump {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-15px);
+    }
+}
       body {
         background: #f5f9f3;
         font-family: 'Roboto', Arial, sans-serif;
@@ -182,7 +197,15 @@
       <h1>Contact Us</h1>
       <p>Have questions or need help? Reach out to us or check our FAQs below!</p>
     </div>
+    <!-- One line space -->
+<br>
+<br>
+<section class="faq-banner">
+    <img src="images/numbers.png" alt="Number Banner" class="jumping-banner">
+</section>
 
+<!-- One line space -->
+<br>
     <section class="faq-section">
       <div class="faq-title">Frequently Asked Questions</div>
       <ul class="faq-list">
