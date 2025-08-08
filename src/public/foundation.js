@@ -95,7 +95,7 @@ function validateForm(event) {
   
   // If all validations pass, redirect to success page
   alert('Registration successful! All information is valid.');
-  window.location.href = 'success.html';
+  window.location.href = 'profilefoundation.html';
   return false; // Prevent actual form submission
 }
 
