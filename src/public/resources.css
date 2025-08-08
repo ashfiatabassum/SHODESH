@@ -302,4 +302,75 @@
   .notes-section {
     padding: 25px;
   }
+  /* ─── append to resources.css ─── */
+
+.blood-btn-container {
+  text-align: center;
+  margin: 40px 0;
+}
+
+.blood-btn {
+  background: #c0392b;
+  color: white;
+  border: none;
+  padding: 15px 30px;          /* same as .save-all-btn */
+  font-size: 1.2rem;           /* bump up for parity */
+  font-weight: 700;
+  border-radius: 25px;         /* same pill-shape */
+  cursor: pointer;
+  transition: background 0.3s, transform 0.3s;
+  display: inline-block;
+  min-width: 200px;            /* ensure “big” width */
+}
+
+.blood-btn:hover {
+  background: #a93226;
+  transform: translateY(-2px);
+}
+/* ─── Additional Resources Section Styling ─── */
+.blood-btn-container {
+  background: #c0392b;       /* deep red background */
+  color: #8e3232;               /* white text */
+  text-align: center;        /* center all text */
+  padding: 40px 20px;        /* breathing room */
+  border-radius: 25px;       /* rounded corners */
+  margin: 60px auto;         /* space above/below */
+  max-width: 800px;          /* optional width constraint */
+}
+
+.blood-btn-container h2 {
+  font-size: 2rem;
+  font-weight: 900;
+  margin-bottom: 0.5em;
+}
+
+.blood-btn-container p {
+  font-size: 1.1rem;
+  margin: 0 0 1.5em;
+  line-height: 1.4;
+}
+
+/* Big white-on-red pill button */
+.blood-btn-container .blood-btn {
+  background: #fff;          /* white fill */
+  color: #c0392b;            /* match red text */
+  padding: 20px 40px;        /* double size */
+  font-size: 2rem;           /* twice base */
+  font-weight: 900;          /* bold */
+  border: none;
+  border-radius: 50px;       /* pill shape */
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s, color 0.3s;
+  display: inline-block;     /* shrink to content */
+  min-width: 550px;          /* ensure a “big” button */
+  text-align: center;
+}
+
+.blood-btn-container .blood-btn:hover {
+  background: #add0bd;       /* light hover */
+  color: #cb483c;            /* darker red text */
+  transform: translateY(-4px);
+}
+
+
 }

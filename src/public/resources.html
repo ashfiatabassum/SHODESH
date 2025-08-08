@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="resources.css" />
   </head>
+  
   <body>
     <div class="top-bar">
       <div>MAIL: contact@shodesh.org</div>
@@ -21,10 +22,10 @@
       <div class="logo"><strong>SHODESH</strong></div>
       <div class="nav-links">
         <a href="index.html">Home</a>
-        <a href="#">About</a>
-        <a href="#">Projects</a>
+        <a href="about.html" class="about-link">About</a>
+       
         <a href="#">Gallery</a>
-        <a href="#">News</a>
+       
         <a href="#">Contact</a>
         <a href="resources.html">Resources</a>
         <a href="search.html">Search</a>
@@ -186,18 +187,40 @@
       </div>
     </div>
 
-    <footer class="resources-footer">
-      <div class="container">
-        <p>&copy; 2025 Shodesh. Keeping Bangladesh safe and connected.</p>
-        <p>
-          <small
-            >Emergency numbers sourced from official Bangladesh government
-            resources</small
-          >
-        </p>
-      </div>
-    </footer>
 
-    <script src="resources.js"></script>
-  </body>
+  
+     <!-- ...existing code above... -->
+<div class="emergency-section additional-resources-section">
+  <h2>Additional Resources</h2>
+  <div class="quick-save-card">
+    <p>
+      Find active blood banks and future vaccine provision timetables and locations near you
+    </p>
+    <a href="blood.html">
+      <button class="save-all-btn" style="width:100%; margin-bottom:16px;">
+        BLOOD BANK INFORMATION
+      </button>
+    </a>
+    <a href="vaccine.html">
+      <button class="save-all-btn" style="width:100%;">
+        VACCINE TIMETABLE
+      </button>
+       </a>
+  </div>
+</div>
+
+<footer class="resources-footer">
+  <div class="container">
+    <p>&copy; 2025 Shodesh. Keeping Bangladesh safe and connected.</p>
+    <p>
+      <small
+        >Emergency numbers sourced from official Bangladesh government
+        resources</small
+      >
+    </p>
+  </div>
+</footer>
+<!-- ...existing code below... -->
+
+</body>
 </html>

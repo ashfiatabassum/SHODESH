@@ -16,7 +16,7 @@ console.log('📁 Static files served from:', publicPath);
 const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: 'mirpurdohs832', // Change if needed
+  password: '', // Change if needed
   database: 'shodesh'
 });
 

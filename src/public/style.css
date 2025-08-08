@@ -37,6 +37,14 @@ body {
   color: #1a3c2f;
   outline: none;
 }
+/* ...existing code... */
+.nav-links a[href="#about"]:hover,
+.nav-links a.about-link:hover {
+  color: #219150;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+/* ...existing code... */
 .nav-links a:hover {
   color: #4a7c59;
 }
