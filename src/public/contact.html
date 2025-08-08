@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Contact Us - SHODESH</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      body {
+        background: #f5f9f3;
+        font-family: 'Roboto', Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+      .navbar {
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(34,60,80,0.06);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 32px;
+      }
+      .logo {
+        font-size: 2rem;
+        color: #176b3a;
+        font-weight: 900;
+        letter-spacing: 2px;
+        padding: 16px 0;
+      }
+      .nav-links a, .nav-links button {
+        color: #176b3a;
+        text-decoration: none;
+        margin: 0 12px;
+        font-weight: 600;
+        font-size: 1.05rem;
+        background: none;
+        border: none;
+        cursor: pointer;
+        transition: color 0.2s;
+        border-radius: 0;
+        padding: 0;
+        box-shadow: none;
+        display: inline;
+      }
+      .nav-links a.active {
+        color: #d32f2f !important;
+        text-decoration: underline;
+      }
+      .nav-links a:hover, .nav-links button:hover {
+        color: #219150;
+        text-decoration: underline;
+        background: none;
+        box-shadow: none;
+      }
+      .contact-hero {
+        background: #e0ebd5 
+        padding: 48px 0 24px 0;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .contact-hero h1 {
+        color: #176b3a;
+        font-size: 2.6rem;
+        font-weight: 900;
+        margin-bottom: 12px;
+        letter-spacing: 1px;
+        animation: fadeInDown 1s cubic-bezier(.4,2,.6,1);
+      }
+      .contact-hero p {
+        color: #333;
+        font-size: 1.2rem;
+        margin-bottom: 0;
+        animation: fadeInUp 1.2s cubic-bezier(.4,2,.6,1);
+      }
+      .contact-graphic {
+        width: 300px; /* Increased from 120px to make bigger */
+        margin: 24px auto 0 auto;
+        display: block;
+        animation: jumpIn 1.1s cubic-bezier(.4,2,.6,1);
+      }
+      @keyframes fadeInDown {
+        0% { opacity: 0; transform: translateY(-40px);}
+        100% { opacity: 1; transform: translateY(0);}
+      }
+      @keyframes fadeInUp {
+        0% { opacity: 0; transform: translateY(40px);}
+        100% { opacity: 1; transform: translateY(0);}
+      }
+      @keyframes jumpIn {
+        0% { opacity: 0; transform: translateY(80px) scale(0.96);}
+        60% { opacity: 1; transform: translateY(-18px) scale(1.05);}
+        80% { transform: translateY(6px) scale(0.98);}
+        100% { opacity: 1; transform: translateY(0) scale(1);}
+      }
+      .faq-section {
+        background: #e0ebd5;
+        border-radius: 18px;
+        box-shadow: 0 4px 24px rgba(34,60,80,0.10);
+        max-width: 900px;
+        margin: 48px auto 32px auto;
+        padding: 36px 28px 28px 28px;
+        animation: jumpIn 1.2s cubic-bezier(.4,2,.6,1);
+        position: relative;
+      }
+      .faq-title {
+        color: #176b3a;
+        font-size: 2rem;
+        font-weight: 900;
+        text-align: center;
+        margin-bottom: 28px;
+        letter-spacing: 1px;
+      }
+      .faq-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .faq-item {
+        margin-bottom: 24px;
+        border-left: 4px solid #219150;
+        background: #f5f9f3;
+        border-radius: 8px;
+        padding: 18px 18px 12px 18px;
+        box-shadow: 0 2px 8px rgba(34,60,80,0.06);
+        animation: fadeInUp 0.7s cubic-bezier(.4,2,.6,1);
+      }
+      .faq-q {
+        color: #176b3a;
+        font-weight: 700;
+        font-size: 1.13rem;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+      }
+      .faq-q i {
+        color: #219150;
+        margin-right: 10px;
+        font-size: 1.2rem;
+      }
+      .faq-a {
+        color: #333;
+        font-size: 1rem;
+        margin-left: 28px;
+      }
+      @media (max-width: 700px) {
+        .faq-section {
+          padding: 18px 4vw 18px 4vw;
+        }
+        .faq-title {
+          font-size: 1.3rem;
+        }
+      }
+      .volunteer-footer {
+        background: #176b3a;
+        padding: 32px 0 18px 0;
+        margin-top: 0;
+        width: 100%;
+      }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  </head>
+  <body>
+    <div class="navbar">
+      <div class="logo"><strong>SHODESH</strong></div>
+      <div class="nav-links">
+        <a href="index.html" class="home-link">Home</a>
+        <a href="about.html" class="about-link">About</a>
+        <a href="#">Gallery</a>
+        <a href="contact.html" class="contact-link">Contact</a>
+        <a href="resources.html" class="resources-link">Resources</a>
+        <a href="search.html" class="search-link">Search</a>
+        <a href="browse.html" class="categories-link">Categories</a>
+        <a href="signin.html">Sign In</a>
+        <a href="volunteer.html" class="volunteer-link">Join Our Team</a>
+      </div>
+    </div>
+
+    <div class="contact-hero">
+      <img src="images/contact-graphic.gif" alt="Contact Graphic" class="contact-graphic"/>
+      <h1>Contact Us</h1>
+      <p>Have questions or need help? Reach out to us or check our FAQs below!</p>
+    </div>
+
+    <section class="faq-section">
+      <div class="faq-title">Frequently Asked Questions</div>
+      <ul class="faq-list">
+        <li class="faq-item">
+          <div class="faq-q"><i class="fas fa-question-circle"></i>What is SHODESH?</div>
+          <div class="faq-a">SHODESH is a web-based donation management platform connecting donors, staff, foundations, and individuals in need to create a transparent, trackable, and trustworthy donation ecosystem in Bangladesh.</div>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q"><i class="fas fa-question-circle"></i>How do I donate to a campaign?</div>
+          <div class="faq-a">You can donate by clicking the "Donate Now" button on the homepage or by browsing and selecting a campaign from the Categories or Search pages.</div>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q"><i class="fas fa-question-circle"></i>Is my donation secure?</div>
+          <div class="faq-a">Yes, all donations are processed through secure payment gateways and are tracked for transparency.</div>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q"><i class="fas fa-question-circle"></i>How can I track my donation?</div>
+          <div class="faq-a">After donating, you will receive a confirmation and can track your donation status through your account dashboard.</div>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q"><i class="fas fa-question-circle"></i>Who can start a fundraising campaign?</div>
+          <div class="faq-a">Anyone can start a campaign by signing up and submitting their cause for review and approval by the SHODESH team.</div>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q"><i class="fas fa-question-circle"></i>How do I join the SHODESH team as a volunteer?</div>
+          <div class="faq-a">Click on the "Join Our Team" link in the header and fill out the volunteer application form.</div>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q"><i class="fas fa-question-circle"></i>Can I donate anonymously?</div>
+          <div class="faq-a">Yes, you can choose to hide your name when making a donation.</div>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q"><i class="fas fa-question-circle"></i>How does SHODESH ensure transparency?</div>
+          <div class="faq-a">Every donation is tracked and verified, and regular updates are provided to donors and beneficiaries.</div>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q"><i class="fas fa-question-circle"></i>What types of causes can I support?</div>
+          <div class="faq-a">You can support health, education, livelihood, animal welfare, and many other causes across Bangladesh.</div>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q"><i class="fas fa-question-circle"></i>How do I contact SHODESH for support?</div>
+          <div class="faq-a">You can reach us through this Contact page, email us at contact@shodesh.org, or call +880 1712 345 678.</div>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q"><i class="fas fa-question-circle"></i>Are there any fees for using SHODESH?</div>
+          <div class="faq-a">SHODESH does not charge donors any fees. A small processing fee may be deducted by payment gateways.</div>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q"><i class="fas fa-question-circle"></i>How do I report a suspicious campaign?</div>
+          <div class="faq-a">If you notice any suspicious activity, please report it immediately using the "Report" button on the campaign page or contact us directly.</div>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q"><i class="fas fa-question-circle"></i>Can I edit or delete my campaign after publishing?</div>
+          <div class="faq-a">Yes, you can edit your campaign details or request deletion by contacting our support team.</div>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q"><i class="fas fa-question-circle"></i>How do I receive funds if I am a beneficiary?</div>
+          <div class="faq-a">Once your campaign is approved and donations are collected, funds will be transferred to your verified bank account or mobile wallet.</div>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q"><i class="fas fa-question-circle"></i>What should I do if I forgot my password?</div>
+          <div class="faq-a">Use the "Forgot Password" link on the Sign In page to reset your password.</div>
+        </li>
+      </ul>
+    </section>
+
+    <footer class="volunteer-footer">
+      <div class="container" style="text-align:center;">
+        <p style="margin:0; color:#fff;">&copy; 2025 Shodesh. Building a better Bangladesh together.</p>
+      </div>
+    </footer>
+
+    <script>
+      // Highlight Contact link only on contact page
+      if (
+        window.location.pathname.endsWith("contact.html")
+      ) {
+        document.querySelector('.contact-link').classList.add('active');
+      }
+    </script>
+  </body>
+</html>
