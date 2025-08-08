@@ -9,50 +9,59 @@
 <body>
   <div class="desktop">
     <div class="div">
-      <div class="let-s-get-you">LET’S GET YOU STARTED</div>
+      <div class="let-s-get-you">LET'S GET YOU STARTED</div>
       <div class="overlap-group">
         <!-- Name fields in a row -->
         <div class="name-row">
           <div class="overlap">
+            <label for="firstName" class="field-label">First Name <span class="required">*</span></label>
             <input type="text" id="firstName" placeholder="First Name" required />
           </div>
           <div class="overlap-5">
+            <label for="lastName" class="field-label">Last Name <span class="required">*</span></label>
             <input type="text" id="lastName" placeholder="Last Name" required />
           </div>
         </div>
         
         <!-- Email field -->
         <div class="overlap-2">
-          <input type="email" id="email" placeholder="Email Address" required />
+          <label for="email" class="field-label">Email Address <span class="required">*</span></label>
+          <input type="email" id="email" placeholder="example@email.com" required />
         </div>
         
         <!-- Phone/NID field -->
         <div class="phone-number-NID-wrapper">
-          <input type="text" id="phoneNID" placeholder="Phone Number / NID" required />
+          <label for="phoneNID" class="field-label">Phone Number / NID <span class="required">*</span></label>
+          <input type="text" id="phoneNID" placeholder="Phone Number or NID" required />
         </div>
         
         <!-- Date of birth field -->
         <div class="date-of-birth-wrapper">
-          <input type="date" id="dateOfBirth" placeholder="Date of Birth" required />
+          <label for="dateOfBirth" class="field-label">Date of Birth <span class="required">*</span></label>
+          <input type="date" id="dateOfBirth" required />
         </div>
         
         <!-- Address fields in a row -->
         <div class="address-row">
           <div class="overlap-3">
-            <input type="text" id="houseNo" placeholder="House No" required />
+            <label for="houseNo" class="field-label">House No. <span class="required">*</span></label>
+            <input type="text" id="houseNo" placeholder="House/Building No." required />
           </div>
           <div class="road-no-wrapper">
-            <input type="text" id="roadNo" placeholder="Road No" required />
+            <label for="roadNo" class="field-label">Road No. <span class="required">*</span></label>
+            <input type="text" id="roadNo" placeholder="Road/Street No." required />
           </div>
         </div>
         
         <!-- Area field -->
         <div class="overlap-4">
-          <input type="text" id="area" placeholder="Area" required />
+          <label for="area" class="field-label">Area <span class="required">*</span></label>
+          <input type="text" id="area" placeholder="Area/Locality" required />
         </div>
         
         <!-- District field -->
         <div class="div-wrapper">
+          <label for="district" class="field-label">District <span class="required">*</span></label>
           <select id="district" required>
             <option value="" disabled selected>Select District</option>
             <option>Bagerhat</option>
@@ -124,6 +133,7 @@
         
         <!-- Division field -->
         <div class="administrative-wrapper">
+          <label for="division" class="field-label">Division <span class="required">*</span></label>
           <select id="division" required>
             <option value="" disabled selected>Select Division</option>
             <option>Barisal</option>
@@ -139,25 +149,30 @@
         
         <!-- ZIP Code field -->
         <div class="zip-code-wrapper">
-          <input type="text" id="zipCode" placeholder="ZIP Code" required pattern="[0-9]+" title="Please enter only digits" />
+          <label for="zipCode" class="field-label">ZIP Code <span class="required">*</span></label>
+          <input type="text" id="zipCode" placeholder="Postal Code (e.g., 1000)" required pattern="[0-9]+" title="Please enter only digits" />
         </div>
         
         <!-- Bkash Number field -->
         <div class="bkash-number-wrapper">
-          <input type="text" id="bkashNumber" placeholder="Bkash Number" required pattern="[0-9]+" title="Please enter only digits" />
+          <label for="bkashNumber" class="field-label">Bkash Number <span class="required">*</span></label>
+          <input type="text" id="bkashNumber" placeholder="01XXXXXXXXX" required pattern="[0-9]+" title="Please enter only digits" />
         </div>
         
         <!-- Bank Account field -->
         <div class="bank-account-wrapper">
-          <input type="text" id="bankAccount" placeholder="Bank Account" required />
+          <label for="bankAccount" class="field-label">Bank Account <span class="required">*</span></label>
+          <input type="text" id="bankAccount" placeholder="Bank Account Number" required />
         </div>
         
         <!-- Password fields -->
         <div class="password-wrapper">
-          <input type="password" id="password" placeholder="Password" required minlength="6" />
+          <label for="password" class="field-label">Password <span class="required">*</span></label>
+          <input type="password" id="password" placeholder="Minimum 6 characters" required minlength="6" />
         </div>
         <div class="confirm-password-wrapper">
-          <input type="password" id="confirmPassword" placeholder="Confirm Password" required minlength="6" />
+          <label for="confirmPassword" class="field-label">Confirm Password <span class="required">*</span></label>
+          <input type="password" id="confirmPassword" placeholder="Re-enter your password" required minlength="6" />
         </div>
         
         <!-- Submit button -->

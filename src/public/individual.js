@@ -88,7 +88,7 @@ function validateAndSubmit() {
     // If all validations pass, show success message and redirect
     showSuccessAlert('Account created successfully!');
     setTimeout(() => {
-        window.location.href = 'success.html';
+        window.location.href = 'profileindividual.html';
     }, 1500);
     return false;
 }

@@ -12,6 +12,124 @@ const emergencyNumbers = [
   { name: "Mobile Complaints", number: "158", description: "Mobile complaints" },
   { name: "Coast Guard Emergency", number: "151", description: "Maritime emergencies" }
 ];
+// >>> in resources.js, right after the emergencyNumbers definition <<<
+
+
+const bloodBankNumbers = [
+  {
+    name: "Bangladesh Red Crescent Blood Bank",
+    address: "7/5 Aurongzeb Road, Mohammadpur, Dhaka",
+
+    number: "02-223310368"
+  },
+  {
+    name: "Holy Family Red Crescent Blood Center",
+    address: "1st Floor, Out-Door, 1 Eskaton Garden Road, Dhaka",
+
+    number: "01811458536"
+  },
+  {
+    name: "Chattogram Fatema Begum Red Crescent Blood Center",
+    address: "395 Anderkilla, Chattogram",
+    number: "031620926"
+  },
+  {
+    name: "Jashore Ahad Red Crescent Blood Center",
+    address: "Munshi Mehabullah Road, Jashore",
+    number: "042168882"
+  },
+  {
+    name: "Dinajpur Begum Tayeeba Mojumder Red Crescent Blood Center",
+    address: "1 New Town, Dinajpur",
+    number: "053161300"
+  },
+  {
+    name: "Chittagong Medical College Hospital Blood Bank",
+    address: "Chittagong Medical College Hospital, Chattogram",
+    number: "061612251"
+  },
+  {
+    name: "New Bangladesh Pathology & Blood Bank",
+    address: "House # 69, Road # 9/A, Dhanmondi R/A, Dhaka-1209",
+    number: "01715546807"
+  },
+  {
+    name: "Islami Bank Hospital Blood Bank",
+    address: "Islami Bank Hospital, Dhaka",
+    number: "028317090"
+  },
+  {
+    name: "Police Blood Bank",
+    address: "Central Police Hospital, Rajarbag, Dhaka",
+    number: "01713398386"
+  },
+  {
+    name: "Oriental Blood Bank",
+    address: "Green Center, 2B/30 Green Road, Dhanmondi, Dhaka",
+    number: "01812700053"
+  },
+  {
+    name: "Mukti Blood Bank & Pathology Lab",
+    address: "54 (1st Floor), Bir-Uttam A.M. Shafiullah Road, Free School St., Dhaka-1207",
+    number: "028624249"
+  },
+  {
+    name: "Thalassemia Blood Bank",
+    address: "30 Chamelibag, 1st Lane, Shantinagar, Dhaka-1219",
+    number: "028332481"
+  },
+  {
+    name: "Badhan Blood Bank",
+    address: "TSC (Ground Floor), University of Dhaka, Dhaka-1000",
+    number: "028629042"
+  },
+  {
+    name: "Alif Blood Bank & Transfusion Center",
+    address: "44/11 West Panthapath (2nd Fl.), Opp. Shamrita Hospital, Dhaka-1215",
+    number: "01712392923"
+  },
+  {
+    name: "Maliha Blood Bank",
+    address: "2/13 Humayan Road, Mohammadpur, Dhaka",
+    number: "01736989326"
+  },
+  {
+    name: "Quantum Blood Bank",
+    address: "(Branch in Asulia) — Quantum Lab, Asulia Highway, Turag, Dhaka",
+    number: "029355756"
+  },
+  {
+    name: "Ibn Sina Diagnostic & Consultation Center",
+    address: "52 Garib-E-Newaz Avenue, Sector-13, Uttara, Dhaka",
+    number: "028953932"
+  },
+  {
+    name: "Famous Blood Bank & Diagnostic Centre",
+    address: "1/9 Humayan Road, College Gate, Dhaka",
+    number: "029144835"
+  },
+  {
+    name: "Sandhani, Dhaka Medical College Branch",
+    address: "Room 35, Tinshed Out-Door Building, BSMMU, Shahbag, Dhaka-1000",
+    number: "029668609"
+  },
+  {
+    name: "Sandhani, Dhaka Dental College Branch",
+    address: "Dhaka Dental College Campus, Dhaka",
+    number: "09011887"
+  },
+  {
+    name: "Sir Salimullah College Blood Bank",
+    address: "Sir Salimullah College, Dhaka",
+    number: "07319123"
+  },
+  {
+    name: "Thalassemia Foundation Hospital",
+    address: "Khulna (Thalassemia Foundation Hospital, Khulna)",
+    number: "028332481"
+  }
+];
+
 
 // Function to save all emergency numbers
 function saveAllNumbers() {
