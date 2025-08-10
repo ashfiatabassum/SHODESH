@@ -3,6 +3,7 @@ function validateAndSubmit() {
     // Get all form elements
     const firstName = document.getElementById('firstName').value.trim();
     const lastName = document.getElementById('lastName').value.trim();
+    const username = document.getElementById('username').value.trim();
     const email = document.getElementById('email').value.trim();
     const phoneNID = document.getElementById('phoneNID').value.trim();
     const dateOfBirth = document.getElementById('dateOfBirth').value;
@@ -18,12 +19,25 @@ function validateAndSubmit() {
     const confirmPassword = document.getElementById('confirmPassword').value;
 
     // Check if all fields are filled
-    if (!firstName || !lastName || !email || !phoneNID || !dateOfBirth || 
+    if (!firstName || !lastName || !email || !username || !phoneNID || !dateOfBirth || 
         !houseNo || !roadNo || !area || !district || !division || 
         !zipCode || !bkashNumber || !bankAccount || !password || !confirmPassword) {
         showErrorAlert('Please fill in all required fields.');
         return false;
     }
+      // Username validation
+  if (username.length < 4) {
+    alert('Username must be at least 4 characters long');
+    return;
+  }
+
+  // Username format validation (only letters, numbers, underscore, dot)
+  const usernamePattern = /^[a-zA-Z0-9._]+$/;
+  if (!usernamePattern.test(username)) {
+    alert('Username can only contain letters, numbers, dots, and underscores');
+    return;
+  }
+
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
