@@ -305,3 +305,12 @@ function showMap() {
   }
 }
 // ...existing code...
+
+// ...existing code...
+
+// Go to home page
+function goHome() {
+  window.location.href = 'index.html';
+}
+
+// ...existing code...

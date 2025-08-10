@@ -251,3 +251,8 @@ function showMap() {
 }
 
 // ...existing code...
+
+// Go to home page
+function goHome() {
+  window.location.href = 'index.html';
+}

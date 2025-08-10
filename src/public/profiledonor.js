@@ -539,3 +539,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const cards = document.querySelectorAll('.info-card');
   cards.forEach(card => observer.observe(card));
 });
+
+// Go to home page
+function goHome() {
+  window.location.href = 'index.html';
+}
