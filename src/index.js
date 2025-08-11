@@ -1,16 +1,30 @@
 const express = require('express');
 const path = require('path');
+const session = require('express-session');
 const db = require('./config/db');
+
+// Import routes
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 
 // ✅ Middleware: Parse incoming JSON
 app.use(express.json());
 
+// ✅ Session middleware for admin authentication
+app.use(session({
+  secret: 'shodesh-admin-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false } // Set to true if using HTTPS
+}));
+
 // ✅ Serve static files from /src/public
 const publicPath = path.join(__dirname, 'public');
 app.use(express.static(publicPath));
 console.log('📁 Static files served from:', publicPath);
+// ✅ Routes
+app.use('/api/admin', adminRoutes);
 
 // ✅ API: Handle donations
 app.post('/donate', (req, res) => {
@@ -27,6 +41,35 @@ app.post('/donate', (req, res) => {
       return res.status(500).json({ message: 'Database error' });
     }
     res.json({ message: '✅ Donation recorded successfully!' });
+  });
+});
+
+// ✅ Admin authentication route
+app.post('/api/admin/login', (req, res) => {
+  const { username, password } = req.body;
+  
+  // Fixed admin credentials for frontend testing
+  if (username === 'admin' && password === '1234') {
+    req.session.adminToken = 'admin-authenticated';
+    res.json({ 
+      success: true, 
+      message: 'Admin login successful',
+      token: 'admin-authenticated'
+    });
+  } else {
+    res.status(401).json({ 
+      success: false, 
+      message: 'Invalid admin credentials' 
+    });
+  }
+});
+
+// ✅ Admin logout route
+app.post('/api/admin/logout', (req, res) => {
+  req.session.destroy();
+  res.json({ 
+    success: true, 
+    message: 'Admin logout successful' 
   });
 });
 
