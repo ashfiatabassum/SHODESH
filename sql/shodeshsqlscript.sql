@@ -115,10 +115,18 @@ CREATE TABLE DONOR(
   mobile VARCHAR(11) NOT NULL CHECK (mobile REGEXP '^0[0-9]{10}$'),
   email VARCHAR(100) NOT NULL CHECK (email REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}$'),
   country VARCHAR(30) NOT NULL CHECK (country REGEXP '^[A-Za-z ]+$'),
+  division VARCHAR(30) CHECK (division IN ('Barisal', 'Chittagong', 'Dhaka', 'Khulna', 'Mymensingh', 'Rajshahi', 'Rangpur', 'Sylhet')),
   DOB DATE NOT NULL,
-  CONSTRAINT DONOR_DONOR_ID_PK PRIMARY KEY (donor_id)
+  CONSTRAINT DONOR_DONOR_ID_PK PRIMARY KEY (donor_id),
+  CONSTRAINT DONOR_USERNAME_U UNIQUE (username),
+  CONSTRAINT DONOR_EMAIL_U UNIQUE (email),
+  CONSTRAINT DONOR_MOBILE_U UNIQUE (mobile),
+  CONSTRAINT DONOR_DIVISION_CHECK CHECK (
+    (country = 'Bangladesh' AND division IS NOT NULL) OR 
+    (country != 'Bangladesh' AND division IS NULL)
+  )
 );
-
+SELECT * FROM DONOR;
 CREATE TABLE EVENT_CREATION(
   creation_id VARCHAR(7) NOT NULL,
   photo BLOB,

@@ -5,6 +5,7 @@ const db = require('./config/db');
 
 // Import routes
 const adminRoutes = require('./routes/admin');
+const donorRoutes = require('./routes/donor');
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use(express.static(publicPath));
 console.log('📁 Static files served from:', publicPath);
 // ✅ Routes
 app.use('/api/admin', adminRoutes);
+app.use('/api/donor', donorRoutes);
 
 // ✅ API: Handle donations
 app.post('/donate', (req, res) => {
@@ -87,7 +89,7 @@ app.get('/', (req, res) => {
 });
 
 // ✅ Start server
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server is live at http://localhost:${PORT}`);
 });
