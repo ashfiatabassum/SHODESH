@@ -93,10 +93,55 @@ function validateForm(event) {
     return false;
   }
   
-  // If all validations pass, redirect to success page
-  alert('Registration successful! All information is valid.');
-  window.location.href = 'profilefoundation.html';
-  return false; // Prevent actual form submission
+  // If all validations pass, submit to backend
+  console.log('🚀 Sending foundation registration request...');
+  
+  // Prepare form data for file upload
+  const formData = new FormData();
+  formData.append('foundationName', document.getElementById('foundationName').value.trim());
+  formData.append('certificate', document.getElementById('certificate').files[0]);
+  formData.append('foundationLicense', document.getElementById('foundationLicense').value.trim());
+  formData.append('email', email);
+  formData.append('phone', phone);
+  formData.append('houseNo', document.getElementById('houseNo').value.trim());
+  formData.append('roadNo', document.getElementById('roadNo').value.trim());
+  formData.append('area', document.getElementById('area').value.trim());
+  formData.append('district', document.getElementById('district').value);
+  formData.append('division', document.getElementById('division').value);
+  formData.append('zipCode', zipCode);
+  formData.append('bkash', bkash);
+  formData.append('bankAccount', document.getElementById('bankAccount').value.trim());
+  formData.append('goalvision', document.getElementById('goalvision').value.trim());
+  formData.append('password', password);
+
+  // Send data to backend
+  fetch('/api/foundation/register', {
+    method: 'POST',
+    body: formData // Don't set Content-Type, let browser set it for FormData
+  })
+  .then(response => {
+    console.log('📡 Response status:', response.status);
+    return response.json();
+  })
+  .then(data => {
+    console.log('📋 Response data:', data);
+    if (data.success) {
+      alert('🎉 Foundation registration successful!\n\n' + 
+            'Your Foundation ID is: ' + data.foundationId + '\n\n' +
+            data.message + '\n\n' +
+            'Please save your Foundation ID for future reference.');
+      // Redirect to profile or success page
+      window.location.href = 'profilefoundation.html';
+    } else {
+      alert('❌ Registration failed: ' + data.message);
+    }
+  })
+  .catch(error => {
+    console.error('❌ Error:', error);
+    alert('❌ An error occurred during registration. Please try again.\n\nError: ' + error.message);
+  });
+
+  return false; // Prevent default form submission
 }
 
 // Add real-time validation feedback
