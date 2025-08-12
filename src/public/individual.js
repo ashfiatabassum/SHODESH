@@ -1,166 +1,14 @@
-// Comprehensive form validation and interactive features
-function validateAndSubmit() {
-    // Get all form elements
-    const firstName = document.getElementById('firstName').value.trim();
-    const lastName = document.getElementById('lastName').value.trim();
-    const username = document.getElementById('username').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const phoneNID = document.getElementById('phoneNID').value.trim();
-    const dateOfBirth = document.getElementById('dateOfBirth').value;
-    const houseNo = document.getElementById('houseNo').value.trim();
-    const roadNo = document.getElementById('roadNo').value.trim();
-    const area = document.getElementById('area').value.trim();
-    const district = document.getElementById('district').value;
-    const division = document.getElementById('division').value;
-    const zipCode = document.getElementById('zipCode').value.trim();
-    const bkashNumber = document.getElementById('bkashNumber').value.trim();
-    const bankAccount = document.getElementById('bankAccount').value.trim();
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
+// SHODESH Individual Registration - Modern JavaScript with Backend Integration
 
-    // Check if all fields are filled
-    if (!firstName || !lastName || !email || !username || !phoneNID || !dateOfBirth || 
-        !houseNo || !roadNo || !area || !district || !division || 
-        !zipCode || !bkashNumber || !bankAccount || !password || !confirmPassword) {
-        showErrorAlert('Please fill in all required fields.');
-        return false;
-    }
-      // Username validation
-  if (username.length < 4) {
-    alert('Username must be at least 4 characters long');
-    return;
-  }
-
-  // Username format validation (only letters, numbers, underscore, dot)
-  const usernamePattern = /^[a-zA-Z0-9._]+$/;
-  if (!usernamePattern.test(username)) {
-    alert('Username can only contain letters, numbers, dots, and underscores');
-    return;
-  }
-
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        showErrorAlert('Please enter a valid email address.');
-        return false;
-    }
-
-    // Validate ZIP code (digits only)
-    const zipRegex = /^[0-9]+$/;
-    if (!zipRegex.test(zipCode)) {
-        showErrorAlert('ZIP Code should contain only digits.');
-        return false;
-    }
-
-    if (zipCode.length < 4 || zipCode.length > 10) {
-        showErrorAlert('ZIP Code should be between 4 and 10 digits.');
-        return false;
-    }
-
-    // Validate Bkash number (digits only)
-    const bkashRegex = /^[0-9]+$/;
-    if (!bkashRegex.test(bkashNumber)) {
-        showErrorAlert('Bkash Number should contain only digits.');
-        return false;
-    }
-
-    if (bkashNumber.length < 10 || bkashNumber.length > 15) {
-        showErrorAlert('Bkash Number should be between 10 and 15 digits.');
-        return false;
-    }
-
-    // Check if passwords match
-    if (password !== confirmPassword) {
-        showErrorAlert('Passwords do not match. Please try again.');
-        return false;
-    }
-
-    // Check password strength (minimum 6 characters)
-    if (password.length < 6) {
-        showErrorAlert('Password must be at least 6 characters long.');
-        return false;
-    }
-
-    // Validate date of birth (should not be in future)
-    const today = new Date();
-    const dob = new Date(dateOfBirth);
-    if (dob >= today) {
-        showErrorAlert('Date of birth cannot be in the future.');
-        return false;
-    }
-
-    // Check if user is at least 13 years old
-    const age = today.getFullYear() - dob.getFullYear();
-    const monthDiff = today.getMonth() - dob.getMonth();
-    if (age < 13 || (age === 13 && monthDiff < 0) || 
-        (age === 13 && monthDiff === 0 && today.getDate() < dob.getDate())) {
-        showErrorAlert('You must be at least 13 years old to register.');
-        return false;
-    }
-
-    // If all validations pass, show success message and redirect
-    showSuccessAlert('Account created successfully!');
-    setTimeout(() => {
-        window.location.href = 'profileindividual.html';
-    }, 1500);
-    return false;
-}
-
-// Custom alert functions for better UX
-function showErrorAlert(message) {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = 'custom-alert error-alert';
-    alertDiv.innerHTML = `
-        <div class="alert-content">
-            <span class="alert-icon">❌</span>
-            <span class="alert-message">${message}</span>
-            <button class="alert-close" onclick="closeAlert(this)">×</button>
-        </div>
-    `;
-    document.body.appendChild(alertDiv);
-    
-    setTimeout(() => {
-        alertDiv.style.opacity = '1';
-        alertDiv.style.transform = 'translateY(0)';
-    }, 10);
-}
-
-function showSuccessAlert(message) {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = 'custom-alert success-alert';
-    alertDiv.innerHTML = `
-        <div class="alert-content">
-            <span class="alert-icon">✅</span>
-            <span class="alert-message">${message}</span>
-        </div>
-    `;
-    document.body.appendChild(alertDiv);
-    
-    setTimeout(() => {
-        alertDiv.style.opacity = '1';
-        alertDiv.style.transform = 'translateY(0)';
-    }, 10);
-}
-
-function closeAlert(button) {
-    const alert = button.closest('.custom-alert');
-    alert.style.opacity = '0';
-    alert.style.transform = 'translateY(-20px)';
-    setTimeout(() => {
-        alert.remove();
-    }, 300);
-}
-
-// Real-time validation and interactive features
+// Initialize districts when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    const zipInput = document.getElementById('zipCode');
-    const bkashInput = document.getElementById('bkashNumber');
-    const passwordInput = document.getElementById('password');
-    const confirmPasswordInput = document.getElementById('confirmPassword');
-    const emailInput = document.getElementById('email');
+    initializeDistricts();
+    initializeFormValidation();
+    initializePasswordToggle();
+});
 
-    // Populate district dropdown
+// Bangladesh districts array
+function initializeDistricts() {
     const districtSelect = document.getElementById('district');
     const districts = [
         'Bagerhat', 'Bandarban', 'Barguna', 'Barisal', 'Bhola', 'Bogra', 'Brahmanbaria',
@@ -175,70 +23,376 @@ document.addEventListener('DOMContentLoaded', function() {
         'Sunamganj', 'Sylhet', 'Tangail', 'Thakurgaon'
     ];
     
-    districtSelect.innerHTML = '<option value="" disabled selected>Select District</option>';
     districts.forEach(district => {
         const option = document.createElement('option');
         option.value = district;
         option.textContent = district;
         districtSelect.appendChild(option);
     });
+}
 
-    // ZIP code validation - only digits
-    if (zipInput) {
-        zipInput.addEventListener('input', function() {
-            this.value = this.value.replace(/[^0-9]/g, '');
-            validateField(this, /^[0-9]{4,10}$/, 'ZIP Code should be 4-10 digits');
-        });
+// Initialize real-time form validation
+function initializeFormValidation() {
+    // Phone number validation
+    const phoneInput = document.getElementById('phoneNumber');
+    phoneInput.addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+        validatePhoneNumber(this);
+    });
+
+    // NID validation
+    const nidInput = document.getElementById('nid');
+    nidInput.addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+        validateNID(this);
+    });
+
+    // ZIP code validation
+    const zipInput = document.getElementById('zipCode');
+    zipInput.addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+        validateZipCode(this);
+    });
+
+    // bKash number validation
+    const bkashInput = document.getElementById('bkashNumber');
+    bkashInput.addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+        validateBkashNumber(this);
+    });
+
+    // Email validation
+    const emailInput = document.getElementById('email');
+    emailInput.addEventListener('blur', function() {
+        validateEmail(this);
+    });
+
+    // Username validation
+    const usernameInput = document.getElementById('username');
+    usernameInput.addEventListener('blur', function() {
+        validateUsername(this);
+    });
+
+    // Password matching
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    
+    confirmPasswordInput.addEventListener('input', function() {
+        validatePasswordMatch(passwordInput, confirmPasswordInput);
+    });
+}
+
+// Password toggle functionality
+function initializePasswordToggle() {
+    // This function will be called by the onclick in HTML
+}
+
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    const button = field.parentElement.querySelector('.toggle-password i');
+    
+    if (field.type === 'password') {
+        field.type = 'text';
+        button.className = 'fas fa-eye-slash';
+    } else {
+        field.type = 'password';
+        button.className = 'fas fa-eye';
     }
+}
 
-    // Bkash number validation - only digits
-    if (bkashInput) {
-        bkashInput.addEventListener('input', function() {
-            this.value = this.value.replace(/[^0-9]/g, '');
-            validateField(this, /^[0-9]{10,15}$/, 'Bkash Number should be 10-15 digits');
-        });
+// Validation functions
+function validatePhoneNumber(input) {
+    const value = input.value;
+    const group = input.closest('.form-group');
+    
+    if (value.length === 0) {
+        setFieldState(group, 'neutral');
+        return true;
     }
+    
+    if (value.length !== 11 || !value.startsWith('0')) {
+        setFieldState(group, 'error');
+        return false;
+    }
+    
+    setFieldState(group, 'success');
+    return true;
+}
 
-    // Real-time password matching validation
-    function checkPasswordMatch() {
-        if (confirmPasswordInput && confirmPasswordInput.value && 
-            passwordInput && passwordInput.value !== confirmPasswordInput.value) {
-            confirmPasswordInput.parentElement.style.borderColor = '#ff0000';
-            confirmPasswordInput.title = 'Passwords do not match';
-        } else if (confirmPasswordInput) {
-            confirmPasswordInput.parentElement.style.borderColor = '';
-            confirmPasswordInput.title = '';
+function validateNID(input) {
+    const value = input.value;
+    const group = input.closest('.form-group');
+    
+    if (value.length === 0) {
+        setFieldState(group, 'neutral');
+        return true;
+    }
+    
+    if (value.length < 10 || value.length > 17) {
+        setFieldState(group, 'error');
+        return false;
+    }
+    
+    setFieldState(group, 'success');
+    return true;
+}
+
+function validateZipCode(input) {
+    const value = input.value;
+    const group = input.closest('.form-group');
+    
+    if (value.length === 0) {
+        setFieldState(group, 'neutral');
+        return true;
+    }
+    
+    if (value.length !== 4) {
+        setFieldState(group, 'error');
+        return false;
+    }
+    
+    setFieldState(group, 'success');
+    return true;
+}
+
+function validateBkashNumber(input) {
+    const value = input.value;
+    const group = input.closest('.form-group');
+    
+    if (value.length === 0) {
+        setFieldState(group, 'neutral');
+        return true;
+    }
+    
+    if (value.length !== 11 || !value.startsWith('0')) {
+        setFieldState(group, 'error');
+        return false;
+    }
+    
+    setFieldState(group, 'success');
+    return true;
+}
+
+function validateEmail(input) {
+    const value = input.value;
+    const group = input.closest('.form-group');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (value.length === 0) {
+        setFieldState(group, 'neutral');
+        return true;
+    }
+    
+    if (!emailRegex.test(value)) {
+        setFieldState(group, 'error');
+        return false;
+    }
+    
+    setFieldState(group, 'success');
+    return true;
+}
+
+function validateUsername(input) {
+    const value = input.value;
+    const group = input.closest('.form-group');
+    const usernamePattern = /^[a-zA-Z0-9._]+$/;
+    
+    if (value.length === 0) {
+        setFieldState(group, 'neutral');
+        return true;
+    }
+    
+    if (value.length < 4 || !usernamePattern.test(value)) {
+        setFieldState(group, 'error');
+        return false;
+    }
+    
+    setFieldState(group, 'success');
+    return true;
+}
+
+function validatePasswordMatch(passwordInput, confirmPasswordInput) {
+    const group = confirmPasswordInput.closest('.form-group');
+    
+    if (confirmPasswordInput.value.length === 0) {
+        setFieldState(group, 'neutral');
+        return true;
+    }
+    
+    if (passwordInput.value !== confirmPasswordInput.value) {
+        setFieldState(group, 'error');
+        return false;
+    }
+    
+    setFieldState(group, 'success');
+    return true;
+}
+
+function setFieldState(group, state) {
+    group.classList.remove('error', 'success');
+    if (state !== 'neutral') {
+        group.classList.add(state);
+    }
+}
+
+// Main validation and submission function
+async function validateAndSubmit() {
+    console.log('🔥 Form submission started');
+    
+    // Get all form values
+    const formData = {
+        firstName: document.getElementById('firstName').value.trim(),
+        lastName: document.getElementById('lastName').value.trim(),
+        username: document.getElementById('username').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        phoneNumber: document.getElementById('phoneNumber').value.trim(),
+        nid: document.getElementById('nid').value.trim(),
+        dateOfBirth: document.getElementById('dateOfBirth').value,
+        houseNo: document.getElementById('houseNo').value.trim(),
+        roadNo: document.getElementById('roadNo').value.trim(),
+        area: document.getElementById('area').value.trim(),
+        district: document.getElementById('district').value,
+        division: document.getElementById('division').value,
+        zipCode: document.getElementById('zipCode').value.trim(),
+        bkashNumber: document.getElementById('bkashNumber').value.trim(),
+        bankAccount: document.getElementById('bankAccount').value.trim(),
+        password: document.getElementById('password').value,
+        confirmPassword: document.getElementById('confirmPassword').value
+    };
+
+    console.log('📋 Form data collected:', formData);
+
+    // Basic required fields check
+    const requiredFields = ['firstName', 'lastName', 'username', 'email', 'phoneNumber', 'nid', 'dateOfBirth', 'houseNo', 'roadNo', 'area', 'district', 'division', 'zipCode', 'bkashNumber', 'bankAccount', 'password', 'confirmPassword'];
+    
+    for (let field of requiredFields) {
+        if (!formData[field]) {
+            showErrorAlert(`${field.replace(/([A-Z])/g, ' $1').toLowerCase()} is required`);
+            console.log(`❌ Missing field: ${field}`);
+            return;
         }
     }
 
-    if (passwordInput) passwordInput.addEventListener('input', checkPasswordMatch);
-    if (confirmPasswordInput) confirmPasswordInput.addEventListener('input', checkPasswordMatch);
-
-    // Email validation
-    if (emailInput) {
-        emailInput.addEventListener('input', function() {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            validateField(this, emailRegex, 'Please enter a valid email address');
-        });
+    // Password match check
+    if (formData.password !== formData.confirmPassword) {
+        showErrorAlert('Passwords do not match');
+        console.log('❌ Password mismatch');
+        return;
     }
 
-    // Add staggered animation delays for form fields
-    const formFields = document.querySelectorAll('.overlap, .overlap-2, .overlap-3, .overlap-4, .overlap-5, .phone-number-NID-wrapper, .date-of-birth-wrapper, .div-wrapper, .administrative-wrapper, .zip-code-wrapper, .bkash-number-wrapper, .bank-account-wrapper, .password-wrapper, .confirm-password-wrapper, .road-no-wrapper');
+    console.log('✅ Basic validation passed, submitting to backend...');
     
-    formFields.forEach((field, index) => {
-        field.style.animationDelay = `${index * 0.1}s`;
-    });
-});
+    // Submit to backend
+    await submitRegistration(formData);
+}
 
-function validateField(field, regex, errorMessage) {
-    const container = field.parentElement;
-    if (field.value && !regex.test(field.value)) {
-        container.style.backgroundColor = '#ffe6e6';
-        container.style.borderColor = '#ff0000';
-        field.title = errorMessage;
-    } else {
-        container.style.backgroundColor = '';
-        container.style.borderColor = '';
-        field.title = '';
+// Submit registration to backend
+async function submitRegistration(formData) {
+    console.log('🚀 Starting backend submission...');
+    
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = submitBtn.querySelector('span');
+    const btnLoader = submitBtn.querySelector('.btn-loader');
+    
+    try {
+        console.log('🔄 Setting loading state...');
+        // Show loading state
+        submitBtn.disabled = true;
+        btnText.style.display = 'none';
+        btnLoader.style.display = 'block';
+
+        console.log('📤 Sending request to /api/individual/register...');
+        const response = await fetch('/api/individual/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                firstName: formData.firstName,
+                lastName: formData.lastName,
+                username: formData.username,
+                email: formData.email,
+                phoneNumber: formData.phoneNumber,
+                nid: formData.nid,
+                dateOfBirth: formData.dateOfBirth,
+                houseNo: formData.houseNo,
+                roadNo: formData.roadNo,
+                area: formData.area,
+                district: formData.district,
+                division: formData.division,
+                zipCode: formData.zipCode,
+                bkashNumber: formData.bkashNumber,
+                bankAccount: formData.bankAccount,
+                password: formData.password
+            })
+        });
+
+        console.log('📥 Response received:', response.status, response.statusText);
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('📋 Response data:', data);
+
+        if (data.success) {
+            console.log('✅ Registration successful!');
+            showSuccessAlert(`${data.message} Your Individual ID: ${data.individualId}`);
+            setTimeout(() => {
+                window.location.href = 'profileindividual.html';
+            }, 3000);
+        } else {
+            console.log('❌ Registration failed:', data.message);
+            showErrorAlert(data.message);
+        }
+    } catch (error) {
+        console.error('💥 Registration error:', error);
+        showErrorAlert(`Network error: ${error.message}. Please check your connection and try again.`);
+    } finally {
+        console.log('🔄 Resetting button state...');
+        // Reset button state
+        submitBtn.disabled = false;
+        btnText.style.display = 'inline';
+        btnLoader.style.display = 'none';
     }
+}
+
+// Alert functions
+function showSuccessAlert(message) {
+    showAlert(message, 'success');
+}
+
+function showErrorAlert(message) {
+    showAlert(message, 'error');
+}
+
+function showAlert(message, type) {
+    const container = document.getElementById('messageContainer');
+    
+    const alert = document.createElement('div');
+    alert.className = `alert ${type}`;
+    
+    const icon = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
+    
+    alert.innerHTML = `
+        <i class="${icon}"></i>
+        <span>${message}</span>
+        <button class="alert-close" onclick="closeAlert(this)">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    container.appendChild(alert);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (alert.parentElement) {
+            alert.remove();
+        }
+    }, 5000);
+}
+
+function closeAlert(button) {
+    button.closest('.alert').remove();
 }

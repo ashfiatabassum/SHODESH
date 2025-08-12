@@ -3,9 +3,11 @@ const path = require('path');
 const session = require('express-session');
 const db = require('./config/db');
 
-// Import routes
+
 const adminRoutes = require('./routes/admin');
 const donorRoutes = require('./routes/donor');
+const foundationRoutes = require('./routes/foundation');
+const individualRoutes = require('./routes/individual');
 
 const app = express();
 
@@ -25,8 +27,15 @@ const publicPath = path.join(__dirname, 'public');
 app.use(express.static(publicPath));
 console.log('📁 Static files served from:', publicPath);
 // ✅ Routes
+console.log('🔗 Registering routes...');
 app.use('/api/admin', adminRoutes);
+console.log('✅ Admin routes registered');
 app.use('/api/donor', donorRoutes);
+console.log('✅ Donor routes registered');
+app.use('/api/foundation', foundationRoutes);
+console.log('✅ Foundation routes registered');
+app.use('/api/individual', individualRoutes);
+console.log('✅ Individual routes registered');
 
 // ✅ API: Handle donations
 app.post('/donate', (req, res) => {
