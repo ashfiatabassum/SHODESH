@@ -129,3 +129,5 @@ Thumbs.db
 
 # Test files
 test-path.js
+test-api-direct.html
+test-foundation-api.js
