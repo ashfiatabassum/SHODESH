@@ -75,10 +75,6 @@
               <span class="value" id="email">Loading...</span>
             </div>
             <div class="info-item">
-              <span class="label">Phone Number</span>
-              <span class="value" id="phoneNumber">Loading...</span>
-            </div>
-            <div class="info-item">
               <span class="label">Date of Birth</span>
               <span class="value" id="dateOfBirth">Loading...</span>
             </div>
@@ -94,19 +90,28 @@
         </div>
       </section>
 
-      <!-- Address Information Card -->
+      <!-- Location Information Card -->
       <section class="info-card">
         <div class="card-header">
-          <h2><i class="fas fa-map-marker-alt"></i> Address Information</h2>
-          <button class="toggle-btn" onclick="toggleCard('address-info')">
+          <h2><i class="fas fa-map-marker-alt"></i> Location Information</h2>
+          <button class="toggle-btn" onclick="toggleCard('location-info')">
             <i class="fas fa-chevron-down"></i>
           </button>
         </div>
-        <div class="card-content" id="address-info">
-          <div class="address-display">
-            <div class="address-text" id="fullAddress">Loading address...</div>
-            <button class="btn-outline" onclick="showMap()">
-              <i class="fas fa-map"></i> View on Map
+        <div class="card-content" id="location-info">
+          <div class="location-display">
+            <div class="location-text">
+              <div class="location-item">
+                <i class="fas fa-globe"></i>
+                <span id="locationCountry">Loading...</span>
+              </div>
+              <div class="location-item" id="locationDivisionContainer" style="display: none;">
+                <i class="fas fa-map-pin"></i>
+                <span id="locationDivision">-</span>
+              </div>
+            </div>
+            <button class="btn-outline" onclick="showCountryOnMap()">
+              <i class="fas fa-map"></i> View Country on Map
             </button>
           </div>
         </div>
@@ -208,8 +213,8 @@
             <input type="email" id="editEmail" required>
           </div>
           <div class="form-group">
-            <label>Phone Number <span class="required">*</span></label>
-            <input type="tel" id="editPhone" required>
+            <label>Date of Birth <span class="required">*</span></label>
+            <input type="date" id="editDateOfBirth" required>
           </div>
           <div class="form-actions">
             <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>

@@ -3,7 +3,6 @@ const path = require('path');
 const session = require('express-session');
 const db = require('./config/db');
 
-
 const adminRoutes = require('./routes/admin');
 const donorRoutes = require('./routes/donor');
 const foundationRoutes = require('./routes/foundation');
@@ -11,10 +10,7 @@ const individualRoutes = require('./routes/individual');
 
 const app = express();
 
-
-
-
-// ✅ Add request logging middleware (ADD THIS)
+// ✅ Add request logging middleware
 app.use((req, res, next) => {
   console.log(`📥 ${req.method} ${req.path} - ${new Date().toISOString()}`);
   if (req.body && Object.keys(req.body).length > 0) {
@@ -23,14 +19,9 @@ app.use((req, res, next) => {
   next();
 });
 
-
-
-
-
-
-
-// ✅ Middleware: Parse incoming JSON
+// ✅ Middleware: Parse incoming JSON and URL-encoded data
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // ✅ Session middleware for admin authentication
 app.use(session({
@@ -44,6 +35,7 @@ app.use(session({
 const publicPath = path.join(__dirname, 'public');
 app.use(express.static(publicPath));
 console.log('📁 Static files served from:', publicPath);
+
 // ✅ Routes
 console.log('🔗 Registering routes...');
 app.use('/api/admin', adminRoutes);
@@ -55,9 +47,51 @@ console.log('✅ Foundation routes registered');
 app.use('/api/individual', individualRoutes);
 console.log('✅ Individual routes registered');
 
+// ✅ Test route for API functionality
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    message: 'SHODESH API is working!',
+    timestamp: new Date().toISOString(),
+    availableRoutes: {
+      admin: [
+        'POST /api/admin/login',
+        'POST /api/admin/logout'
+      ],
+      donor: [
+        'POST /api/donor/register',
+        'POST /api/donor/signin',
+        'GET /api/donor/profile/:donorId',
+        'PUT /api/donor/update/:donorId',
+        'POST /api/donor/check-availability'
+      ],
+      foundation: [
+        'POST /api/foundation/register',
+        'POST /api/foundation/signin'
+      ],
+      individual: [
+        'POST /api/individual/register',
+        'POST /api/individual/signin'
+      ]
+    }
+  });
+});
 
+// ✅ Test route specifically for donor routes
+app.get('/api/donor/test', (req, res) => {
+  res.json({ 
+    message: 'Donor routes are working!', 
+    timestamp: new Date(),
+    endpoints: [
+      'POST /api/donor/register',
+      'POST /api/donor/signin',
+      'GET /api/donor/profile/:donorId',
+      'PUT /api/donor/update/:donorId ← This should work now!',
+      'POST /api/donor/check-availability'
+    ]
+  });
+});
 
-// ✅ Test route specifically for individual registration (ADD THIS)
+// ✅ Test route specifically for individual registration
 app.get('/api/individual/test', (req, res) => {
   res.json({ 
     message: 'Individual routes are working!', 
@@ -65,10 +99,6 @@ app.get('/api/individual/test', (req, res) => {
     endpoint: '/api/individual/register is available for POST requests'
   });
 });
-
-
-
-
 
 // ✅ API: Handle donations
 app.post('/donate', (req, res) => {
@@ -117,44 +147,67 @@ app.post('/api/admin/logout', (req, res) => {
   });
 });
 
+// ✅ Serve specific HTML files
+app.get('/signin', (req, res) => {
+  res.sendFile(path.join(publicPath, 'signin.html'));
+});
+
+app.get('/signup', (req, res) => {
+  res.sendFile(path.join(publicPath, 'signup.html'));
+});
+
+app.get('/profiledonor', (req, res) => {
+  res.sendFile(path.join(publicPath, 'profiledonor.html'));
+});
+
+app.get('/donor', (req, res) => {
+  res.sendFile(path.join(publicPath, 'donor.html'));
+});
+
 // ✅ Test route
 app.get('/test', (req, res) => {
   console.log('🔥 /test route was accessed');
   res.send('✅ /test route is working properly');
 });
 
-// ✅ Optional: Serve index.html manually if needed
+// ✅ Serve index.html manually if needed
 app.get('/', (req, res) => {
   const filePath = path.join(publicPath, 'index.html');
   console.log('📄 Serving homepage from:', filePath);
   res.sendFile(filePath);
 });
 
-
-
-
-
-
-// ✅ 404 handler for debugging (ADD THIS)
+// ✅ 404 handler for debugging
 app.use((req, res) => {
   console.log(`❌ 404 - Route not found: ${req.method} ${req.path}`);
   res.status(404).json({ 
     error: 'Route not found',
     method: req.method,
     path: req.path,
-    message: 'This endpoint does not exist'
+    message: 'This endpoint does not exist',
+    registeredRoutes: {
+      '/api/donor/*': 'Donor-related endpoints',
+      '/api/admin/*': 'Admin-related endpoints',
+      '/api/foundation/*': 'Foundation-related endpoints',
+      '/api/individual/*': 'Individual-related endpoints'
+    }
   });
 });
 
-
-
-
-
-
-
+// ✅ Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('❌ Server error:', err);
+  res.status(500).json({
+    error: 'Internal server error',
+    message: err.message
+  });
+});
 
 // ✅ Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server is live at http://localhost:${PORT}`);
+  console.log('🚀 SHODESH Server Started Successfully!');
+  console.log(`📡 Server running on: http://localhost:${PORT}`);
+  console.log(`📂 Serving static files from: ${publicPath}`);
+ 
 });

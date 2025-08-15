@@ -167,9 +167,6 @@ router.post('/register', async (req, res) => {
       }
     }
 
-    // Hash password
-    const hashedPassword = password; // No hashing for now
-
     // Generate donor ID
     const donorId = generateDonorId();
 
@@ -187,7 +184,7 @@ router.post('/register', async (req, res) => {
       lastName,
       username,
       email,
-      hashedPassword,
+      password, // Plain text as per your setup
       country,
       country === 'Bangladesh' ? division : null,
       dateOfBirth
@@ -206,10 +203,33 @@ router.post('/register', async (req, res) => {
     });
 
     console.log('🎉 Registration successful for donor:', donorId);
+    
+    // Return donor data for profile page
     res.status(201).json({
       success: true,
       message: 'Donor registered successfully!',
-      donorId: donorId
+      donorId: donorId,
+      donorData: {
+        personalInfo: {
+          firstName,
+          lastName,
+          username,
+          email,
+          dateOfBirth,
+          country,
+          division: country === 'Bangladesh' ? division : null,
+          memberSince: new Date().getFullYear().toString()
+        },
+        donations: [],
+        achievements: [
+          {
+            title: "Welcome to SHODESH",
+            description: "Successfully created your donor account",
+            icon: "fas fa-star",
+            earned: true
+          }
+        ]
+      }
     });
 
   } catch (error) {
@@ -222,29 +242,10 @@ router.post('/register', async (req, res) => {
         message: 'Database table not found. Please ensure the DONOR table exists.'
       });
     } else if (error.code === 'ER_DUP_ENTRY') {
-      // Handle duplicate entry errors from database constraints
-      const errorMessage = error.message.toLowerCase();
-      if (errorMessage.includes('username')) {
-        return res.status(409).json({
-          success: false,
-          message: 'This username is already taken. Please choose a different username.',
-          field: 'username',
-          code: 'USERNAME_EXISTS'
-        });
-      } else if (errorMessage.includes('email')) {
-        return res.status(409).json({
-          success: false,
-          message: 'An account with this email address already exists. Please use a different email or try logging in.',
-          field: 'email',
-          code: 'EMAIL_EXISTS'
-        });
-      } else {
-        return res.status(409).json({
-          success: false,
-          message: 'This information is already registered. Please check your username and email.',
-          code: 'DUPLICATE_ENTRY'
-        });
-      }
+      return res.status(409).json({
+        success: false,
+        message: 'Username or email already exists.'
+      });
     } else if (error.code === 'ER_CHECK_CONSTRAINT_VIOLATED') {
       return res.status(400).json({
         success: false,
@@ -255,6 +256,175 @@ router.post('/register', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Internal server error: ' + error.message
+    });
+  }
+});
+
+// POST /api/donor/signin - Authenticate donor
+router.post('/signin', async (req, res) => {
+  console.log('🔐 Donor sign in request received:', req.body);
+  
+  try {
+    const { username, password } = req.body;
+
+    // Input validation
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username and password are required'
+      });
+    }
+
+    // Query to find donor by username
+    const query = `
+      SELECT donor_id, first_name, last_name, username, email, password,
+             date_of_birth, country, division, profile_created_at
+      FROM donor 
+      WHERE username = ?
+    `;
+    
+    const results = await new Promise((resolve, reject) => {
+      db.query(query, [username], (err, results) => {
+        if (err) {
+          console.error('❌ Error fetching donor:', err);
+          reject(err);
+        } else {
+          console.log('📋 Donor query results:', results.length);
+          resolve(results);
+        }
+      });
+    });
+
+    // Check if donor exists
+    if (results.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid username or password'
+      });
+    }
+
+    const donor = results[0];
+    
+    // Verify password (plain text comparison)
+    if (donor.password !== password) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid username or password'
+      });
+    }
+
+    console.log('✅ Donor authenticated successfully:', donor.donor_id);
+
+    // Prepare donor data for profile
+    const donorData = {
+      personalInfo: {
+        firstName: donor.first_name,
+        lastName: donor.last_name,
+        username: donor.username,
+        email: donor.email,
+        dateOfBirth: donor.date_of_birth,
+        country: donor.country,
+        division: donor.division,
+        memberSince: new Date(donor.profile_created_at).getFullYear().toString()
+      },
+      donations: [], // Will be populated from donations table later
+      achievements: [
+        {
+          title: "Welcome to SHODESH",
+          description: "Successfully created your donor account",
+          icon: "fas fa-star",
+          earned: true
+        },
+        {
+          title: "Returning Member",
+          description: "Signed in to your account",
+          icon: "fas fa-sign-in-alt",
+          earned: true
+        }
+      ]
+    };
+
+    // Return success response with donor data
+    res.status(200).json({
+      success: true,
+      message: 'Sign in successful',
+      donorId: donor.donor_id,
+      donorData: donorData
+    });
+
+  } catch (error) {
+    console.error('❌ Error during sign in:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
+
+// GET /api/donor/profile/:donorId - Get donor profile data
+router.get('/profile/:donorId', async (req, res) => {
+  try {
+    const { donorId } = req.params;
+    
+    // Query only table fields
+    const query = `
+      SELECT donor_id, first_name, last_name, username, email, 
+             date_of_birth, country, division, profile_created_at
+      FROM donor 
+      WHERE donor_id = ?
+    `;
+    
+    const results = await new Promise((resolve, reject) => {
+      db.query(query, [donorId], (err, results) => {
+        if (err) {
+          console.error('❌ Error fetching donor profile:', err);
+          reject(err);
+        } else {
+          resolve(results);
+        }
+      });
+    });
+
+    if (results.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Donor not found'
+      });
+    }
+
+    const donor = results[0];
+    const donorData = {
+      personalInfo: {
+        firstName: donor.first_name,
+        lastName: donor.last_name,
+        username: donor.username,
+        email: donor.email,
+        dateOfBirth: donor.date_of_birth,
+        country: donor.country,
+        division: donor.division,
+        memberSince: new Date(donor.profile_created_at).getFullYear().toString()
+      },
+      donations: [], // Empty for new users
+      achievements: [
+        {
+          title: "Welcome to SHODESH",
+          description: "Successfully created your donor account",
+          icon: "fas fa-star",
+          earned: true
+        }
+      ]
+    };
+
+    res.json({
+      success: true,
+      donorData
+    });
+
+  } catch (error) {
+    console.error('❌ Error fetching donor profile:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch donor profile'
     });
   }
 });

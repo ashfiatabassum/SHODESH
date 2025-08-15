@@ -1,546 +1,557 @@
-// Sample donor data (in real application, this would come from a database)
-const donorData = {
-  personalInfo: {
-    firstName: "Rahul",
-    lastName: "Ahmed",
-    username: "rahul_helper",
-    email: "rahul.ahmed@email.com",
-    phone: "+880 1712-345678",
-    dateOfBirth: "1995-03-15",
-    country: "Bangladesh",
-    division: "Dhaka",
-    memberSince: "2022"
-  },
-  address: {
-    houseNo: "House #25",
-    roadNo: "Road #7",
-    area: "Dhanmondi",
-    district: "Dhaka",
-    division: "Dhaka",
-    zipCode: "1205"
-  },
-  donations: [
-    {
-      id: 1,
-      title: "Flood Relief Fund",
-      amount: 5000,
-      date: "2024-01-15",
-      recipient: "Sylhet Flood Victims",
-      type: "Emergency Relief"
-    },
-    {
-      id: 2,
-      title: "Winter Clothing Drive",
-      amount: 3000,
-      date: "2023-12-20",
-      recipient: "Street Children Foundation",
-      type: "Seasonal Help"
-    },
-    {
-      id: 3,
-      title: "Education Support",
-      amount: 7500,
-      date: "2023-11-10",
-      recipient: "Rural School Development",
-      type: "Education"
-    },
-    {
-      id: 4,
-      title: "Medical Emergency",
-      amount: 10000,
-      date: "2023-10-05",
-      recipient: "Cancer Patient Support",
-      type: "Healthcare"
-    },
-    {
-      id: 5,
-      title: "Food Distribution",
-      amount: 2500,
-      date: "2023-09-18",
-      recipient: "Daily Wage Workers",
-      type: "Food Security"
-    },
-    {
-      id: 6,
-      title: "Clean Water Project",
-      amount: 8000,
-      date: "2023-08-22",
-      recipient: "Village Water Supply",
-      type: "Infrastructure"
-    }
-  ],
-  achievements: [
-    {
-      title: "First Donation",
-      description: "Made your first donation to help others",
-      icon: "fas fa-star",
-      earned: true
-    },
-    {
-      title: "Generous Heart",
-      description: "Donated over ৳25,000 in total",
-      icon: "fas fa-heart",
-      earned: true
-    },
-    {
-      title: "Regular Supporter",
-      description: "Made donations for 6 consecutive months",
-      icon: "fas fa-medal",
-      earned: true
-    },
-    {
-      title: "Community Champion",
-      description: "Supported 5+ different causes",
-      icon: "fas fa-trophy",
-      earned: true
-    },
-    {
-      title: "Emergency Helper",
-      description: "Responded to 3+ emergency relief campaigns",
-      icon: "fas fa-ambulance",
-      earned: false
-    },
-    {
-      title: "Education Advocate",
-      description: "Donated ৳10,000+ to education causes",
-      icon: "fas fa-graduation-cap",
-      earned: false
-    }
-  ]
-};
-
-let currentDonationPage = 1;
-const donationsPerPage = 3;
-let sortOrder = 'recent';
+// Check if donor data exists in localStorage or fetch from server
+let donorData = {};
 
 // Initialize the page when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-  loadDonorProfile();
-  loadDonationHistory();
-  loadAchievements();
-  calculateStats();
-  
-  // Add smooth scrolling animation delay for cards
-  animateCards();
+  initializeDonorData();
 });
 
-// Load donor profile information
+async function initializeDonorData() {
+  try {
+    // Check if donor data is available in localStorage (from recent signup)
+    const storedDonorData = localStorage.getItem('donorData');
+    const storedDonorId = localStorage.getItem('donorId');
+    
+    console.log('🔍 Checking stored data...');
+    console.log('Stored donorData:', storedDonorData);
+    console.log('Stored donorId:', storedDonorId);
+    
+    if (storedDonorData) {
+      // Use stored data from recent signup
+      donorData = JSON.parse(storedDonorData);
+      console.log('📋 Using stored donor data:', donorData);
+      
+      // Load the profile with actual data
+      loadDonorProfile();
+      loadDonationHistory();
+      loadAchievements();
+      calculateStats();
+      animateCards();
+      
+    } else if (storedDonorId) {
+      // Fetch data from server using donor ID
+      console.log('📡 Fetching data from server for ID:', storedDonorId);
+      
+      const response = await fetch(`/api/donor/profile/${storedDonorId}`);
+      const result = await response.json();
+      
+      if (result.success) {
+        donorData = result.donorData;
+        console.log('📋 Fetched donor data from server:', donorData);
+        
+        // Load the profile with fetched data
+        loadDonorProfile();
+        loadDonationHistory();
+        loadAchievements();
+        calculateStats();
+        animateCards();
+        
+      } else {
+        throw new Error(result.message);
+      }
+    } else {
+      // No donor data found - use default data instead of redirecting
+      console.log('⚠️ No donor data found, using default data');
+      donorData = getDefaultDonorData();
+      
+      // Load the profile with default data
+      loadDonorProfile();
+      loadDonationHistory();
+      loadAchievements();
+      calculateStats();
+      animateCards();
+    }
+    
+  } catch (error) {
+    console.error('❌ Error loading donor data:', error);
+    // Use default data instead of redirecting to signin
+    console.log('📋 Using default donor data due to error');
+    donorData = getDefaultDonorData();
+    
+    // Load the profile with default data
+    loadDonorProfile();
+    loadDonationHistory();
+    loadAchievements();
+    calculateStats();
+    animateCards();
+  }
+}
+
+function getDefaultDonorData() {
+  return {
+    personalInfo: {
+      firstName: "New",
+      lastName: "Donor",
+      username: "new_donor",
+      email: "donor@email.com",
+      dateOfBirth: "1990-01-01",
+      country: "Bangladesh",
+      division: "Dhaka",
+      memberSince: "2024"
+    },
+    donations: [],
+    achievements: [
+      {
+        title: "Welcome to SHODESH",
+        description: "Successfully created your donor account",
+        icon: "fas fa-star",
+        earned: true
+      }
+    ]
+  };
+}
+
+// Load donor profile with data
 function loadDonorProfile() {
-  const { personalInfo, address } = donorData;
+  console.log('🔄 Loading donor profile with data:', donorData);
   
-  // Update header information
-  document.getElementById('donorName').textContent = `${personalInfo.firstName} ${personalInfo.lastName}`;
-  document.getElementById('donorUsername').textContent = `@${personalInfo.username}`;
-  document.getElementById('memberSince').textContent = personalInfo.memberSince;
+  if (!donorData || !donorData.personalInfo) {
+    console.error('❌ No donor data available for profile');
+    return;
+  }
+
+  const { personalInfo } = donorData;
+
+  // Update header - check if elements exist
+  const donorNameEl = document.getElementById('donorName');
+  const donorUsernameEl = document.getElementById('donorUsername');
   
-  // Update personal information
-  document.getElementById('fullName').textContent = `${personalInfo.firstName} ${personalInfo.lastName}`;
-  document.getElementById('email').textContent = personalInfo.email;
-  document.getElementById('phoneNumber').textContent = personalInfo.phone;
-  document.getElementById('dateOfBirth').textContent = formatDate(personalInfo.dateOfBirth);
-  document.getElementById('country').textContent = personalInfo.country;
-  document.getElementById('division').textContent = personalInfo.division;
+  if (donorNameEl) {
+    donorNameEl.textContent = `${personalInfo.firstName} ${personalInfo.lastName}`;
+  }
+  if (donorUsernameEl) {
+    donorUsernameEl.textContent = `@${personalInfo.username}`;
+  }
   
-  // Update address information
-  const fullAddress = `${address.houseNo}, ${address.roadNo}, ${address.area}, ${address.district}, ${address.division} - ${address.zipCode}`;
-  document.getElementById('fullAddress').textContent = fullAddress;
+  // Update personal info section
+  const personalInfoElements = {
+    'fullName': `${personalInfo.firstName} ${personalInfo.lastName}`,
+    'email': personalInfo.email,
+    'dateOfBirth': personalInfo.dateOfBirth,
+    'country': personalInfo.country,
+    'division': personalInfo.division || '-',
+    'memberSince': personalInfo.memberSince
+  };
+  
+  Object.entries(personalInfoElements).forEach(([id, value]) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.textContent = value || '-';
+    } else {
+      console.warn(`⚠️ Element with ID '${id}' not found`);
+    }
+  });
+
+  // Update location information
+  const locationCountryEl = document.getElementById('locationCountry');
+  const locationDivisionEl = document.getElementById('locationDivision');
+  const locationDivisionContainer = document.getElementById('locationDivisionContainer');
+  
+  if (locationCountryEl) {
+    locationCountryEl.textContent = personalInfo.country || '-';
+  }
+  
+  if (locationDivisionEl && personalInfo.division) {
+    locationDivisionEl.textContent = personalInfo.division;
+    if (locationDivisionContainer) {
+      locationDivisionContainer.style.display = 'flex';
+    }
+  } else if (locationDivisionContainer) {
+    locationDivisionContainer.style.display = 'none';
+  }
+  
+  console.log('✅ Donor profile loaded successfully');
 }
 
 // Load donation history
 function loadDonationHistory() {
   const donationsList = document.getElementById('donationsList');
-  const startIndex = (currentDonationPage - 1) * donationsPerPage;
-  const endIndex = startIndex + donationsPerPage;
-  
-  let sortedDonations = [...donorData.donations];
-  
-  // Sort donations based on selected order
-  switch(sortOrder) {
-    case 'recent':
-      sortedDonations.sort((a, b) => new Date(b.date) - new Date(a.date));
-      break;
-    case 'amount':
-      sortedDonations.sort((a, b) => b.amount - a.amount);
-      break;
-    case 'oldest':
-      sortedDonations.sort((a, b) => new Date(a.date) - new Date(b.date));
-      break;
+  if (!donationsList) {
+    console.warn('⚠️ donationsList element not found');
+    return;
   }
   
-  const donationsToShow = sortedDonations.slice(startIndex, endIndex);
+  donationsList.innerHTML = '';
   
-  if (currentDonationPage === 1) {
-    donationsList.innerHTML = '';
+  if (!donorData.donations || donorData.donations.length === 0) {
+    donationsList.innerHTML = `
+      <div class="no-donations">
+        <i class="fas fa-heart"></i>
+        <p>No donations yet. Start making a difference today!</p>
+        <button class="donate-btn" onclick="findProjects()">Find Projects to Support</button>
+      </div>
+    `;
+    return;
   }
   
-  donationsToShow.forEach((donation, index) => {
-    const donationElement = createDonationElement(donation, startIndex + index);
-    donationsList.appendChild(donationElement);
-    
-    // Animate donation items
-    setTimeout(() => {
-      donationElement.style.opacity = '1';
-      donationElement.style.transform = 'translateX(0)';
-    }, index * 100);
+  donorData.donations.forEach(donation => {
+    const donationItem = document.createElement('div');
+    donationItem.className = 'donation-item';
+    donationItem.innerHTML = `
+      <div class="donation-info">
+        <div class="donation-title">${donation.projectTitle}</div>
+        <div class="donation-details">${donation.foundationName}</div>
+      </div>
+      <div class="donation-meta">
+        <div class="donation-amount">৳${donation.amount.toLocaleString()}</div>
+        <div class="donation-date">${formatDate(donation.date)}</div>
+      </div>
+    `;
+    donationsList.appendChild(donationItem);
   });
-  
-  // Hide load more button if all donations are shown
-  const loadMoreContainer = document.querySelector('.load-more-container');
-  if (endIndex >= sortedDonations.length) {
-    loadMoreContainer.style.display = 'none';
-  } else {
-    loadMoreContainer.style.display = 'block';
-  }
+
+  // Update donation stats
+  updateDonationStats();
 }
 
-// Create donation element
-function createDonationElement(donation, index) {
-  const donationItem = document.createElement('div');
-  donationItem.className = 'donation-item';
-  donationItem.style.opacity = '0';
-  donationItem.style.transform = 'translateX(-30px)';
-  donationItem.style.transition = 'all 0.5s ease';
+// Update donation statistics
+function updateDonationStats() {
+  const donations = donorData.donations || [];
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
   
-  donationItem.innerHTML = `
-    <div class="donation-info">
-      <div class="donation-title">${donation.title}</div>
-      <div class="donation-details">
-        <span>${donation.recipient}</span> • <span>${donation.type}</span>
-      </div>
-    </div>
-    <div class="donation-meta">
-      <div class="donation-amount">৳${donation.amount.toLocaleString()}</div>
-      <div class="donation-date">${formatDate(donation.date)}</div>
-    </div>
-  `;
+  // Calculate this month's donations
+  const thisMonthAmount = donations.filter(d => {
+    const donationDate = new Date(d.date);
+    return donationDate.getMonth() === currentMonth && donationDate.getFullYear() === currentYear;
+  }).reduce((sum, d) => sum + d.amount, 0);
   
-  // Add click animation
-  donationItem.addEventListener('click', function() {
-    this.style.transform = 'scale(0.98)';
-    setTimeout(() => {
-      this.style.transform = 'translateX(10px)';
-    }, 100);
+  // Calculate this year's donations
+  const thisYearAmount = donations.filter(d => {
+    const donationDate = new Date(d.date);
+    return donationDate.getFullYear() === currentYear;
+  }).reduce((sum, d) => sum + d.amount, 0);
+  
+  // Find largest donation
+  const largestDonation = donations.length > 0 ? Math.max(...donations.map(d => d.amount)) : 0;
+  
+  // Update elements
+  const statsElements = {
+    'thisMonth': '৳' + thisMonthAmount.toLocaleString(),
+    'thisYear': '৳' + thisYearAmount.toLocaleString(),
+    'largestDonation': '৳' + largestDonation.toLocaleString()
+  };
+  
+  Object.entries(statsElements).forEach(([id, value]) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.textContent = value;
+    }
   });
-  
-  return donationItem;
 }
 
 // Load achievements
 function loadAchievements() {
   const achievementsList = document.getElementById('achievementsList');
+  if (!achievementsList) {
+    console.warn('⚠️ achievementsList element not found');
+    return;
+  }
+  
   achievementsList.innerHTML = '';
   
-  donorData.achievements.forEach((achievement, index) => {
-    const achievementElement = createAchievementElement(achievement);
-    achievementsList.appendChild(achievementElement);
-    
-    // Animate achievement items
-    setTimeout(() => {
-      achievementElement.style.opacity = '1';
-      achievementElement.style.transform = 'scale(1)';
-    }, index * 150);
+  if (!donorData.achievements || donorData.achievements.length === 0) {
+    achievementsList.innerHTML = `
+      <div class="no-achievements">
+        <i class="fas fa-trophy"></i>
+        <p>No achievements yet. Start donating to earn achievements!</p>
+      </div>
+    `;
+    return;
+  }
+  
+  donorData.achievements.forEach(achievement => {
+    const achievementItem = document.createElement('div');
+    achievementItem.className = `achievement-item ${achievement.earned ? 'earned' : 'locked'}`;
+    achievementItem.innerHTML = `
+      <div class="achievement-icon">
+        <i class="${achievement.icon}"></i>
+      </div>
+      <div class="achievement-info">
+        <div class="achievement-title">${achievement.title}</div>
+        <div class="achievement-description">${achievement.description}</div>
+      </div>
+      ${achievement.earned ? '<div class="achievement-badge">✓</div>' : '<div class="achievement-badge">🔒</div>'}
+    `;
+    achievementsList.appendChild(achievementItem);
   });
 }
 
-// Create achievement element
-function createAchievementElement(achievement) {
-  const achievementItem = document.createElement('div');
-  achievementItem.className = `achievement-item ${achievement.earned ? 'earned' : 'locked'}`;
-  achievementItem.style.opacity = '0';
-  achievementItem.style.transform = 'scale(0.9)';
-  achievementItem.style.transition = 'all 0.5s ease';
-  
-  if (!achievement.earned) {
-    achievementItem.style.filter = 'grayscale(100%)';
-    achievementItem.style.opacity = '0.6';
-  }
-  
-  achievementItem.innerHTML = `
-    <div class="achievement-icon">
-      <i class="${achievement.icon}"></i>
-    </div>
-    <div class="achievement-info">
-      <span class="title">${achievement.title}</span>
-      <span class="description">${achievement.description}</span>
-    </div>
-  `;
-  
-  // Add click effect for earned achievements
-  if (achievement.earned) {
-    achievementItem.addEventListener('click', function() {
-      this.style.transform = 'scale(1.05)';
-      setTimeout(() => {
-        this.style.transform = 'scale(1)';
-      }, 200);
-    });
-  }
-  
-  return achievementItem;
-}
-
-// Calculate and display statistics
+// Calculate stats
 function calculateStats() {
-  const donations = donorData.donations;
-  const currentDate = new Date();
-  const currentMonth = currentDate.getMonth();
-  const currentYear = currentDate.getFullYear();
+  const totalDonations = donorData.donations ? donorData.donations.length : 0;
+  const totalAmount = donorData.donations ? donorData.donations.reduce((sum, d) => sum + d.amount, 0) : 0;
   
-  // Total donations and amount
-  const totalDonations = donations.length;
-  const totalAmount = donations.reduce((sum, donation) => sum + donation.amount, 0);
+  // Safely update stats elements
+  const statsElements = {
+    'totalDonations': totalDonations,
+    'totalAmount': '৳' + totalAmount.toLocaleString()
+  };
   
-  // This month donations
-  const thisMonthAmount = donations
-    .filter(donation => {
-      const donationDate = new Date(donation.date);
-      return donationDate.getMonth() === currentMonth && donationDate.getFullYear() === currentYear;
-    })
-    .reduce((sum, donation) => sum + donation.amount, 0);
-  
-  // This year donations
-  const thisYearAmount = donations
-    .filter(donation => new Date(donation.date).getFullYear() === currentYear)
-    .reduce((sum, donation) => sum + donation.amount, 0);
-  
-  // Largest donation
-  const largestDonation = Math.max(...donations.map(donation => donation.amount));
-  
-  // Update DOM with animation
-  animateCountUp('totalDonations', totalDonations);
-  animateCountUp('totalAmount', totalAmount, '৳');
-  animateCountUp('thisMonth', thisMonthAmount, '৳');
-  animateCountUp('thisYear', thisYearAmount, '৳');
-  animateCountUp('largestDonation', largestDonation, '৳');
-}
-
-// Animate counting up numbers
-function animateCountUp(elementId, targetValue, prefix = '') {
-  const element = document.getElementById(elementId);
-  const startValue = 0;
-  const duration = 2000;
-  const startTime = performance.now();
-  
-  function updateCount(currentTime) {
-    const elapsed = currentTime - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-    
-    // Easing function for smooth animation
-    const easeOut = 1 - Math.pow(1 - progress, 3);
-    const currentValue = Math.floor(startValue + (targetValue - startValue) * easeOut);
-    
-    element.textContent = prefix + currentValue.toLocaleString();
-    
-    if (progress < 1) {
-      requestAnimationFrame(updateCount);
+  Object.entries(statsElements).forEach(([id, value]) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.textContent = value;
+    } else {
+      console.warn(`⚠️ Stats element with ID '${id}' not found`);
     }
+  });
+}
+
+// Function to show country on map
+function showCountryOnMap() {
+  if (!donorData || !donorData.personalInfo || !donorData.personalInfo.country) {
+    showNotification('Country information not available');
+    return;
   }
   
-  requestAnimationFrame(updateCount);
-}
-
-// Toggle card collapse/expand
-function toggleCard(cardId) {
-  const cardContent = document.getElementById(cardId);
-  const toggleBtn = cardContent.parentElement.querySelector('.toggle-btn i');
+  const country = donorData.personalInfo.country;
+  const googleMapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(country)}`;
   
-  cardContent.classList.toggle('collapsed');
-  
-  if (cardContent.classList.contains('collapsed')) {
-    toggleBtn.style.transform = 'rotate(-90deg)';
-  } else {
-    toggleBtn.style.transform = 'rotate(0deg)';
-  }
+  // Open in new tab
+  window.open(googleMapsUrl, '_blank');
+  showNotification(`Opening ${country} on Google Maps...`);
 }
 
-// Sort donations
-function sortDonations() {
-  const sortFilter = document.getElementById('sortFilter');
-  sortOrder = sortFilter.value;
-  currentDonationPage = 1;
-  loadDonationHistory();
-}
-
-// Load more donations
-function loadMoreDonations() {
-  currentDonationPage++;
-  loadDonationHistory();
-}
-
-// Edit profile modal functions
+// Functions for HTML button calls
 function editProfile() {
-  const modal = document.getElementById('editModal');
-  const { personalInfo } = donorData;
+  showNotification('Edit profile feature is not available');
+}
+
+function shareProfile() {
+  const profileUrl = window.location.href;
+  if (navigator.share) {
+    navigator.share({
+      title: 'SHODESH Donor Profile',
+      text: `Check out ${donorData.personalInfo?.firstName || 'this'}'s donor profile on SHODESH`,
+      url: profileUrl
+    }).then(() => {
+      showNotification('Profile shared successfully!');
+    }).catch((error) => {
+      console.log('Error sharing:', error);
+      copyToClipboard(profileUrl);
+    });
+  } else {
+    copyToClipboard(profileUrl);
+  }
+}
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    showNotification('Profile URL copied to clipboard!');
+  }).catch(() => {
+    showNotification('Unable to copy to clipboard');
+  });
+}
+
+function toggleCard(cardId) {
+  const card = document.getElementById(cardId);
+  if (!card) return;
   
-  // Populate form with current data
-  document.getElementById('editFirstName').value = personalInfo.firstName;
-  document.getElementById('editLastName').value = personalInfo.lastName;
-  document.getElementById('editEmail').value = personalInfo.email;
-  document.getElementById('editPhone').value = personalInfo.phone;
+  const toggleBtn = card.parentElement.querySelector('.toggle-btn i');
   
-  modal.classList.add('show');
+  if (card.style.display === 'none') {
+    card.style.display = 'block';
+    if (toggleBtn) toggleBtn.className = 'fas fa-chevron-down';
+  } else {
+    card.style.display = 'none';
+    if (toggleBtn) toggleBtn.className = 'fas fa-chevron-right';
+  }
+}
+
+function sortDonations() {
+  const sortValue = document.getElementById('sortFilter').value;
+  console.log('Sorting donations by:', sortValue);
+  
+  if (!donorData.donations || donorData.donations.length === 0) return;
+  
+  // Sort donations based on selected value
+  switch (sortValue) {
+    case 'recent':
+      donorData.donations.sort((a, b) => new Date(b.date) - new Date(a.date));
+      break;
+    case 'amount':
+      donorData.donations.sort((a, b) => b.amount - a.amount);
+      break;
+    case 'oldest':
+      donorData.donations.sort((a, b) => new Date(a.date) - new Date(b.date));
+      break;
+  }
+  
+  // Reload donation history
+  loadDonationHistory();
+  showNotification(`Sorted donations by ${sortValue}`);
+}
+
+function loadMoreDonations() {
+  showNotification('Loading more donations...');
+  // Implementation for pagination - would need backend support
 }
 
 function closeModal() {
   const modal = document.getElementById('editModal');
-  modal.classList.remove('show');
-}
-
-// Handle form submission
-document.getElementById('editForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-  
-  // Get form data
-  const firstName = document.getElementById('editFirstName').value;
-  const lastName = document.getElementById('editLastName').value;
-  const email = document.getElementById('editEmail').value;
-  const phone = document.getElementById('editPhone').value;
-  
-  // Update donor data (in real app, this would be sent to server)
-  donorData.personalInfo.firstName = firstName;
-  donorData.personalInfo.lastName = lastName;
-  donorData.personalInfo.email = email;
-  donorData.personalInfo.phone = phone;
-  
-  // Reload profile
-  loadDonorProfile();
-  
-  // Close modal
-  closeModal();
-  
-  // Show success message
-  showNotification('Profile updated successfully!', 'success');
-});
-
-// Share profile function
-function shareProfile() {
-  const shareText = `Check out ${donorData.personalInfo.firstName}'s donation profile on SHODESH! Total donations: ৳${donorData.donations.reduce((sum, d) => sum + d.amount, 0).toLocaleString()}`;
-  
-  if (navigator.share) {
-    navigator.share({
-      title: 'SHODESH - Donor Profile',
-      text: shareText,
-      url: window.location.href
-    });
-  } else {
-    // Fallback: copy to clipboard
-    navigator.clipboard.writeText(shareText).then(() => {
-      showNotification('Profile link copied to clipboard!', 'info');
-    });
+  if (modal) {
+    modal.classList.remove('show');
   }
-}
-
-// Show map function
-function showMap() {
-  const address = donorData.address;
-  const query = `${address.area}, ${address.district}, ${address.division}, Bangladesh`;
-  const mapUrl = `https://www.google.com/maps/search/${encodeURIComponent(query)}`;
-  window.open(mapUrl, '_blank');
 }
 
 // Utility functions
 function formatDate(dateString) {
-  const options = { year: 'numeric', month: 'long', day: 'numeric' };
-  return new Date(dateString).toLocaleDateString('en-US', options);
+  return new Date(dateString).toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
 }
 
-function showNotification(message, type = 'info') {
+function showNotification(message) {
   const notification = document.createElement('div');
-  notification.className = `notification ${type}`;
   notification.textContent = message;
   notification.style.cssText = `
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 15px 20px;
-    background: ${type === 'success' ? '#4a7c59' : type === 'error' ? '#dc3545' : '#17a2b8'};
-    color: white;
-    border-radius: 8px;
-    z-index: 1001;
-    animation: slideInFromRight 0.3s ease;
+    position: fixed; top: 20px; right: 20px; padding: 15px 20px;
+    background: #4a7c59; color: white; border-radius: 8px; z-index: 1001;
+    font-family: 'Roboto Condensed', sans-serif; font-weight: 500;
+    box-shadow: 0 5px 15px rgba(74, 124, 89, 0.4);
+    animation: slideInRight 0.3s ease-out;
   `;
-  
   document.body.appendChild(notification);
-  
   setTimeout(() => {
-    notification.style.animation = 'slideOutToRight 0.3s ease';
-    setTimeout(() => {
-      document.body.removeChild(notification);
-    }, 300);
+    notification.style.animation = 'slideOutRight 0.3s ease-in';
+    setTimeout(() => document.body.removeChild(notification), 300);
   }, 3000);
 }
 
-// Animate cards on page load
+// Animation function
 function animateCards() {
-  const cards = document.querySelectorAll('.info-card');
+  const cards = document.querySelectorAll('.info-card, .profile-header');
   cards.forEach((card, index) => {
-    card.style.opacity = '0';
-    card.style.transform = 'translateY(30px)';
-    
-    setTimeout(() => {
-      card.style.transition = 'all 0.6s ease';
-      card.style.opacity = '1';
-      card.style.transform = 'translateY(0)';
-    }, index * 200);
+    if (card) {
+      setTimeout(() => {
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0)';
+      }, index * 200);
+    }
   });
 }
 
-// Add CSS animations for notifications
+// Close modals on outside click
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('modal')) {
+    e.target.classList.remove('show');
+  }
+});
+
+// Other action functions
+function findProjects() {
+  showNotification('Redirecting to project listings...');
+  // You can redirect to projects page when you create it
+  // window.location.href = 'projects.html';
+}
+
+function logout() {
+  if (confirm('Are you sure you want to logout? This will clear your session data.')) {
+    localStorage.removeItem('donorData');
+    localStorage.removeItem('donorId');
+    window.location.href = 'signin.html';
+  }
+}
+
+function goHome() {
+  if (confirm('Are you sure you want to go back to the home page?')) {
+    window.location.href = 'index.html';
+  }
+}
+
+// Add CSS for animations and styling
 const style = document.createElement('style');
 style.textContent = `
-  @keyframes slideInFromRight {
-    from {
-      opacity: 0;
-      transform: translateX(100px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(100%); }
+    to { opacity: 1; transform: translateX(0); }
   }
   
-  @keyframes slideOutToRight {
-    from {
-      opacity: 1;
-      transform: translateX(0);
-    }
-    to {
-      opacity: 0;
-      transform: translateX(100px);
-    }
+  @keyframes slideOutRight {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(100%); }
+  }
+  
+  .no-donations, .no-achievements {
+    text-align: center;
+    padding: 40px 20px;
+    color: #7f8c8d;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 2px dashed #e9ecef;
+  }
+  
+  .no-donations i, .no-achievements i {
+    font-size: 3rem;
+    color: #bdc3c7;
+    margin-bottom: 15px;
+    display: block;
+  }
+  
+  .donate-btn {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background: #4a7c59;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+  
+  .donate-btn:hover {
+    background: #3a6249;
+    transform: translateY(-2px);
+  }
+  
+  .achievement-item.locked {
+    opacity: 0.6;
+    filter: grayscale(100%);
+  }
+  
+  .achievement-badge {
+    font-size: 1.2rem;
+    margin-left: auto;
+  }
+  
+  .location-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0;
+  }
+  
+  .location-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  
+  .location-text {
+    flex: 1;
+  }
+  
+  .btn-outline {
+    padding: 8px 16px;
+    border: 2px solid #4a7c59;
+    background: transparent;
+    color: #4a7c59;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-outline:hover {
+    background: #4a7c59;
+    color: white;
   }
 `;
 document.head.appendChild(style);
-
-// Close modal when clicking outside
-document.getElementById('editModal').addEventListener('click', function(e) {
-  if (e.target === this) {
-    closeModal();
-  }
-});
-
-// Keyboard navigation for modal
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    closeModal();
-  }
-});
-
-// Add intersection observer for scroll animations
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.style.animation = 'slideInFromBottom 0.6s ease forwards';
-    }
-  });
-}, { threshold: 0.1 });
-
-// Observe all cards for scroll animations
-document.addEventListener('DOMContentLoaded', function() {
-  const cards = document.querySelectorAll('.info-card');
-  cards.forEach(card => observer.observe(card));
-});
-
-// Go to home page
-function goHome() {
-  window.location.href = 'index.html';
-}
