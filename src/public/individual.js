@@ -33,19 +33,87 @@ function initializeDistricts() {
 
 // Initialize real-time form validation
 function initializeFormValidation() {
-    // Phone number validation
-    const phoneInput = document.getElementById('phoneNumber');
-    phoneInput.addEventListener('input', function() {
-        this.value = this.value.replace(/[^0-9]/g, '');
-        validatePhoneNumber(this);
-    });
+    // Username availability checking
+    const usernameInput = document.getElementById('username');
+    if (usernameInput) {
+        let usernameTimeout;
+        usernameInput.addEventListener('input', function() {
+            clearTimeout(usernameTimeout);
+            const username = this.value.trim();
+            
+            if (username.length >= 4) {
+                usernameTimeout = setTimeout(() => {
+                    checkAvailability('username', username, usernameInput);
+                }, 500); // Wait 500ms after user stops typing
+            }
+        });
+    }
 
-    // NID validation
+    // Email availability checking
+    const emailInput = document.getElementById('email');
+    if (emailInput) {
+        let emailTimeout;
+        emailInput.addEventListener('input', function() {
+            clearTimeout(emailTimeout);
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const email = this.value.trim();
+            
+            if (email && emailRegex.test(email)) {
+                emailTimeout = setTimeout(() => {
+                    checkAvailability('email', email, emailInput);
+                }, 500); // Wait 500ms after user stops typing
+            } else if (email && !emailRegex.test(email)) {
+                this.style.borderColor = '#ff0000';
+                this.title = 'Please enter a valid email address';
+            } else {
+                this.style.borderColor = '';
+                this.title = '';
+            }
+        });
+    }
+
+    // Phone number validation and availability checking
+    const phoneInput = document.getElementById('phoneNumber');
+    if (phoneInput) {
+        let phoneTimeout;
+        phoneInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+            validatePhoneNumber(this);
+            
+            clearTimeout(phoneTimeout);
+            const phoneNumber = this.value.trim();
+            
+            if (phoneNumber.length === 11) {
+                phoneTimeout = setTimeout(() => {
+                    // Format the number before checking
+                    let formattedNumber = phoneNumber;
+                    if (!formattedNumber.startsWith('0')) {
+                        formattedNumber = '0' + formattedNumber.substring(1);
+                    }
+                    checkAvailability('mobile', formattedNumber, phoneInput);
+                }, 500);
+            }
+        });
+    }
+
+    // NID validation and availability checking
     const nidInput = document.getElementById('nid');
-    nidInput.addEventListener('input', function() {
-        this.value = this.value.replace(/[^0-9]/g, '');
-        validateNID(this);
-    });
+    if (nidInput) {
+        let nidTimeout;
+        nidInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+            validateNID(this);
+            
+            clearTimeout(nidTimeout);
+            const nid = this.value.trim();
+            
+            if (nid.length >= 10 && nid.length <= 17) {
+                nidTimeout = setTimeout(() => {
+                    checkAvailability('nid', nid, nidInput);
+                }, 500);
+            }
+        });
+    }
 
     // ZIP code validation
     const zipInput = document.getElementById('zipCode');
@@ -59,18 +127,6 @@ function initializeFormValidation() {
     bkashInput.addEventListener('input', function() {
         this.value = this.value.replace(/[^0-9]/g, '');
         validateBkashNumber(this);
-    });
-
-    // Email validation
-    const emailInput = document.getElementById('email');
-    emailInput.addEventListener('blur', function() {
-        validateEmail(this);
-    });
-
-    // Username validation
-    const usernameInput = document.getElementById('username');
-    usernameInput.addEventListener('blur', function() {
-        validateUsername(this);
     });
 
     // Password matching
@@ -344,7 +400,34 @@ async function submitRegistration(formData) {
             }, 3000);
         } else {
             console.log('❌ Registration failed:', data.message);
-            showErrorAlert(data.message);
+            
+            // Handle specific error types with enhanced messaging
+            let errorMessage = data.message;
+            if (data.code === 'USERNAME_EXISTS') {
+                errorMessage = '❌ Username Already Taken!\n\n' + data.message + '\n\nPlease try a different username.';
+            } else if (data.code === 'EMAIL_EXISTS') {
+                errorMessage = '❌ Email Already Registered!\n\n' + data.message + '\n\nTry logging in instead or use a different email.';
+            } else if (data.code === 'MOBILE_EXISTS') {
+                errorMessage = '❌ Mobile Number Already Registered!\n\n' + data.message + '\n\nPlease use a different mobile number.';
+            } else if (data.code === 'NID_EXISTS') {
+                errorMessage = '❌ NID Already Registered!\n\n' + data.message + '\n\nEach person can only have one account.';
+            } else {
+                errorMessage = '❌ Registration Failed!\n\n' + data.message;
+            }
+            
+            showErrorAlert(errorMessage);
+            
+            // Focus on the problematic field if specified
+            if (data.field) {
+                const fieldElement = document.getElementById(data.field);
+                if (fieldElement) {
+                    fieldElement.focus();
+                    fieldElement.style.borderColor = '#ff0000';
+                    setTimeout(() => {
+                        fieldElement.style.borderColor = '';
+                    }, 3000);
+                }
+            }
         }
     } catch (error) {
         console.error('💥 Registration error:', error);
@@ -427,4 +510,32 @@ async function submitRegistration(formData) {
         console.error('Network error:', error);
         alert('Network error: ' + error.message);
     }
+}
+
+// Function to check username/email/mobile/nid availability
+function checkAvailability(field, value, inputElement) {
+    fetch('/api/individual/check-availability', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ field: field, value: value })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (data.available) {
+                inputElement.style.borderColor = '#00aa00';
+                inputElement.title = `✅ ${data.message}`;
+            } else {
+                inputElement.style.borderColor = '#ff0000';
+                inputElement.title = `❌ ${data.message}`;
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error checking availability:', error);
+        inputElement.style.borderColor = '';
+        inputElement.title = '';
+    });
 }

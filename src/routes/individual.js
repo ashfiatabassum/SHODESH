@@ -260,27 +260,39 @@ router.post('/register', async (req, res) => {
     if (existingResults.length > 0) {
       const existing = existingResults[0];
       if (existing.username === username) {
+        console.log(`❌ Username '${username}' already exists`);
         return res.status(409).json({
           success: false,
-          message: 'Username already exists'
+          message: 'This username is already taken. Please choose a different username.',
+          field: 'username',
+          code: 'USERNAME_EXISTS'
         });
       }
       if (existing.email === email) {
+        console.log(`❌ Email '${email}' already registered`);
         return res.status(409).json({
           success: false,
-          message: 'Email already registered'
+          message: 'An account with this email address already exists. Please use a different email or try logging in.',
+          field: 'email',
+          code: 'EMAIL_EXISTS'
         });
       }
       if (existing.mobile === mobileNumber) {
+        console.log(`❌ Mobile number '${mobileNumber}' already registered`);
         return res.status(409).json({
           success: false,
-          message: 'Mobile number already registered'
+          message: 'This mobile number is already registered. Please use a different mobile number.',
+          field: 'phoneNumber',
+          code: 'MOBILE_EXISTS'
         });
       }
       if (existing.nid === nid) {
+        console.log(`❌ NID '${nid}' already registered`);
         return res.status(409).json({
           success: false,
-          message: 'NID already registered'
+          message: 'This NID is already registered. Each person can only have one account.',
+          field: 'nid',
+          code: 'NID_EXISTS'
         });
       }
     }
@@ -346,10 +358,43 @@ router.post('/register', async (req, res) => {
         message: 'Database table not found. Please ensure the INDIVIDUAL table exists.'
       });
     } else if (error.code === 'ER_DUP_ENTRY') {
-      return res.status(409).json({
-        success: false,
-        message: 'Username, email, mobile number, or NID already exists.'
-      });
+      // Handle duplicate entry errors from database constraints
+      const errorMessage = error.message.toLowerCase();
+      if (errorMessage.includes('username')) {
+        return res.status(409).json({
+          success: false,
+          message: 'This username is already taken. Please choose a different username.',
+          field: 'username',
+          code: 'USERNAME_EXISTS'
+        });
+      } else if (errorMessage.includes('email')) {
+        return res.status(409).json({
+          success: false,
+          message: 'An account with this email address already exists. Please use a different email or try logging in.',
+          field: 'email',
+          code: 'EMAIL_EXISTS'
+        });
+      } else if (errorMessage.includes('mobile')) {
+        return res.status(409).json({
+          success: false,
+          message: 'This mobile number is already registered. Please use a different mobile number.',
+          field: 'phoneNumber',
+          code: 'MOBILE_EXISTS'
+        });
+      } else if (errorMessage.includes('nid')) {
+        return res.status(409).json({
+          success: false,
+          message: 'This NID is already registered. Each person can only have one account.',
+          field: 'nid',
+          code: 'NID_EXISTS'
+        });
+      } else {
+        return res.status(409).json({
+          success: false,
+          message: 'Some of the information provided is already registered. Please check your username, email, mobile number, and NID.',
+          code: 'DUPLICATE_ENTRY'
+        });
+      }
     } else if (error.code === 'ER_CHECK_CONSTRAINT_VIOLATED') {
       return res.status(400).json({
         success: false,
@@ -364,7 +409,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// GET /api/individual/check-availability - Check if username/email/mobile/nid is available
+// POST /api/individual/check-availability - Check if username/email/mobile/nid is available
 router.post('/check-availability', (req, res) => {
   const { field, value } = req.body;
 
@@ -393,9 +438,18 @@ router.post('/check-availability', (req, res) => {
       });
     }
 
+    const isAvailable = results.length === 0;
+    let fieldLabel = field;
+    if (field === 'nid') fieldLabel = 'NID';
+    if (field === 'mobile') fieldLabel = 'Mobile number';
+    
     res.json({
       success: true,
-      available: results.length === 0
+      available: isAvailable,
+      message: isAvailable ? 
+        `${fieldLabel.charAt(0).toUpperCase() + fieldLabel.slice(1)} is available` : 
+        `${fieldLabel.charAt(0).toUpperCase() + fieldLabel.slice(1)} is already taken`,
+      field: field
     });
   });
 });
