@@ -8,7 +8,7 @@
 
 body {
     font-family: 'Poppins', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #4a7c59 0%, #5a8c69 100%);
     min-height: 100vh;
     padding: 20px 0;
     position: relative;
@@ -49,7 +49,7 @@ body::before {
 
 .logo i {
     font-size: 3rem;
-    color: #ff6b6b;
+    color: #2ed573;
     animation: heartbeat 2s ease-in-out infinite;
 }
 
@@ -62,7 +62,7 @@ body::before {
     font-size: 2.5rem;
     font-weight: 700;
     letter-spacing: 2px;
-    background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+    background: linear-gradient(45deg, #2ed573, #4a7c59);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -120,7 +120,7 @@ body::before {
 }
 
 .form-header h3 i {
-    color: #667eea;
+    color: #4a7c59;
 }
 
 .form-header p {
@@ -151,12 +151,12 @@ body::before {
     font-size: 1.2rem;
     font-weight: 600;
     color: #2c3e50;
-    border-bottom: 2px solid #667eea;
+    border-bottom: 2px solid #4a7c59;
     padding-bottom: 10px;
 }
 
 .section-title i {
-    color: #667eea;
+    color: #4a7c59;
     font-size: 1.3rem;
 }
 
@@ -225,9 +225,9 @@ body::before {
 .form-group input:focus,
 .form-group select:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: #4a7c59;
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+    box-shadow: 0 8px 25px rgba(74, 124, 89, 0.3);
 }
 
 .form-group input::placeholder {
@@ -248,7 +248,7 @@ body::before {
 
 .form-group input:focus + .field-icon,
 .form-group select:focus + .field-icon {
-    color: #667eea;
+    color: #4a7c59;
 }
 
 /* Password Toggle - Static Solution */
@@ -267,7 +267,7 @@ body::before {
 }
 
 .toggle-password:hover {
-    color: #667eea;
+    color: #4a7c59;
 }
 
 /* Select Dropdown */
@@ -283,7 +283,7 @@ select option {
 }
 
 .submit-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #4a7c59 0%, #5a8c69 100%);
     color: white;
     border: none;
     padding: 18px 40px;
@@ -301,7 +301,8 @@ select option {
 
 .submit-btn:hover {
     transform: translateY(-3px);
-    box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 15px 35px rgba(74, 124, 89, 0.4);
+    background: linear-gradient(135deg, #5a8c69 0%, #4a7c59 100%);
 }
 
 .submit-btn:active {
@@ -339,14 +340,14 @@ select option {
 }
 
 .form-footer a {
-    color: #667eea;
+    color: #4a7c59;
     text-decoration: none;
     font-weight: 500;
     transition: color 0.3s ease;
 }
 
 .form-footer a:hover {
-    color: #5a6fd8;
+    color: #3a6249;
     text-decoration: underline;
 }
 
@@ -383,7 +384,7 @@ select option {
 }
 
 .alert.success {
-    background: linear-gradient(135deg, #00b894, #00a085);
+    background: linear-gradient(135deg, #4a7c59, #5a8c69);
     color: white;
 }
 
@@ -480,7 +481,7 @@ select option {
 
 .form-group.success input,
 .form-group.success select {
-    border-color: #27ae60;
+    border-color: #4a7c59;
     background-color: #f2fdf5;
 }
 
@@ -489,7 +490,7 @@ select option {
 }
 
 .form-group.success .field-icon {
-    color: #27ae60;
+    color: #4a7c59;
 }
 
 /* Loading Animation */
@@ -638,7 +639,7 @@ select option {
 
 /* NEW: Red asterisk styling */
 .required {
-  color: #ff0000;
+  color: #e74c3c;
   font-weight: bold;
   margin-left: 3px;
   font-size: 16px;
@@ -1093,4 +1094,6 @@ select:invalid {
   font-size: 18px;
   opacity: 0.8;
 }
+
+
 

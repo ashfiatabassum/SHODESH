@@ -290,3 +290,119 @@ button:hover {
     font-size: 16px;
   }
 }
+
+/* ... all your existing CSS ... */
+
+/* Container height adjustment to accommodate sign-in section */
+.container {
+  position: relative;
+  width: 1440px;
+  min-height: 1450px; /* Increased from 1350px to accommodate sign-in section */
+  margin: 0 auto;
+  background: url('images/donorbggg.png') no-repeat left top;
+  background-size: 800px auto;
+}
+
+/* Sign In Section Styling */
+.signin-section {
+  position: absolute;
+  top: 1340px; /* Positioned below the form card */
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  padding-bottom: 60px; /* Space below the sign-in section */
+}
+
+.signin-text {
+  color: #4a7c59;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  font-family: 'Roboto Condensed', sans-serif;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.signin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #4a7c59 0%, #5a8c69 100%);
+  color: white;
+  text-decoration: none;
+  padding: 14px 32px;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(74, 124, 89, 0.4);
+  font-family: 'Roboto Condensed', sans-serif;
+  border: 2px solid transparent;
+  margin-bottom: 40px; /* Space below the button */
+}
+
+.signin-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(74, 124, 89, 0.5);
+  background: linear-gradient(135deg, #5a8c69 0%, #6a9c79 100%);
+  text-decoration: none;
+  color: white;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.signin-btn:active {
+  transform: translateY(-1px);
+}
+
+.signin-btn i {
+  font-size: 14px;
+}
+
+/* Responsive adjustments for sign in section */
+@media (max-width: 768px) {
+  .container {
+    min-height: 1550px; /* Increased for mobile */
+  }
+  
+  .signin-section {
+    top: 1420px; /* Adjusted for mobile layout */
+    gap: 12px;
+    padding-bottom: 50px;
+  }
+  
+  .signin-text {
+    font-size: 16px;
+  }
+  
+  .signin-btn {
+    padding: 12px 28px;
+    font-size: 15px;
+    margin-bottom: 35px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    min-height: 1600px;
+  }
+  
+  .signin-section {
+    top: 1450px;
+    gap: 10px;
+    padding-bottom: 40px;
+  }
+  
+  .signin-text {
+    font-size: 15px;
+  }
+  
+  .signin-btn {
+    padding: 10px 25px;
+    font-size: 14px;
+    margin-bottom: 30px;
+  }
+}

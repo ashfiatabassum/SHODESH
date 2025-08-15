@@ -396,3 +396,35 @@ function showAlert(message, type) {
 function closeAlert(button) {
     button.closest('.alert').remove();
 }
+
+
+
+
+
+
+// This goes in your frontend JavaScript, NOT in the server route file
+async function submitRegistration(formData) {
+    try {
+        const response = await fetch('/api/individual/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+        console.log('Full server response:', result);
+
+        if (!response.ok) {
+            console.error('Server error details:', result.message);
+            alert('Registration failed: ' + result.message);
+            return;
+        }
+
+        // Success handling
+        alert('Registration successful!');
+        
+    } catch (error) {
+        console.error('Network error:', error);
+        alert('Network error: ' + error.message);
+    }
+}

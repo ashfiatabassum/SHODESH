@@ -13,23 +13,24 @@ body, html {
   background-color: #ffffff;
 }
 
+/* RESTORED TO ORIGINAL SIZE + SPACE FOR SIGN-IN */
 .overlap-group-wrapper {
   background-color: #ffffff;
-  height: 1750px; /* Increased height for more gaps */
+  height: 1950px; /* Original 1750px + 200px for sign-in section */
   width: 1440px;
 }
 
 .overlap-group {
-  height: 1700px; /* Increased height */
+  height: 1900px; /* Original 1700px + 200px for sign-in section */
   position: relative;
   top: 35px;
   width: 1403px;
 }
 
-/* Form background container */
+/* RESTORED TO ORIGINAL FORM SIZE */
 .form-background {
   background-color: #4a7c59;
-  height: 1730px; /* Adjusted to end just after button */
+  height: 1730px; /* Back to original size */
   left: 689px;
   position: absolute;
   top: 42px;
@@ -52,8 +53,8 @@ body, html {
   height: 54px;
   left: 720px;
   position: absolute;
-  top: 115px; /* Increased to accommodate larger labels */
-  width: 630px; /* Reduced to fit inside form */
+  top: 115px;
+  width: 630px;
   border: 2px solid transparent;
   transition: all 0.3s ease;
 }
@@ -64,27 +65,27 @@ body, html {
   height: 54px;
   left: 720px;
   position: absolute;
-  top: 215px; /* Increased gap */
-  width: 630px; /* Reduced to fit inside form */
+  top: 215px;
+  width: 630px;
   border: 2px solid transparent;
   transition: all 0.3s ease;
 }
 
-/* Increased gaps between input boxes - Now 100px gaps */
-.rectangle-2 { top: 315px; }   /* +100px gap */
-.rectangle-3 { top: 415px; }   /* +100px gap */
-.rectangle-4 { top: 515px; }   /* +100px gap */
-.rectangle-5 { top: 615px; }   /* +100px gap */
-.rectangle-6 { top: 715px; }   /* +100px gap */
-.rectangle-7 { top: 815px; }   /* +100px gap */
-.rectangle-8 { top: 915px; }   /* +100px gap */
-.rectangle-9 { top: 1015px; }  /* +100px gap */
-.rectangle-10 { top: 1115px; } /* +100px gap */
-.rectangle-11 { top: 1215px; } /* +100px gap */
-.rectangle-12 { top: 1315px; } /* +100px gap */
-.rectangle-12-5 { top: 1415px; } /* +100px gap */
-.rectangle-13 { top: 1515px; } /* +100px gap */
-.rectangle-14 { top: 1615px; } /* +100px gap */
+/* RESTORED TO ORIGINAL GAPS - 100px between inputs */
+.rectangle-2 { top: 315px; }
+.rectangle-3 { top: 415px; }
+.rectangle-4 { top: 515px; }
+.rectangle-5 { top: 615px; }
+.rectangle-6 { top: 715px; }
+.rectangle-7 { top: 815px; }
+.rectangle-8 { top: 915px; }
+.rectangle-9 { top: 1015px; }
+.rectangle-10 { top: 1115px; }
+.rectangle-11 { top: 1215px; }
+.rectangle-12 { top: 1315px; }
+.rectangle-12-5 { top: 1415px; }
+.rectangle-13 { top: 1515px; }
+.rectangle-14 { top: 1615px; } /* Last input field */
 
 .rectangle-2, .rectangle-3, .rectangle-4, .rectangle-5,
 .rectangle-6, .rectangle-7, .rectangle-8, .rectangle-9,
@@ -93,7 +94,7 @@ body, html {
   height: 54px;
   left: 720px;
   position: absolute;
-  width: 630px; /* Reduced to fit inside form */
+  width: 630px;
   border-radius: 10px;
   border: 2px solid transparent;
   transition: all 0.3s ease;
@@ -219,9 +220,9 @@ body, html {
   font-family: "Roboto Condensed", sans-serif;
 }
 
-/* Button placement - positioned within the form with padding from last input */
+/* FIXED BUTTON POSITION - Below last input with proper spacing */
 .text-wrapper-12 {
-  top: 1695px; /* Positioned 80px below last input field */
+  top: 1695px; /* 80px below last input field (1615px + 80px) */
   left: 850px;
   font-size: 28px;
   cursor: pointer;
@@ -280,30 +281,16 @@ body, html {
 }
 
 @keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.02);
-  }
-  100% {
-    transform: scale(1);
-  }
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
 }
 
 @keyframes colorChange {
-  0% {
-    color: #af3e3e;
-  }
-  33% {
-    color: green;
-  }
-  66% {
-    color: #8b3131;
-  }
-  100% {
-    color: rgba(0, 128, 0, 0.466);
-  }
+  0% { color: #af3e3e; }
+  33% { color: green; }
+  66% { color: #8b3131; }
+  100% { color: rgba(0, 128, 0, 0.466); }
 }
 
 /* Enhanced file input styling */
@@ -396,20 +383,87 @@ select option {
   pointer-events: none;
 }
 
-/* Label styling - CORRECTED AND ENLARGED */
+/* Label styling */
 .field-label {
   position: absolute;
-  top: -30px; /* Moved further up */
-  left: 20px; /* Adjusted positioning */
-  font-size: 18px; /* Increased from 14px */
-  font-weight: 700; /* Made bolder */
+  top: -30px;
+  left: 20px;
+  font-size: 18px;
+  font-weight: 700;
   color: #ffffff;
   font-family: "Roboto Condensed", sans-serif;
   background: transparent;
-  padding: 2px 8px; /* Added more padding */
+  padding: 2px 8px;
   z-index: 2;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7); /* Enhanced shadow */
-  letter-spacing: 0.5px; /* Added letter spacing */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+  letter-spacing: 0.5px;
+}
+
+/* Red asterisk styling for required fields */
+.required {
+  color: #ff0000;
+  font-weight: bold;
+  margin-left: 3px;
+  font-size: 16px;
+}
+
+/* SIGN IN SECTION - POSITIONED BELOW FORM WITH PROPER SPACING */
+.signin-section {
+  position: absolute;
+  top: 1850px; /* Form ends around 1730px, button at 1695px + padding = 1780px */
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  padding-bottom: 80px; /* Space below the sign-in section */
+}
+
+.signin-text {
+  color: black;
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  font-family: "Roboto Condensed", sans-serif;
+}
+
+.signin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #4a7c59 0%, #5a8c69 100%);
+  color: white;
+  text-decoration: none;
+  padding: 12px 30px;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(74, 124, 89, 0.4);
+  font-family: "Roboto Condensed", sans-serif;
+  border: 2px solid transparent;
+  margin-bottom: 40px; /* Space below the button */
+}
+
+.signin-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(74, 124, 89, 0.5);
+  background: linear-gradient(135deg, #5a8c69 0%, #6a9c79 100%);
+  text-decoration: none;
+  color: white;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.signin-btn:active {
+  transform: translateY(-1px);
+}
+
+.signin-btn i {
+  font-size: 14px;
 }
 
 /* Responsive adjustments */
@@ -437,7 +491,7 @@ select option {
     width: 90%;
     left: 5%;
     height: auto;
-    min-height: 1700px; /* Increased for mobile */
+    min-height: 1700px;
   }
   
   .foundationbg {
@@ -469,13 +523,36 @@ select option {
   }
   
   .field-label {
-    font-size: 16px; /* Slightly smaller on mobile */
+    font-size: 16px;
+  }
+  
+  .signin-section {
+    top: 1650px; /* Adjusted for mobile */
+    gap: 12px;
+    padding-bottom: 60px;
+  }
+  
+  .signin-text {
+    font-size: 14px;
+  }
+  
+  .signin-btn {
+    padding: 10px 25px;
+    font-size: 14px;
+    margin-bottom: 30px;
   }
 }
-/* Red asterisk styling for required fields */
-.required {
-  color: #ff0000;
-  font-weight: bold;
-  margin-left: 3px;
-  font-size: 16px;
+
+@media (max-width: 480px) {
+  .signin-section {
+    top: 1600px; /* Adjusted for smaller screens */
+    gap: 10px;
+    padding-bottom: 50px;
+  }
+  
+  .signin-btn {
+    padding: 8px 20px;
+    font-size: 13px;
+    margin-bottom: 25px;
+  }
 }
