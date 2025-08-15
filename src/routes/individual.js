@@ -2,12 +2,6 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 
-/*// Test route
-router.get('/test', (req, res) => {
-  console.log('🧪 Test route hit!');
-  res.json({ message: 'Individual routes are working!' });
-});*/
-
 // Generate individual ID (simple implementation)
 function generateIndividualId() {
   const prefix = 'IND';
@@ -316,8 +310,8 @@ router.post('/register', async (req, res) => {
       username,
       email,
       password, // No hashing as requested
-      mobileNumber,
-      nid,
+      mobileNumber,    // FIXED: Use mobileNumber instead of phoneNumber
+      nid,             // FIXED: Use nid instead of nidNumber
       dateOfBirth,
       houseNo,
       roadNo,
@@ -328,6 +322,8 @@ router.post('/register', async (req, res) => {
       bkashFormatted,
       bankAccount
     ];
+
+    console.log('💾 Insert values:', insertValues);
 
     await new Promise((resolve, reject) => {
       db.query(insertQuery, insertValues, (err, result) => {
@@ -454,9 +450,176 @@ router.post('/check-availability', (req, res) => {
   });
 });
 
+// POST /api/individual/signin - Authenticate individual
+router.post('/signin', async (req, res) => {
+  console.log('🔐 Individual sign in request received:', req.body);
+  
+  try {
+    const { username, password } = req.body;
+
+    // Input validation
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username and password are required'
+      });
+    }
+
+    // Query to find individual by username
+    const query = `
+      SELECT individual_id, first_name, last_name, username, email, password,
+             mobile, nid, dob, house_no, road_no, area, district, 
+             administrative_div, zip, bkash, bank_account
+      FROM individual 
+      WHERE username = ?
+    `;
+    
+    const results = await new Promise((resolve, reject) => {
+      db.query(query, [username], (err, results) => {
+        if (err) {
+          console.error('❌ Error fetching individual:', err);
+          reject(err);
+        } else {
+          console.log('📋 Individual query results:', results.length);
+          resolve(results);
+        }
+      });
+    });
+
+    // Check if individual exists
+    if (results.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid username or password'
+      });
+    }
+
+    const individual = results[0];
+    
+    // Verify password (plain text comparison)
+    if (individual.password !== password) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid username or password'
+      });
+    }
+
+    console.log('✅ Individual authenticated successfully:', individual.individual_id);
+
+    // Prepare individual data for profile
+    const individualData = {
+      personalInfo: {
+        firstName: individual.first_name,
+        lastName: individual.last_name,
+        email: individual.email,
+        phoneNumber: individual.mobile,      // FIXED: Use phoneNumber
+        nidNumber: individual.nid,           // FIXED: Use nidNumber
+        dateOfBirth: individual.dob,
+        memberSince: "2024" // You can calculate this from a created_at field if you have one
+      },
+      address: {
+        houseNo: individual.house_no,
+        roadNo: individual.road_no,
+        area: individual.area,
+        district: individual.district,
+        division: individual.administrative_div,
+        zipCode: individual.zip
+      },
+      financial: {
+        bkashNumber: individual.bkash,
+        bankAccount: individual.bank_account
+      },
+      helpRequests: [], // Will be populated from help_requests table later
+      receivedDonations: [] // Will be populated from donations table later
+    };
+
+    // Return success response with individual data
+    res.status(200).json({
+      success: true,
+      message: 'Sign in successful',
+      individualId: individual.individual_id,
+      individualData: individualData
+    });
+
+  } catch (error) {
+    console.error('❌ Error during sign in:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
+
+// GET /api/individual/profile/:individualId - Get individual profile data
+router.get('/profile/:individualId', async (req, res) => {
+  try {
+    const { individualId } = req.params;
+    
+    const query = `
+      SELECT individual_id, first_name, last_name, username, email, 
+             mobile, nid, dob, house_no, road_no, area, district, 
+             administrative_div, zip, bkash, bank_account
+      FROM individual 
+      WHERE individual_id = ?
+    `;
+    
+    const results = await new Promise((resolve, reject) => {
+      db.query(query, [individualId], (err, results) => {
+        if (err) {
+          console.error('❌ Error fetching individual profile:', err);
+          reject(err);
+        } else {
+          resolve(results);
+        }
+      });
+    });
+
+    if (results.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Individual not found'
+      });
+    }
+
+    const individual = results[0];
+    const individualData = {
+      personalInfo: {
+        firstName: individual.first_name,
+        lastName: individual.last_name,
+        email: individual.email,
+        phoneNumber: individual.mobile,      // FIXED: Use phoneNumber instead of phoneNID
+        nidNumber: individual.nid,
+        dateOfBirth: individual.dob,
+        memberSince: "2024"
+      },
+      address: {
+        houseNo: individual.house_no,
+        roadNo: individual.road_no,
+        area: individual.area,
+        district: individual.district,
+        division: individual.administrative_div,
+        zipCode: individual.zip
+      },
+      financial: {
+        bkashNumber: individual.bkash,
+        bankAccount: individual.bank_account
+      },
+      helpRequests: [],
+      receivedDonations: []
+    };
+
+    res.json({
+      success: true,
+      individualData
+    });
+
+  } catch (error) {
+    console.error('❌ Error fetching individual profile:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch individual profile'
+    });
+  }
+});
+
 module.exports = router;
-
-
-
-
-

@@ -62,7 +62,7 @@ function showCustomAlert(message, type = 'info', duration = 5000) {
         progressBar.style.animation = `progress ${duration}ms linear`;
     }
 
-    return alertContainer; // Return reference for manual removal
+    return alertContainer;
 }
 
 // Function to remove loading alerts manually
@@ -106,13 +106,14 @@ document.getElementById("signin").addEventListener("click", async () => {
   signinBtn.style.opacity = "0.7";
   
   // Show loading alert
-  const loadingAlert = showCustomAlert('🔐 Verifying your credentials... Please wait.', 'loading');
+  showCustomAlert('🔐 Verifying your credentials... Please wait.', 'loading');
   
   try {
-    console.log('🔐 Attempting donor sign in...');
+    console.log('🔐 Attempting to sign in with username:', user);
     
-    // Send login request to backend
-    const response = await fetch('/api/donor/signin', {
+    // Try individual signin first
+    console.log('🔐 Checking individual credentials...');
+    let response = await fetch('/api/individual/signin', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -123,20 +124,86 @@ document.getElementById("signin").addEventListener("click", async () => {
       })
     });
     
-    const data = await response.json();
-    console.log('📋 Sign in response:', data);
+    console.log('📊 Individual response status:', response.status);
+    
+    // Handle different response types
+    let data;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      console.error('❌ Failed to parse individual response as JSON:', parseError);
+      data = { success: false, message: 'Server response error' };
+    }
+    
+    console.log('📋 Individual sign in response:', data);
+    
+    if (response.ok && data.success) {
+      // Remove loading alert
+      removeLoadingAlert();
+      
+      // Store individual data and redirect to profile
+      localStorage.setItem('individualId', data.individualId);
+      localStorage.setItem('individualData', JSON.stringify(data.individualData));
+      localStorage.setItem('userType', 'individual');
+      
+      showCustomAlert(
+        `🎉 <strong>Welcome back, ${data.individualData.personalInfo.firstName}!</strong><br><br>
+        Successfully signed in as an <strong>Individual</strong>.<br><br>
+        <small>Redirecting to your profile...</small>`, 
+        'success', 
+        3000
+      );
+      
+      // Redirect to individual profile after delay
+      setTimeout(() => {
+        window.location.href = 'profileindividual.html';
+      }, 3000);
+      return;
+    }
+    
+    // If individual signin failed, try donor signin
+    console.log('🔐 Individual signin failed, trying donor signin...');
+    console.log('Individual error message:', data.message);
+    
+    // Update loading message
+    removeLoadingAlert();
+    showCustomAlert('🔐 Checking donor credentials... Please wait.', 'loading');
+    
+    response = await fetch('/api/donor/signin', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: user,
+        password: pass
+      })
+    });
+    
+    console.log('📊 Donor response status:', response.status);
+    
+    // Handle different response types for donor
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      console.error('❌ Failed to parse donor response as JSON:', parseError);
+      data = { success: false, message: 'Server response error' };
+    }
+    
+    console.log('📋 Donor sign in response:', data);
     
     // Remove loading alert
     removeLoadingAlert();
     
-    if (data.success) {
-      // Store donor data for profile page
+    if (response.ok && data.success) {
+      // Store donor data and redirect to profile
       localStorage.setItem('donorId', data.donorId);
       localStorage.setItem('donorData', JSON.stringify(data.donorData));
+      localStorage.setItem('userType', 'donor');
       
       showCustomAlert(
         `🎉 <strong>Welcome back, ${data.donorData.personalInfo.firstName}!</strong><br><br>
-        Successfully signed in to your SHODESH account.<br><br>
+        Successfully signed in as a <strong>Donor</strong>.<br><br>
         <small>Redirecting to your profile...</small>`, 
         'success', 
         3000
@@ -146,15 +213,33 @@ document.getElementById("signin").addEventListener("click", async () => {
       setTimeout(() => {
         window.location.href = 'profiledonor.html';
       }, 3000);
-    } else {
-      showCustomAlert(
-        `<strong>Sign In Failed</strong><br><br>
-        ${data.message}<br><br>
-        <small>Please check your username and password and try again.</small>`, 
-        'error', 
-        6000
-      );
+      return;
     }
+    
+    // Both signin attempts failed - show detailed error message
+    console.log('❌ Both signin attempts failed');
+    console.log('Donor error message:', data.message);
+    
+    let errorMessage = 'Invalid username or password.';
+    
+    // Check if it's a server error
+    if (response.status >= 500) {
+      errorMessage = 'Server error occurred. Please try again later.';
+    } else if (data.message) {
+      errorMessage = data.message;
+    }
+    
+    showCustomAlert(
+      `<strong>Sign In Failed</strong><br><br>
+      ${errorMessage}<br><br>
+      <small>Make sure you're using the correct username and password for your account.</small><br><br>
+      <strong>Account Types:</strong><br>
+      • Individual Account<br>
+      • Donor Account<br><br>
+      <small>If you don't have an account, please register first.</small>`, 
+      'error', 
+      10000
+    );
     
   } catch (error) {
     console.error('❌ Sign in error:', error);
@@ -163,9 +248,10 @@ document.getElementById("signin").addEventListener("click", async () => {
     showCustomAlert(
       `<strong>Connection Error</strong><br><br>
       Unable to connect to the server. Please check your internet connection and try again.<br><br>
-      <small>Error: ${error.message}</small>`, 
+      <small>Error: ${error.message}</small><br><br>
+      <small>Make sure the server is running on the correct port.</small>`, 
       'error', 
-      7000
+      10000
     );
   } finally {
     // Reset button state
@@ -175,6 +261,7 @@ document.getElementById("signin").addEventListener("click", async () => {
   }
 });
 
+// ...rest of the code remains the same...
 // Handle Enter key press and add real-time validation
 document.addEventListener('DOMContentLoaded', function() {
   const passwordField = document.getElementById("password");
@@ -271,6 +358,37 @@ document.addEventListener('DOMContentLoaded', function() {
         this.style.boxShadow = '';
       }
     });
+  }
+
+  // Add account type indicator (only individual and donor)
+  const formContainer = document.querySelector('.signin-form') || document.querySelector('form');
+  if (formContainer && !document.querySelector('.account-types-info')) {
+    const accountTypesInfo = document.createElement('div');
+    accountTypesInfo.className = 'account-types-info';
+    accountTypesInfo.innerHTML = `
+      <div class="account-types-header">
+        <i class="fas fa-info-circle"></i>
+        <span>Supported Account Types</span>
+      </div>
+      <div class="account-types-list">
+        <div class="account-type">
+          <i class="fas fa-user"></i>
+          <span>Individual</span>
+        </div>
+        <div class="account-type">
+          <i class="fas fa-heart"></i>
+          <span>Donor</span>
+        </div>
+      </div>
+    `;
+    
+    // Insert before the form or at the end of the container
+    const insertTarget = formContainer.querySelector('form') || formContainer;
+    if (insertTarget.nextSibling) {
+      formContainer.insertBefore(accountTypesInfo, insertTarget.nextSibling);
+    } else {
+      formContainer.appendChild(accountTypesInfo);
+    }
   }
 });
 
@@ -438,6 +556,51 @@ customStyles.textContent = `
         transform: translateY(-1px);
     }
 
+    /* Account Types Info Styles */
+    .account-types-info {
+        margin-top: 20px;
+        padding: 15px;
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 10px;
+        border-left: 4px solid #4a7c59;
+    }
+
+    .account-types-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 14px;
+    }
+
+    .account-types-header i {
+        color: #4a7c59;
+    }
+
+    .account-types-list {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .account-type {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        background: white;
+        border-radius: 6px;
+        font-size: 12px;
+        color: #495057;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .account-type i {
+        color: #6c757d;
+    }
+
     /* Responsive design */
     @media (max-width: 480px) {
         .custom-alert {
@@ -455,6 +618,15 @@ customStyles.textContent = `
 
         .alert-message {
             font-size: 13px;
+        }
+
+        .account-types-list {
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .account-type {
+            justify-content: center;
         }
     }
 

@@ -97,7 +97,7 @@ function initializeFormValidation() {
     }
 
     // NID validation and availability checking
-    const nidInput = document.getElementById('nid');
+    const nidInput = document.getElementById('nidNumber');
     if (nidInput) {
         let nidTimeout;
         nidInput.addEventListener('input', function() {
@@ -117,25 +117,31 @@ function initializeFormValidation() {
 
     // ZIP code validation
     const zipInput = document.getElementById('zipCode');
-    zipInput.addEventListener('input', function() {
-        this.value = this.value.replace(/[^0-9]/g, '');
-        validateZipCode(this);
-    });
+    if (zipInput) {
+        zipInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+            validateZipCode(this);
+        });
+    }
 
     // bKash number validation
     const bkashInput = document.getElementById('bkashNumber');
-    bkashInput.addEventListener('input', function() {
-        this.value = this.value.replace(/[^0-9]/g, '');
-        validateBkashNumber(this);
-    });
+    if (bkashInput) {
+        bkashInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+            validateBkashNumber(this);
+        });
+    }
 
     // Password matching
     const passwordInput = document.getElementById('password');
     const confirmPasswordInput = document.getElementById('confirmPassword');
     
-    confirmPasswordInput.addEventListener('input', function() {
-        validatePasswordMatch(passwordInput, confirmPasswordInput);
-    });
+    if (confirmPasswordInput) {
+        confirmPasswordInput.addEventListener('input', function() {
+            validatePasswordMatch(passwordInput, confirmPasswordInput);
+        });
+    }
 }
 
 // Password toggle functionality
@@ -285,9 +291,11 @@ function validatePasswordMatch(passwordInput, confirmPasswordInput) {
 }
 
 function setFieldState(group, state) {
-    group.classList.remove('error', 'success');
-    if (state !== 'neutral') {
-        group.classList.add(state);
+    if (group) {
+        group.classList.remove('error', 'success');
+        if (state !== 'neutral') {
+            group.classList.add(state);
+        }
     }
 }
 
@@ -302,7 +310,7 @@ async function validateAndSubmit() {
         username: document.getElementById('username').value.trim(),
         email: document.getElementById('email').value.trim(),
         phoneNumber: document.getElementById('phoneNumber').value.trim(),
-        nid: document.getElementById('nid').value.trim(),
+        nid: document.getElementById('nidNumber').value.trim(),
         dateOfBirth: document.getElementById('dateOfBirth').value,
         houseNo: document.getElementById('houseNo').value.trim(),
         roadNo: document.getElementById('roadNo').value.trim(),
@@ -319,11 +327,11 @@ async function validateAndSubmit() {
     console.log('📋 Form data collected:', formData);
 
     // Basic required fields check
-    const requiredFields = ['firstName', 'lastName', 'username', 'email', 'phoneNumber', 'nid', 'dateOfBirth', 'houseNo', 'roadNo', 'area', 'district', 'division', 'zipCode', 'bkashNumber', 'bankAccount', 'password', 'confirmPassword'];
+    const requiredFields = ['firstName', 'lastName', 'username', 'email', 'phoneNumber', 'nidNumber', 'dateOfBirth', 'houseNo', 'roadNo', 'area', 'district', 'division', 'zipCode', 'bkashNumber', 'bankAccount', 'password', 'confirmPassword'];
     
     for (let field of requiredFields) {
         if (!formData[field]) {
-            showErrorAlert(`${field.replace(/([A-Z])/g, ' $1').toLowerCase()} is required`);
+            showCustomAlert(`${field.replace(/([A-Z])/g, ' $1').toLowerCase()} is required`, 'error');
             console.log(`❌ Missing field: ${field}`);
             return;
         }
@@ -331,7 +339,7 @@ async function validateAndSubmit() {
 
     // Password match check
     if (formData.password !== formData.confirmPassword) {
-        showErrorAlert('Passwords do not match');
+        showCustomAlert('Passwords do not match', 'error');
         console.log('❌ Password mismatch');
         return;
     }
@@ -354,8 +362,11 @@ async function submitRegistration(formData) {
         console.log('🔄 Setting loading state...');
         // Show loading state
         submitBtn.disabled = true;
-        btnText.style.display = 'none';
-        btnLoader.style.display = 'block';
+        if (btnText) btnText.style.display = 'none';
+        if (btnLoader) btnLoader.style.display = 'block';
+
+        // Show loading alert
+        showCustomAlert('🔄 Registering your account... Please wait.', 'loading');
 
         console.log('📤 Sending request to /api/individual/register...');
         const response = await fetch('/api/individual/register', {
@@ -369,7 +380,7 @@ async function submitRegistration(formData) {
                 username: formData.username,
                 email: formData.email,
                 phoneNumber: formData.phoneNumber,
-                nid: formData.nid,
+                nid: formData.nidNumber,
                 dateOfBirth: formData.dateOfBirth,
                 houseNo: formData.houseNo,
                 roadNo: formData.roadNo,
@@ -385,8 +396,12 @@ async function submitRegistration(formData) {
 
         console.log('📥 Response received:', response.status, response.statusText);
 
+        // Remove loading alert
+        removeLoadingAlert();
+
         if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            const errorData = await response.json();
+            throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
         }
 
         const data = await response.json();
@@ -394,28 +409,38 @@ async function submitRegistration(formData) {
 
         if (data.success) {
             console.log('✅ Registration successful!');
-            showSuccessAlert(`${data.message} Your Individual ID: ${data.individualId}`);
+            showCustomAlert(
+                `🎉 <strong>Registration Successful!</strong><br><br>
+                Your Individual ID: <strong>${data.individualId}</strong><br><br>
+                <small>Redirecting to sign-in page...</small>`, 
+                'success', 
+                4000
+            );
+            
+            // Redirect to signin page after a delay
             setTimeout(() => {
-                window.location.href = 'profileindividual.html';
-            }, 3000);
+                window.location.href = 'signin.html';
+            }, 4000);
         } else {
             console.log('❌ Registration failed:', data.message);
             
             // Handle specific error types with enhanced messaging
             let errorMessage = data.message;
+            let alertType = 'error';
+            
             if (data.code === 'USERNAME_EXISTS') {
-                errorMessage = '❌ Username Already Taken!\n\n' + data.message + '\n\nPlease try a different username.';
+                errorMessage = `<strong>Username Already Taken!</strong><br><br>${data.message}<br><br><small>Please try a different username.</small>`;
             } else if (data.code === 'EMAIL_EXISTS') {
-                errorMessage = '❌ Email Already Registered!\n\n' + data.message + '\n\nTry logging in instead or use a different email.';
+                errorMessage = `<strong>Email Already Registered!</strong><br><br>${data.message}<br><br><small>Try logging in instead or use a different email.</small>`;
             } else if (data.code === 'MOBILE_EXISTS') {
-                errorMessage = '❌ Mobile Number Already Registered!\n\n' + data.message + '\n\nPlease use a different mobile number.';
+                errorMessage = `<strong>Mobile Number Already Registered!</strong><br><br>${data.message}<br><br><small>Please use a different mobile number.</small>`;
             } else if (data.code === 'NID_EXISTS') {
-                errorMessage = '❌ NID Already Registered!\n\n' + data.message + '\n\nEach person can only have one account.';
+                errorMessage = `<strong>NID Already Registered!</strong><br><br>${data.message}<br><br><small>Each person can only have one account.</small>`;
             } else {
-                errorMessage = '❌ Registration Failed!\n\n' + data.message;
+                errorMessage = `<strong>Registration Failed!</strong><br><br>${data.message}`;
             }
             
-            showErrorAlert(errorMessage);
+            showCustomAlert(errorMessage, alertType, 6000);
             
             // Focus on the problematic field if specified
             if (data.field) {
@@ -431,84 +456,20 @@ async function submitRegistration(formData) {
         }
     } catch (error) {
         console.error('💥 Registration error:', error);
-        showErrorAlert(`Network error: ${error.message}. Please check your connection and try again.`);
+        removeLoadingAlert();
+        showCustomAlert(
+            `<strong>Network Error</strong><br><br>
+            ${error.message}<br><br>
+            <small>Please check your connection and try again.</small>`, 
+            'error', 
+            7000
+        );
     } finally {
         console.log('🔄 Resetting button state...');
         // Reset button state
         submitBtn.disabled = false;
-        btnText.style.display = 'inline';
-        btnLoader.style.display = 'none';
-    }
-}
-
-// Alert functions
-function showSuccessAlert(message) {
-    showAlert(message, 'success');
-}
-
-function showErrorAlert(message) {
-    showAlert(message, 'error');
-}
-
-function showAlert(message, type) {
-    const container = document.getElementById('messageContainer');
-    
-    const alert = document.createElement('div');
-    alert.className = `alert ${type}`;
-    
-    const icon = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
-    
-    alert.innerHTML = `
-        <i class="${icon}"></i>
-        <span>${message}</span>
-        <button class="alert-close" onclick="closeAlert(this)">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
-    
-    container.appendChild(alert);
-    
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-        if (alert.parentElement) {
-            alert.remove();
-        }
-    }, 5000);
-}
-
-function closeAlert(button) {
-    button.closest('.alert').remove();
-}
-
-
-
-
-
-
-// This goes in your frontend JavaScript, NOT in the server route file
-async function submitRegistration(formData) {
-    try {
-        const response = await fetch('/api/individual/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData)
-        });
-
-        const result = await response.json();
-        console.log('Full server response:', result);
-
-        if (!response.ok) {
-            console.error('Server error details:', result.message);
-            alert('Registration failed: ' + result.message);
-            return;
-        }
-
-        // Success handling
-        alert('Registration successful!');
-        
-    } catch (error) {
-        console.error('Network error:', error);
-        alert('Network error: ' + error.message);
+        if (btnText) btnText.style.display = 'inline';
+        if (btnLoader) btnLoader.style.display = 'none';
     }
 }
 
@@ -525,10 +486,12 @@ function checkAvailability(field, value, inputElement) {
     .then(data => {
         if (data.success) {
             if (data.available) {
-                inputElement.style.borderColor = '#00aa00';
+                inputElement.style.borderColor = '#2ed573';
+                inputElement.style.boxShadow = '0 0 10px rgba(46, 213, 115, 0.3)';
                 inputElement.title = `✅ ${data.message}`;
             } else {
-                inputElement.style.borderColor = '#ff0000';
+                inputElement.style.borderColor = '#ff4757';
+                inputElement.style.boxShadow = '0 0 10px rgba(255, 71, 87, 0.3)';
                 inputElement.title = `❌ ${data.message}`;
             }
         }
@@ -536,6 +499,244 @@ function checkAvailability(field, value, inputElement) {
     .catch(error => {
         console.error('Error checking availability:', error);
         inputElement.style.borderColor = '';
+        inputElement.style.boxShadow = '';
         inputElement.title = '';
     });
 }
+
+// Custom alert functions (same as signin and donor registration)
+function showCustomAlert(message, type = 'info', duration = 5000) {
+    // Remove any existing alerts
+    const existingAlerts = document.querySelectorAll('.custom-alert');
+    existingAlerts.forEach(alert => alert.remove());
+
+    // Create alert container
+    const alertContainer = document.createElement('div');
+    alertContainer.className = `custom-alert ${type}`;
+    
+    // Set icon based on type
+    let icon;
+    switch(type) {
+        case 'success':
+            icon = '✅';
+            break;
+        case 'error':
+            icon = '❌';
+            break;
+        case 'warning':
+            icon = '⚠️';
+            break;
+        case 'loading':
+            icon = '⏳';
+            break;
+        case 'info':
+        default:
+            icon = 'ℹ️';
+            break;
+    }
+
+    alertContainer.innerHTML = `
+        <div class="alert-content">
+            <div class="alert-icon">${icon}</div>
+            <div class="alert-message">${message}</div>
+            <button class="alert-close" onclick="this.parentElement.parentElement.remove()">×</button>
+        </div>
+        <div class="alert-progress"></div>
+    `;
+
+    // Add to page
+    document.body.appendChild(alertContainer);
+
+    // Animate in
+    setTimeout(() => {
+        alertContainer.classList.add('show');
+    }, 10);
+
+    // Auto remove after duration (except for loading alerts)
+    if (type !== 'loading') {
+        setTimeout(() => {
+            alertContainer.classList.add('hide');
+            setTimeout(() => {
+                if (alertContainer.parentNode) {
+                    alertContainer.remove();
+                }
+            }, 300);
+        }, duration);
+
+        // Start progress bar animation
+        const progressBar = alertContainer.querySelector('.alert-progress');
+        progressBar.style.animation = `progress ${duration}ms linear`;
+    }
+
+    return alertContainer;
+}
+
+// Function to remove loading alerts manually
+function removeLoadingAlert() {
+    const loadingAlerts = document.querySelectorAll('.custom-alert.loading');
+    loadingAlerts.forEach(alert => {
+        alert.classList.add('hide');
+        setTimeout(() => {
+            if (alert.parentNode) {
+                alert.remove();
+            }
+        }, 300);
+    });
+}
+
+// Legacy alert functions for compatibility
+function showSuccessAlert(message) {
+    showCustomAlert(message, 'success');
+}
+
+function showErrorAlert(message) {
+    showCustomAlert(message, 'error');
+}
+
+// Add CSS styles for custom alerts
+const customStyles = document.createElement('style');
+customStyles.textContent = `
+    /* Custom Alert Styles */
+    .custom-alert {
+        position: fixed;
+        top: 20px;
+        right: -400px;
+        width: 380px;
+        z-index: 10000;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        backdrop-filter: blur(10px);
+    }
+
+    .custom-alert.show {
+        right: 20px;
+        transform: translateY(0);
+    }
+
+    .custom-alert.hide {
+        right: -400px;
+        opacity: 0;
+    }
+
+    .custom-alert.success {
+        background: linear-gradient(135deg, #2ed573, #17c0eb);
+        color: white;
+    }
+
+    .custom-alert.error {
+        background: linear-gradient(135deg, #ff4757, #ff3838);
+        color: white;
+    }
+
+    .custom-alert.warning {
+        background: linear-gradient(135deg, #ffa502, #ff6348);
+        color: white;
+    }
+
+    .custom-alert.loading {
+        background: linear-gradient(135deg, #5f27cd, #341f97);
+        color: white;
+    }
+
+    .custom-alert.info {
+        background: linear-gradient(135deg, #3742fa, #2f3542);
+        color: white;
+    }
+
+    .alert-content {
+        display: flex;
+        align-items: flex-start;
+        padding: 20px;
+        gap: 15px;
+        position: relative;
+    }
+
+    .alert-icon {
+        font-size: 24px;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .custom-alert.loading .alert-icon {
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+
+    .alert-message {
+        flex: 1;
+        font-size: 14px;
+        line-height: 1.5;
+        font-weight: 500;
+    }
+
+    .alert-close {
+        background: none;
+        border: none;
+        color: inherit;
+        font-size: 20px;
+        cursor: pointer;
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: background-color 0.2s;
+        flex-shrink: 0;
+    }
+
+    .alert-close:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .custom-alert.loading .alert-close {
+        display: none;
+    }
+
+    .alert-progress {
+        height: 3px;
+        background: rgba(255, 255, 255, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .alert-progress::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.7);
+        width: 100%;
+    }
+
+    .custom-alert.loading .alert-progress {
+        display: none;
+    }
+
+    @keyframes progress {
+        from { width: 100%; }
+        to { width: 0%; }
+    }
+
+    /* Responsive design */
+    @media (max-width: 480px) {
+        .custom-alert {
+            right: -100%;
+            width: calc(100% - 40px);
+        }
+        
+        .custom-alert.show {
+            right: 20px;
+        }
+    }
+`;
+document.head.appendChild(customStyles);
