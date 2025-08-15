@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cache Buster Test</title>
+</head>
+<body>
+    <h1>Cache Test</h1>
+    <p>File served at: <span id="timestamp"></span></p>
+    <p>If you see a current timestamp, the files are being served fresh.</p>
+    
+    <script>
+        document.getElementById('timestamp').textContent = new Date().toISOString();
+        console.log('🕒 Page loaded at:', new Date().toISOString());
+        
+        // Test the foundation API immediately
+        setTimeout(async () => {
+            console.log('🔧 Testing foundation API...');
+            try {
+                const response = await fetch('/api/admin/foundations?status=unverified', {
+                    headers: {
+                        'Authorization': 'test-admin-token',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('📡 API Response status:', response.status);
+                const data = await response.json();
+                console.log('📊 API Response data:', data);
+                
+                if (data.success) {
+                    document.body.innerHTML += `
+                        <div style="background: #d4edda; padding: 15px; border: 1px solid #c3e6cb; border-radius: 5px; margin: 15px 0;">
+                            <h3>✅ API Test Successful!</h3>
+                            <p><strong>Found foundations:</strong> ${data.data.length}</p>
+                            <ul>
+                                ${data.data.map(f => `<li>${f.foundation_name} (${f.foundation_id})</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                } else {
+                    document.body.innerHTML += `
+                        <div style="background: #f8d7da; padding: 15px; border: 1px solid #f5c6cb; border-radius: 5px; margin: 15px 0;">
+                            <h3>❌ API Test Failed</h3>
+                            <p>Error: ${data.message}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.body.innerHTML += `
+                    <div style="background: #fff3cd; padding: 15px; border: 1px solid #ffeaa7; border-radius: 5px; margin: 15px 0;">
+                        <h3>⚠️ Network Error</h3>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

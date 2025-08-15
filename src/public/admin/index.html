@@ -61,10 +61,10 @@
                 <i class="fas fa-fire"></i>
                 <span>Trending Management</span>
             </div>
-            <div class="menu-item" onclick="showSection('foundations')">
+            <div class="menu-item" onclick="window.location.href='foundation-verification.html'">
                 <i class="fas fa-building"></i>
                 <span>Foundation Verification</span>
-                <span class="badge">3</span>
+                <span class="badge">2</span>
             </div>
             <div class="menu-item" onclick="showSection('volunteers')">
                 <i class="fas fa-users"></i>
@@ -149,10 +149,10 @@
                         <span>Verify Events</span>
                         <small>12 pending</small>
                     </button>
-                    <button class="action-card" onclick="showSection('foundations')">
+                    <button class="action-card" onclick="window.location.href='foundation-verification.html'">
                         <i class="fas fa-building"></i>
                         <span>Review Foundations</span>
-                        <small>3 pending</small>
+                        <small>2 total</small>
                     </button>
                     <button class="action-card" onclick="showSection('volunteers')">
                         <i class="fas fa-users"></i>
@@ -296,8 +296,105 @@
             </div>
         </section>
 
+        <!-- Foundation Verification Section -->
+        <section id="foundations" class="admin-section">
+            <div class="section-header">
+                <h2>Foundation Verification</h2>
+                <div class="header-actions">
+                    <a href="foundation-verification.html" class="btn-primary">
+                        <i class="fas fa-external-link-alt"></i>
+                        Open Foundation Verification
+                    </a>
+                </div>
+            </div>
+
+            <div class="quick-stats-grid">
+                <div class="quick-stat">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>1</h3>
+                        <p>Pending Verification</p>
+                        <small>Awaiting review</small>
+                    </div>
+                </div>
+                <div class="quick-stat">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>1</h3>
+                        <p>Verified Foundations</p>
+                        <small>Active foundations</small>
+                    </div>
+                </div>
+                <div class="quick-stat">
+                    <div class="stat-icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>2</h3>
+                        <p>Total Applications</p>
+                        <small>All time</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-icon">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+                <div class="info-content">
+                    <h3>Foundation Verification Process</h3>
+                    <p>Click "Open Foundation Verification" to access the dedicated verification system where you can:</p>
+                    <ul>
+                        <li>View all foundation applications with detailed information</li>
+                        <li>Review foundation certificates, licenses, and contact details</li>
+                        <li>Approve or reject foundation registrations</li>
+                        <li>Filter foundations by verification status</li>
+                        <li>Access complete foundation profiles in structured format</li>
+                    </ul>
+                    <div class="info-actions">
+                        <a href="foundation-verification.html" class="btn-primary">
+                            <i class="fas fa-arrow-right"></i>
+                            Go to Foundation Verification
+                        </a>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </section>
+
         <!-- Other sections will be added here -->
     </main>
+
+    <!-- Foundation Details Modal -->
+    <div id="foundationDetailsModal" class="modal foundation-modal">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h3>Foundation Verification Details</h3>
+                <button class="close-btn" onclick="closeFoundationModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="foundationDetails" class="foundation-details">
+                    <!-- Foundation details will be populated by JavaScript -->
+                </div>
+                <div class="verification-actions">
+                    <button class="btn-success" onclick="verifyFoundation('approve')">
+                        <i class="fas fa-check"></i>
+                        Approve Foundation
+                    </button>
+                    <button class="btn-danger" onclick="verifyFoundation('reject')">
+                        <i class="fas fa-times"></i>
+                        Suspend Foundation
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Add Category Modal -->
     <div id="addCategoryModal" class="modal">

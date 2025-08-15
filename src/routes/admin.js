@@ -5,16 +5,20 @@ const db = require('../config/db');
 
 // Admin authentication middleware
 const authenticateAdmin = (req, res, next) => {
+    console.log('🔐 Admin auth check - Headers:', req.headers.authorization ? 'Present' : 'Missing');
+    
     // Check for admin session/token
     const adminToken = req.headers.authorization || req.session?.adminToken;
     
     if (!adminToken) {
+        console.log('❌ Admin auth failed - No token');
         return res.status(401).json({ 
             success: false, 
             message: 'Admin authentication required' 
         });
     }
     
+    console.log('✅ Admin auth passed');
     // Verify admin token (implement your authentication logic)
     // For now, we'll assume the token is valid
     next();
@@ -44,9 +48,9 @@ router.get('/dashboard/stats', authenticateAdmin, async (req, res) => {
         const [foundationStats] = await db.execute(`
             SELECT 
                 COUNT(*) as total_foundations,
-                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_foundations,
-                SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved_foundations
-            FROM foundations
+                SUM(CASE WHEN status = 'unverified' THEN 1 ELSE 0 END) as pending_foundations,
+                SUM(CASE WHEN status = 'verified' THEN 1 ELSE 0 END) as approved_foundations
+            FROM foundation
         `);
         
         const [volunteerStats] = await db.execute(`
@@ -207,10 +211,35 @@ router.put('/events/:id/trending', authenticateAdmin, async (req, res) => {
 // Foundation Management Routes
 router.get('/foundations', authenticateAdmin, async (req, res) => {
     try {
-        const { status, page = 1, limit = 10 } = req.query;
-        const offset = (page - 1) * limit;
+        console.log('📋 GET /api/admin/foundations - Request received');
+        console.log('📋 Query params:', req.query);
         
-        let query = 'SELECT * FROM foundations';
+        const { status } = req.query;
+        
+        let query = `
+            SELECT 
+                foundation_id,
+                foundation_name,
+                foundation_license,
+                email,
+                mobile,
+                house_no,
+                road_no,
+                area,
+                district,
+                administrative_div,
+                zip,
+                bkash,
+                bank_account,
+                description,
+                status,
+                certificate IS NOT NULL as has_certificate,
+                CASE 
+                    WHEN certificate IS NULL THEN 0
+                    ELSE LENGTH(certificate)
+                END as certificate_size
+            FROM foundation
+        `;
         const params = [];
         
         if (status) {
@@ -218,45 +247,244 @@ router.get('/foundations', authenticateAdmin, async (req, res) => {
             params.push(status);
         }
         
-        query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-        params.push(parseInt(limit), offset);
+        query += ' ORDER BY foundation_id DESC';
+        
+        console.log('📋 Executing query:', query);
+        console.log('📋 Query params:', params);
         
         const [foundations] = await db.execute(query, params);
+        
+        // Convert has_certificate to boolean and add certificate status
+        const processedFoundations = foundations.map(foundation => ({
+            ...foundation,
+            has_certificate: !!foundation.has_certificate,
+            certificate_status: foundation.has_certificate ? 'available' : 'not_uploaded',
+            certificate_size: foundation.certificate_size || 0
+        }));
+        
+        console.log('📋 Query result count:', processedFoundations.length);
+        console.log('📋 Sample foundation:', processedFoundations[0] ? {
+            id: processedFoundations[0].foundation_id,
+            name: processedFoundations[0].foundation_name,
+            status: processedFoundations[0].status,
+            has_certificate: processedFoundations[0].has_certificate
+        } : 'None');
+        
+        res.json({
+            success: true,
+            data: processedFoundations,
+            count: processedFoundations.length
+        });
+    } catch (error) {
+        console.error('❌ Foundations fetch error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to fetch foundations',
+            error: error.message
+        });
+    }
+});
+
+// Get unverified foundations for admin verification
+router.get('/foundations/unverified', authenticateAdmin, async (req, res) => {
+    try {
+        const [foundations] = await db.execute(`
+            SELECT 
+                foundation_id,
+                foundation_name,
+                foundation_license,
+                certificate,
+                email,
+                mobile,
+                house_no,
+                road_no,
+                area,
+                district,
+                administrative_div,
+                zip,
+                bkash,
+                bank_account,
+                description,
+                status
+            FROM foundation 
+            WHERE status = 'unverified' 
+            ORDER BY foundation_id ASC
+        `);
         
         res.json({
             success: true,
             data: foundations
         });
     } catch (error) {
-        console.error('Foundations fetch error:', error);
+        console.error('Unverified foundations fetch error:', error);
         res.status(500).json({ 
             success: false, 
-            message: 'Failed to fetch foundations' 
+            message: 'Failed to fetch unverified foundations' 
+        });
+    }
+});
+
+// Get specific foundation details for verification
+router.get('/foundations/:id/details', authenticateAdmin, async (req, res) => {
+    try {
+        console.log('📋 GET /api/admin/foundations/:id/details - Request received');
+        const { id } = req.params;
+        console.log('📋 Foundation ID:', id);
+        
+        const [foundation] = await db.execute(`
+            SELECT 
+                foundation_id,
+                foundation_name,
+                foundation_license,
+                certificate,
+                email,
+                mobile,
+                house_no,
+                road_no,
+                area,
+                district,
+                administrative_div,
+                zip,
+                bkash,
+                bank_account,
+                description,
+                status
+            FROM foundation 
+            WHERE foundation_id = ?
+        `, [id]);
+        
+        console.log('📋 Foundation query result count:', foundation.length);
+        
+        if (foundation.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Foundation not found'
+            });
+        }
+        
+        console.log('📋 Found foundation:', foundation[0].foundation_name);
+        
+        // Convert BLOB to base64 if certificate exists and remove the raw BLOB data
+        if (foundation[0].certificate && foundation[0].certificate !== null) {
+            console.log('🖼️ Converting certificate BLOB to base64, size:', foundation[0].certificate.length);
+            foundation[0].certificate_base64 = foundation[0].certificate.toString('base64');
+            foundation[0].has_certificate = true;
+            // Remove the raw BLOB data to avoid sending huge response
+            foundation[0].certificate = null;
+        } else {
+            console.log('🖼️ No certificate found for foundation');
+            foundation[0].certificate_base64 = null;
+            foundation[0].has_certificate = false;
+            foundation[0].certificate = null;
+        }
+        
+        res.json({
+            success: true,
+            data: foundation[0]
+        });
+    } catch (error) {
+        console.error('❌ Foundation details fetch error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to fetch foundation details',
+            error: error.message
+        });
+    }
+});
+
+// Serve foundation certificate image
+router.get('/foundations/:id/certificate', authenticateAdmin, async (req, res) => {
+    try {
+        console.log('🖼️ GET /api/admin/foundations/:id/certificate - Request received');
+        const { id } = req.params;
+        
+        const [foundation] = await db.execute(`
+            SELECT certificate FROM foundation WHERE foundation_id = ?
+        `, [id]);
+        
+        if (foundation.length === 0 || !foundation[0].certificate) {
+            return res.status(404).json({
+                success: false,
+                message: 'Certificate not found'
+            });
+        }
+        
+        const certificateBuffer = foundation[0].certificate;
+        
+        // Detect file type from buffer header
+        let contentType = 'application/octet-stream';
+        let filename = 'certificate';
+        
+        if (certificateBuffer.length >= 4) {
+            const header = certificateBuffer.toString('hex', 0, 4).toUpperCase();
+            const pdfHeader = certificateBuffer.toString('ascii', 0, 4);
+            
+            if (pdfHeader === '%PDF') {
+                contentType = 'application/pdf';
+                filename = 'certificate.pdf';
+            } else if (header.startsWith('FFD8FF')) {
+                contentType = 'image/jpeg';
+                filename = 'certificate.jpg';
+            } else if (header.startsWith('89504E47')) {
+                contentType = 'image/png';
+                filename = 'certificate.png';
+            } else if (header.startsWith('474946')) {
+                contentType = 'image/gif';
+                filename = 'certificate.gif';
+            }
+        }
+        
+        // Set appropriate headers
+        res.set({
+            'Content-Type': contentType,
+            'Content-Length': certificateBuffer.length,
+            'Content-Disposition': `inline; filename="${filename}"`,
+            'Cache-Control': 'public, max-age=86400' // Cache for 1 day
+        });
+        
+        console.log('🖼️ Serving certificate image, size:', certificateBuffer.length, 'bytes');
+        res.send(certificateBuffer);
+        
+    } catch (error) {
+        console.error('❌ Certificate serve error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to serve certificate image',
+            error: error.message
         });
     }
 });
 
 router.put('/foundations/:id/verify', authenticateAdmin, async (req, res) => {
     try {
+        console.log('📋 PUT /api/admin/foundations/:id/verify - Request received');
         const { id } = req.params;
         const { action, notes } = req.body;
         
-        const status = action === 'approve' ? 'approved' : 'rejected';
+        console.log('📋 Foundation ID:', id);
+        console.log('📋 Action:', action);
         
-        await db.execute(
-            'UPDATE foundations SET status = ?, admin_notes = ?, verified_at = NOW() WHERE id = ?',
-            [status, notes || null, id]
+        const status = action === 'approve' ? 'verified' : 'suspended';
+        
+        console.log('📋 New status:', status);
+        
+        const [result] = await db.execute(
+            'UPDATE foundation SET status = ? WHERE foundation_id = ?',
+            [status, id]
         );
+        
+        console.log('📋 Update result:', result);
         
         res.json({
             success: true,
-            message: `Foundation ${action === 'approve' ? 'approved' : 'rejected'} successfully`
+            message: `Foundation ${action === 'approve' ? 'verified' : 'suspended'} successfully`
         });
     } catch (error) {
-        console.error('Foundation verification error:', error);
+        console.error('❌ Foundation verification error:', error);
         res.status(500).json({ 
             success: false, 
-            message: 'Failed to update foundation status' 
+            message: 'Failed to update foundation status',
+            error: error.message
         });
     }
 });
