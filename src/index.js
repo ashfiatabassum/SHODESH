@@ -11,6 +11,24 @@ const individualRoutes = require('./routes/individual');
 
 const app = express();
 
+
+
+
+// ✅ Add request logging middleware (ADD THIS)
+app.use((req, res, next) => {
+  console.log(`📥 ${req.method} ${req.path} - ${new Date().toISOString()}`);
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log('📦 Body:', JSON.stringify(req.body, null, 2));
+  }
+  next();
+});
+
+
+
+
+
+
+
 // ✅ Middleware: Parse incoming JSON
 app.use(express.json());
 
@@ -36,6 +54,21 @@ app.use('/api/foundation', foundationRoutes);
 console.log('✅ Foundation routes registered');
 app.use('/api/individual', individualRoutes);
 console.log('✅ Individual routes registered');
+
+
+
+// ✅ Test route specifically for individual registration (ADD THIS)
+app.get('/api/individual/test', (req, res) => {
+  res.json({ 
+    message: 'Individual routes are working!', 
+    timestamp: new Date(),
+    endpoint: '/api/individual/register is available for POST requests'
+  });
+});
+
+
+
+
 
 // ✅ API: Handle donations
 app.post('/donate', (req, res) => {
@@ -96,6 +129,29 @@ app.get('/', (req, res) => {
   console.log('📄 Serving homepage from:', filePath);
   res.sendFile(filePath);
 });
+
+
+
+
+
+
+// ✅ 404 handler for debugging (ADD THIS)
+app.use((req, res) => {
+  console.log(`❌ 404 - Route not found: ${req.method} ${req.path}`);
+  res.status(404).json({ 
+    error: 'Route not found',
+    method: req.method,
+    path: req.path,
+    message: 'This endpoint does not exist'
+  });
+});
+
+
+
+
+
+
+
 
 // ✅ Start server
 const PORT = process.env.PORT || 3000;

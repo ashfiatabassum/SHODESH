@@ -2,11 +2,11 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 
-// Test route
+/*// Test route
 router.get('/test', (req, res) => {
   console.log('🧪 Test route hit!');
   res.json({ message: 'Individual routes are working!' });
-});
+});*/
 
 // Generate individual ID (simple implementation)
 function generateIndividualId() {
@@ -401,3 +401,8 @@ router.post('/check-availability', (req, res) => {
 });
 
 module.exports = router;
+
+
+
+
+
