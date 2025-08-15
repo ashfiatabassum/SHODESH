@@ -20,15 +20,13 @@ function validateForm() {
     const username = document.getElementById('username').value.trim();
     const dateOfBirth = document.getElementById('dateOfBirth').value;
     const email = document.getElementById('email').value.trim();
-    const countryCode = document.getElementById('countryCode').value;
-    const phoneNumber = document.getElementById('phoneNumber').value.trim();
     const country = document.getElementById('country').value;
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
 
     // Check if all fields are filled
     if (!firstName || !lastName || !username || !dateOfBirth || !email || 
-        !countryCode || !phoneNumber || !country || !password || !confirmPassword) {
+        !country || !password || !confirmPassword) {
         alert('Please fill in all required fields.');
         return false;
     }
@@ -65,36 +63,6 @@ function validateForm() {
     if (!nameRegex.test(country)) {
         alert('Country name should contain only letters and spaces.');
         return false;
-    }
-
-    // Validate and format mobile number
-    let mobileNumber = '';
-    if (countryCode === '+880' && country === 'Bangladesh') {
-        // For Bangladesh, ensure the number starts with 0 and is 11 digits
-        if (!phoneNumber.startsWith('1')) {
-            alert('For Bangladesh, phone number should start with 1 (without the 0).');
-            return false;
-        }
-        mobileNumber = '0' + phoneNumber; // Add leading 0
-        if (!/^0[0-9]{10}$/.test(mobileNumber)) {
-            alert('For Bangladesh, mobile number should be 11 digits starting with 0.');
-            return false;
-        }
-    } else {
-        // For other countries, validate phone number (only digits)
-        const phoneRegex = /^[0-9]+$/;
-        if (!phoneRegex.test(phoneNumber)) {
-            alert('Phone number should contain only digits.');
-            return false;
-        }
-        // For international format, keep as entered
-        mobileNumber = phoneNumber;
-        
-        // Validate phone number length (should be reasonable)
-        if (phoneNumber.length < 7 || phoneNumber.length > 15) {
-            alert('Phone number should be between 7 and 15 digits.');
-            return false;
-        }
     }
 
     // Check if passwords match
@@ -148,11 +116,10 @@ function validateForm() {
         lastName: lastName,
         username: username,
         password: password,
-        mobile: mobileNumber,
         email: email,
         country: country,
         division: country === 'Bangladesh' ? division : null,
-        DOB: dateOfBirth
+        dateOfBirth: dateOfBirth
     };
 
     console.log('Donor data to be saved:', donorData);
@@ -194,25 +161,9 @@ function validateForm() {
 
 // Add real-time validation when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    const phoneInput = document.getElementById('phoneNumber');
     const passwordInput = document.getElementById('password');
     const confirmPasswordInput = document.getElementById('confirmPassword');
     const emailInput = document.getElementById('email');
-
-    // Phone number input validation - only allow digits
-    if (phoneInput) {
-        phoneInput.addEventListener('input', function() {
-            // Remove any non-digit characters
-            this.value = this.value.replace(/[^0-9]/g, '');
-            
-            // Add visual feedback
-            if (this.value && !/^[0-9]+$/.test(this.value)) {
-                this.style.borderColor = '#ff0000';
-            } else {
-                this.style.borderColor = '';
-            }
-        });
-    }
 
     // Real-time password matching validation
     function checkPasswordMatch() {

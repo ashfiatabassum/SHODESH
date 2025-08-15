@@ -4,15 +4,9 @@ const db = require('../config/db');
 
 // Generate donor ID (simple implementation)
 function generateDonorId() {
-  const prefix = 'DON';
-  const randomNum = Math.floor(1000 + Math.random() * 9000);
-  return `${prefix}${randomNum}`;
-}
-
-// Validate Bangladesh mobile number format
-function validateBangladeshMobile(mobile) {
-  const bangladeshMobileRegex = /^0[0-9]{10}$/;
-  return bangladeshMobileRegex.test(mobile);
+  const prefix = 'D';
+  const randomNum = Math.floor(100000 + Math.random() * 900000);
+  return `${prefix}${randomNum.toString().padStart(6, '0')}`;
 }
 
 // Validate email format
@@ -40,19 +34,18 @@ router.post('/register', async (req, res) => {
       lastName,
       username,
       password,
-      mobile,
       email,
       country,
       division,
-      DOB
+      dateOfBirth
     } = req.body;
 
     console.log('📋 Extracted data:', {
-      firstName, lastName, username, mobile, email, country, division, DOB
+      firstName, lastName, username, email, country, division, dateOfBirth
     });
 
     // Input validation
-    if (!firstName || !lastName || !username || !password || !mobile || !email || !country || !DOB) {
+    if (!firstName || !lastName || !username || !password || !email || !country || !dateOfBirth) {
       console.log('❌ Missing required fields');
       return res.status(400).json({
         success: false,
@@ -69,10 +62,10 @@ router.post('/register', async (req, res) => {
     }
 
     // Validate username length
-    if (username.length > 15) {
+    if (username.length > 20) {
       return res.status(400).json({
         success: false,
-        message: 'Username cannot exceed 15 characters'
+        message: 'Username cannot exceed 20 characters'
       });
     }
 
@@ -81,14 +74,6 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Password must be at least 6 characters long'
-      });
-    }
-
-    // Validate mobile number
-    if (!validateBangladeshMobile(mobile)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Mobile number must be in Bangladesh format (0XXXXXXXXXX)'
       });
     }
 
@@ -122,7 +107,7 @@ router.post('/register', async (req, res) => {
     }
 
     // Validate date of birth
-    const dobDate = new Date(DOB);
+    const dobDate = new Date(dateOfBirth);
     const today = new Date();
     if (dobDate >= today) {
       return res.status(400).json({
@@ -142,14 +127,14 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    // Check for existing username, email, or mobile
+    // Check for existing username or email
     const checkExistingQuery = `
-      SELECT username, email, mobile FROM donor 
-      WHERE username = ? OR email = ? OR mobile = ?
+      SELECT username, email FROM donor 
+      WHERE username = ? OR email = ?
     `;
     
     const existingResults = await new Promise((resolve, reject) => {
-      db.query(checkExistingQuery, [username, email, mobile], (err, results) => {
+      db.query(checkExistingQuery, [username, email], (err, results) => {
         if (err) {
           console.error('❌ Error checking existing records:', err);
           reject(err);
@@ -174,12 +159,6 @@ router.post('/register', async (req, res) => {
           message: 'Email already registered'
         });
       }
-      if (existing.mobile === mobile) {
-        return res.status(409).json({
-          success: false,
-          message: 'Mobile number already registered'
-        });
-      }
     }
 
     // Hash password
@@ -191,9 +170,9 @@ router.post('/register', async (req, res) => {
     // Insert donor into database
     const insertQuery = `
       INSERT INTO donor (
-        donor_id, first_name, last_name, username, password, 
-        mobile, email, country, division, DOB
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        donor_id, first_name, last_name, username, email, password, 
+        country, division, date_of_birth
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const insertValues = [
@@ -201,12 +180,11 @@ router.post('/register', async (req, res) => {
       firstName,
       lastName,
       username,
-      hashedPassword,
-      mobile,
       email,
+      hashedPassword,
       country,
       country === 'Bangladesh' ? division : null,
-      DOB
+      dateOfBirth
     ];
 
     await new Promise((resolve, reject) => {
@@ -256,7 +234,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// GET /api/donor/check-availability - Check if username/email/mobile is available
+// GET /api/donor/check-availability - Check if username/email is available
 router.post('/check-availability', (req, res) => {
   const { field, value } = req.body;
 
@@ -267,10 +245,10 @@ router.post('/check-availability', (req, res) => {
     });
   }
 
-  if (!['username', 'email', 'mobile'].includes(field)) {
+  if (!['username', 'email'].includes(field)) {
     return res.status(400).json({
       success: false,
-      message: 'Invalid field. Must be username, email, or mobile'
+      message: 'Invalid field. Must be username or email'
     });
   }
 
