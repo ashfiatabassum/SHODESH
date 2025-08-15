@@ -67,7 +67,7 @@ router.post('/register', upload.single('certificate'), async (req, res) => {
       zipCode,
       bkash,
       bankAccount,
-      goalvision,
+      description,
       password
     } = req.body;
 
@@ -78,7 +78,7 @@ router.post('/register', upload.single('certificate'), async (req, res) => {
     // Input validation
     if (!foundationName || !foundationLicense || !email || !phone || !houseNo || 
         !roadNo || !area || !district || !division || !zipCode || !bkash || 
-        !bankAccount || !goalvision || !password) {
+        !bankAccount || !description || !password) {
       console.log('❌ Missing required fields');
       return res.status(400).json({
         success: false,
@@ -260,7 +260,7 @@ router.post('/register', upload.single('certificate'), async (req, res) => {
       INSERT INTO foundation (
         foundation_id, foundation_name, certificate, foundation_license, 
         mobile, email, password, house_no, road_no, area, district, 
-        administrative_div, zip, bkash, bank_account, goal_vision, status
+        administrative_div, zip, bkash, bank_account, description, status
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
@@ -280,7 +280,7 @@ router.post('/register', upload.single('certificate'), async (req, res) => {
       zipCode,
       bkashNumber,
       bankAccount,
-      goalvision,
+      description,
       'unverified' // Default status
     ];
 

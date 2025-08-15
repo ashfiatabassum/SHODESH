@@ -1,4 +1,5 @@
 USE shodesh;
+SHOW VARIABLES LIKE 'secure_file_priv';
 
 -- ========================
 -- Table: INDIVIDUAL
@@ -27,7 +28,7 @@ CREATE TABLE INDIVIDUAL (
   CONSTRAINT INDIVIDUAL_EMAIL_U UNIQUE (email),
   CONSTRAINT INDIVIDUAL_MOBILE_U UNIQUE (mobile)
 );
-
+SELECT * FROM INDIVIDUAL;
 -- ========================
 -- Table: FOUNDATION
 -- ========================
@@ -47,14 +48,14 @@ CREATE TABLE FOUNDATION(
   zip VARCHAR(4) CHECK (zip REGEXP '^[0-9]{4}$'),
   bkash VARCHAR(11) CHECK (bkash REGEXP '^0[0-9]{10}$'),
   bank_account VARCHAR(18),
-  goal_vision TEXT,
-  status ENUM('verified', 'unverified') DEFAULT 'unverified',
+  description TEXT,
+  status ENUM('verified', 'unverified', 'suspended') DEFAULT 'unverified',
   CONSTRAINT FOUNDATION_FOUNDATION_ID_PK PRIMARY KEY (foundation_id),
   CONSTRAINT FOUNDATION_FOUNDATION_LICENSE_U UNIQUE (foundation_license),
   CONSTRAINT FOUNDATION_EMAIL_U UNIQUE (email),
   CONSTRAINT FOUNDATION_MOBILE_U UNIQUE (mobile)
 );
-
+SELECT * FROM FOUNDATION;
 CREATE TABLE DONOR (
   donor_id VARCHAR(7) NOT NULL,
   first_name VARCHAR(50) NOT NULL CHECK (first_name REGEXP '^[A-Za-z ]+$'),
@@ -77,6 +78,8 @@ CREATE TABLE DONOR (
     (country != 'Bangladesh' AND division IS NULL)
   )
 );
+
+SELECT * FROM DONOR;
 -- ========================
 -- Sample Data
 -- ========================
@@ -86,6 +89,6 @@ INSERT INTO INDIVIDUAL VALUES
 ('I000003','Anika','Sultana','anika_s','anika@example.com','mypwd88','01755555555','1928374650912','1998-01-15','78','56','Dhanmondi','Dhaka','Dhaka','1209','01766666666','345678901234567890');
 
 INSERT INTO FOUNDATION VALUES
-('F000001','Helping Hands',NULL,'LIC123456789','01777777777','help@example.com','helpme77','10','1','Tejgaon','Dhaka','Dhaka','1215','01788888888','456789012345678901','Support for needy','verified'),
-('F000002','Green Earth',NULL,'LIC987654321','01799999999','green@example.com','green12','22','2','Uttara','Dhaka','Dhaka','1230','01700000000','567890123456789012','Environmental projects','unverified'),
-('F000003','Food for All',NULL,'LIC112233445','01712312312','food@example.com','foodpass','30','5','Mirpur','Dhaka','Dhaka','1216','01732132132','678901234567890123','Feeding poor families','verified');
+('F000001','Helping Hands',NULL,'LIC123456789','01777777777','help@example.com','helpme77','10','1','Tejgaon','Dhaka','Dhaka','1215','01788888888','456789012345678901','We provide comprehensive support and assistance to underprivileged communities, focusing on education, healthcare, and basic needs. Our vision is to create a society where everyone has equal opportunities to thrive and succeed.','verified'),
+('F000002','Green Earth',NULL,'LIC987654321','01799999999','green@example.com','green12','22','2','Uttara','Dhaka','Dhaka','1230','01700000000','567890123456789012','Dedicated to environmental conservation and sustainability projects. We work on reforestation, clean energy initiatives, waste management, and environmental awareness programs to protect our planet for future generations.','unverified'),
+('F000003','Food for All',NULL,'LIC112233445','01712312312','food@example.com','foodpass','30','5','Mirpur','Dhaka','Dhaka','1216','01732132132','678901234567890123','Our mission is to eliminate hunger and malnutrition by providing nutritious meals to underprivileged families, especially children. We also focus on sustainable food programs and nutrition education in rural communities.','verified');

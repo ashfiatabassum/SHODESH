@@ -111,7 +111,7 @@ function validateForm(event) {
   formData.append('zipCode', zipCode);
   formData.append('bkash', bkash);
   formData.append('bankAccount', document.getElementById('bankAccount').value.trim());
-  formData.append('goalvision', document.getElementById('goalvision').value.trim());
+  formData.append('description', document.getElementById('description').value.trim());
   formData.append('password', password);
 
   // Send data to backend
