@@ -148,15 +148,21 @@ router.post('/register', async (req, res) => {
     if (existingResults.length > 0) {
       const existing = existingResults[0];
       if (existing.username === username) {
+        console.log(`❌ Username '${username}' already exists`);
         return res.status(409).json({
           success: false,
-          message: 'Username already exists'
+          message: 'This username is already taken. Please choose a different username.',
+          field: 'username',
+          code: 'USERNAME_EXISTS'
         });
       }
       if (existing.email === email) {
+        console.log(`❌ Email '${email}' already registered`);
         return res.status(409).json({
           success: false,
-          message: 'Email already registered'
+          message: 'An account with this email address already exists. Please use a different email or try logging in.',
+          field: 'email',
+          code: 'EMAIL_EXISTS'
         });
       }
     }
@@ -216,10 +222,29 @@ router.post('/register', async (req, res) => {
         message: 'Database table not found. Please ensure the DONOR table exists.'
       });
     } else if (error.code === 'ER_DUP_ENTRY') {
-      return res.status(409).json({
-        success: false,
-        message: 'Username, email, or mobile number already exists.'
-      });
+      // Handle duplicate entry errors from database constraints
+      const errorMessage = error.message.toLowerCase();
+      if (errorMessage.includes('username')) {
+        return res.status(409).json({
+          success: false,
+          message: 'This username is already taken. Please choose a different username.',
+          field: 'username',
+          code: 'USERNAME_EXISTS'
+        });
+      } else if (errorMessage.includes('email')) {
+        return res.status(409).json({
+          success: false,
+          message: 'An account with this email address already exists. Please use a different email or try logging in.',
+          field: 'email',
+          code: 'EMAIL_EXISTS'
+        });
+      } else {
+        return res.status(409).json({
+          success: false,
+          message: 'This information is already registered. Please check your username and email.',
+          code: 'DUPLICATE_ENTRY'
+        });
+      }
     } else if (error.code === 'ER_CHECK_CONSTRAINT_VIOLATED') {
       return res.status(400).json({
         success: false,
@@ -234,7 +259,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// GET /api/donor/check-availability - Check if username/email is available
+// POST /api/donor/check-availability - Check if username/email is available
 router.post('/check-availability', (req, res) => {
   const { field, value } = req.body;
 
@@ -263,9 +288,15 @@ router.post('/check-availability', (req, res) => {
       });
     }
 
+    const isAvailable = results.length === 0;
+    
     res.json({
       success: true,
-      available: results.length === 0
+      available: isAvailable,
+      message: isAvailable ? 
+        `${field.charAt(0).toUpperCase() + field.slice(1)} is available` : 
+        `${field.charAt(0).toUpperCase() + field.slice(1)} is already taken`,
+      field: field
     });
   });
 });

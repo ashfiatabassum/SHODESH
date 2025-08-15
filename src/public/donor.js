@@ -146,7 +146,28 @@ function validateForm() {
             // Redirect to login or home page
             window.location.href = '/signin.html';
         } else {
-            alert('❌ Registration failed: ' + data.message);
+            // Handle specific error types
+            let errorMessage = data.message;
+            if (data.code === 'USERNAME_EXISTS') {
+                errorMessage = '❌ Username Already Taken!\n\n' + data.message + '\n\nPlease try a different username.';
+            } else if (data.code === 'EMAIL_EXISTS') {
+                errorMessage = '❌ Email Already Registered!\n\n' + data.message + '\n\nTry logging in instead or use a different email.';
+            } else {
+                errorMessage = '❌ Registration Failed!\n\n' + data.message;
+            }
+            alert(errorMessage);
+            
+            // Focus on the problematic field if specified
+            if (data.field) {
+                const fieldElement = document.getElementById(data.field);
+                if (fieldElement) {
+                    fieldElement.focus();
+                    fieldElement.style.borderColor = '#ff0000';
+                    setTimeout(() => {
+                        fieldElement.style.borderColor = '';
+                    }, 3000);
+                }
+            }
         }
     })
     .catch(error => {
@@ -161,9 +182,47 @@ function validateForm() {
 
 // Add real-time validation when page loads
 document.addEventListener('DOMContentLoaded', function() {
+    const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
     const confirmPasswordInput = document.getElementById('confirmPassword');
     const emailInput = document.getElementById('email');
+
+    // Real-time username availability checking
+    if (usernameInput) {
+        let usernameTimeout;
+        usernameInput.addEventListener('input', function() {
+            clearTimeout(usernameTimeout);
+            const username = this.value.trim();
+            
+            if (username.length >= 4) {
+                usernameTimeout = setTimeout(() => {
+                    checkAvailability('username', username, usernameInput);
+                }, 500); // Wait 500ms after user stops typing
+            }
+        });
+    }
+
+    // Real-time email availability checking
+    if (emailInput) {
+        let emailTimeout;
+        emailInput.addEventListener('input', function() {
+            clearTimeout(emailTimeout);
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const email = this.value.trim();
+            
+            if (email && emailRegex.test(email)) {
+                emailTimeout = setTimeout(() => {
+                    checkAvailability('email', email, emailInput);
+                }, 500); // Wait 500ms after user stops typing
+            } else if (email && !emailRegex.test(email)) {
+                this.style.borderColor = '#ff0000';
+                this.title = 'Please enter a valid email address';
+            } else {
+                this.style.borderColor = '';
+                this.title = '';
+            }
+        });
+    }
 
     // Real-time password matching validation
     function checkPasswordMatch() {
@@ -179,18 +238,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (passwordInput) passwordInput.addEventListener('input', checkPasswordMatch);
     if (confirmPasswordInput) confirmPasswordInput.addEventListener('input', checkPasswordMatch);
-
-    // Email validation
-    if (emailInput) {
-        emailInput.addEventListener('input', function() {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (this.value && !emailRegex.test(this.value)) {
-                this.style.borderColor = '#ff0000';
-                this.title = 'Please enter a valid email address';
-            } else {
-                this.style.borderColor = '';
-                this.title = '';
-            }
-        });
-    }
 });
+
+// Function to check username/email availability
+function checkAvailability(field, value, inputElement) {
+    fetch('/api/donor/check-availability', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ field: field, value: value })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (data.available) {
+                inputElement.style.borderColor = '#00aa00';
+                inputElement.title = `✅ ${field.charAt(0).toUpperCase() + field.slice(1)} is available`;
+            } else {
+                inputElement.style.borderColor = '#ff0000';
+                inputElement.title = `❌ ${field.charAt(0).toUpperCase() + field.slice(1)} is already taken`;
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error checking availability:', error);
+        inputElement.style.borderColor = '';
+        inputElement.title = '';
+    });
+}
