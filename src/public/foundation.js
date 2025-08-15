@@ -1,3 +1,57 @@
+// Password toggle function
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    const button = field.parentNode.querySelector('.toggle-password');
+    const icon = button.querySelector('i');
+    
+    if (field.type === 'password') {
+        field.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+    } else {
+        field.type = 'password';
+        icon.className = 'fas fa-eye';
+    }
+}
+
+// Message display functions
+function showSuccess(message) {
+    showAlert(message, 'success');
+}
+
+function showError(message) {
+    showAlert(message, 'error');
+}
+
+function showAlert(message, type) {
+    const container = document.getElementById('messageContainer');
+    
+    const alert = document.createElement('div');
+    alert.className = `message ${type}`;
+    
+    const icon = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
+    
+    alert.innerHTML = `
+        <i class="${icon}"></i>
+        <span>${message}</span>
+        <button class="alert-close" onclick="closeAlert(this)" style="background: none; border: none; color: inherit; margin-left: 10px; cursor: pointer;">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    container.appendChild(alert);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (alert.parentElement) {
+            alert.remove();
+        }
+    }, 5000);
+}
+
+function closeAlert(button) {
+    button.closest('.message').remove();
+}
+
 function validateForm(event) {
   event.preventDefault(); // Prevent default form submission
   
@@ -36,9 +90,9 @@ function validateForm(event) {
     emptyFields.push('Certificate (PDF file)');
   }
   
-  // If there are empty fields, show alert and return
+  // If there are empty fields, show error message and return
   if (emptyFields.length > 0) {
-    alert('Please fill in all required fields:\n\n• ' + emptyFields.join('\n• '));
+    showError('Please fill in all required fields:\n\n• ' + emptyFields.join('\n• '));
     return false;
   }
   
@@ -89,7 +143,7 @@ function validateForm(event) {
   
   // If there are validation errors, show them
   if (validationErrors.length > 0) {
-    alert('Please fix the following errors:\n\n• ' + validationErrors.join('\n• '));
+    showError('Please fix the following errors:\n\n• ' + validationErrors.join('\n• '));
     return false;
   }
   
@@ -126,19 +180,21 @@ function validateForm(event) {
   .then(data => {
     console.log('📋 Response data:', data);
     if (data.success) {
-      alert('🎉 Foundation registration successful!\n\n' + 
+      showSuccess('🎉 Foundation registration successful!\n\n' + 
             'Your Foundation ID is: ' + data.foundationId + '\n\n' +
             data.message + '\n\n' +
             'Please save your Foundation ID for future reference.');
       // Redirect to profile or success page
-      window.location.href = 'profilefoundation.html';
+      setTimeout(() => {
+        window.location.href = 'profilefoundation.html';
+      }, 3000);
     } else {
-      alert('❌ Registration failed: ' + data.message);
+      showError('❌ Registration failed: ' + data.message);
     }
   })
   .catch(error => {
     console.error('❌ Error:', error);
-    alert('❌ An error occurred during registration. Please try again.\n\nError: ' + error.message);
+    showError('❌ An error occurred during registration. Please try again.\n\nError: ' + error.message);
   });
 
   return false; // Prevent default form submission
