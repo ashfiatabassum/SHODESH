@@ -1,24 +1,18 @@
 const mysql = require('mysql2');
 
-// Create connection pool with promise support
-const pool = mysql.createPool({
+const connection = mysql.createConnection({
   host: 'localhost',
   user: 'root',       // your MySQL username
   password: 'mirpurdohs832', // replace with your MySQL password
-  database: 'shodesh', // replace with your DB name
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+  database: 'shodesh' // replace with your DB name
 });
 
-// Get promise-based pool
-const promisePool = pool.promise();
-
-// Test connection
-promisePool.execute('SELECT 1').then(() => {
+connection.connect((err) => {
+  if (err) {
+    console.error('❌ MySQL connection failed:', err);
+    return;
+  }
   console.log('✅ Connected to MySQL');
-}).catch((err) => {
-  console.error('❌ MySQL connection failed:', err);
 });
 
-module.exports = promisePool;
+module.exports = connection;

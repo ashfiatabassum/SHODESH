@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const adminDb = require('../config/db-admin'); // Use promise-based DB for admin functionality
 
 // Admin authentication middleware
 const authenticateAdmin = (req, res, next) => {
@@ -28,7 +29,7 @@ const authenticateAdmin = (req, res, next) => {
 router.get('/dashboard/stats', authenticateAdmin, async (req, res) => {
     try {
         // Get various statistics for the dashboard
-        const [eventStats] = await db.execute(`
+        const [eventStats] = await adminDb.execute(`
             SELECT 
                 COUNT(*) as total_events,
                 SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_events,
@@ -37,7 +38,7 @@ router.get('/dashboard/stats', authenticateAdmin, async (req, res) => {
             FROM events
         `);
         
-        const [donationStats] = await db.execute(`
+        const [donationStats] = await adminDb.execute(`
             SELECT 
                 COUNT(*) as total_donations,
                 SUM(amount) as total_amount,
@@ -45,7 +46,7 @@ router.get('/dashboard/stats', authenticateAdmin, async (req, res) => {
             FROM donations
         `);
         
-        const [foundationStats] = await db.execute(`
+        const [foundationStats] = await adminDb.execute(`
             SELECT 
                 COUNT(*) as total_foundations,
                 SUM(CASE WHEN status = 'unverified' THEN 1 ELSE 0 END) as pending_foundations,
@@ -53,7 +54,7 @@ router.get('/dashboard/stats', authenticateAdmin, async (req, res) => {
             FROM foundation
         `);
         
-        const [volunteerStats] = await db.execute(`
+        const [volunteerStats] = await adminDb.execute(`
             SELECT 
                 COUNT(*) as total_volunteers,
                 SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_volunteers,
@@ -112,7 +113,7 @@ router.get('/events', authenticateAdmin, async (req, res) => {
         query += ' ORDER BY e.created_at DESC LIMIT ? OFFSET ?';
         params.push(parseInt(limit), offset);
         
-        const [events] = await db.execute(query, params);
+        const [events] = await adminDb.execute(query, params);
         
         res.json({
             success: true,
@@ -134,7 +135,7 @@ router.put('/events/:id/verify', authenticateAdmin, async (req, res) => {
         
         const status = action === 'approve' ? 'verified' : 'rejected';
         
-        await db.execute(
+        await adminDb.execute(
             'UPDATE events SET status = ?, admin_notes = ?, verified_at = NOW() WHERE id = ?',
             [status, notes || null, id]
         );
@@ -159,7 +160,7 @@ router.post('/events/:id/request-volunteer-verification', authenticateAdmin, asy
         
         // Create verification requests for selected volunteers
         for (const volunteerId of volunteerIds) {
-            await db.execute(`
+            await adminDb.execute(`
                 INSERT INTO volunteer_verification_requests 
                 (event_id, volunteer_id, instructions, status, created_at)
                 VALUES (?, ?, ?, 'pending', NOW())
@@ -167,7 +168,7 @@ router.post('/events/:id/request-volunteer-verification', authenticateAdmin, asy
         }
         
         // Update event status to indicate volunteer verification is requested
-        await db.execute(
+        await adminDb.execute(
             'UPDATE events SET volunteer_verification_requested = true WHERE id = ?',
             [id]
         );
@@ -190,7 +191,7 @@ router.put('/events/:id/trending', authenticateAdmin, async (req, res) => {
         const { id } = req.params;
         const { isTrending } = req.body;
         
-        await db.execute(
+        await adminDb.execute(
             'UPDATE events SET is_trending = ?, trending_added_at = ? WHERE id = ?',
             [isTrending, isTrending ? new Date() : null, id]
         );
@@ -252,7 +253,7 @@ router.get('/foundations', authenticateAdmin, async (req, res) => {
         console.log('📋 Executing query:', query);
         console.log('📋 Query params:', params);
         
-        const [foundations] = await db.execute(query, params);
+        const [foundations] = await adminDb.execute(query, params);
         
         // Convert has_certificate to boolean and add certificate status
         const processedFoundations = foundations.map(foundation => ({
@@ -288,7 +289,7 @@ router.get('/foundations', authenticateAdmin, async (req, res) => {
 // Get unverified foundations for admin verification
 router.get('/foundations/unverified', authenticateAdmin, async (req, res) => {
     try {
-        const [foundations] = await db.execute(`
+        const [foundations] = await adminDb.execute(`
             SELECT 
                 foundation_id,
                 foundation_name,
@@ -331,7 +332,7 @@ router.get('/foundations/:id/details', authenticateAdmin, async (req, res) => {
         const { id } = req.params;
         console.log('📋 Foundation ID:', id);
         
-        const [foundation] = await db.execute(`
+        const [foundation] = await adminDb.execute(`
             SELECT 
                 foundation_id,
                 foundation_name,
@@ -398,7 +399,7 @@ router.get('/foundations/:id/certificate', authenticateAdmin, async (req, res) =
         console.log('🖼️ GET /api/admin/foundations/:id/certificate - Request received');
         const { id } = req.params;
         
-        const [foundation] = await db.execute(`
+        const [foundation] = await adminadminDb.execute(`
             SELECT certificate FROM foundation WHERE foundation_id = ?
         `, [id]);
         
@@ -468,7 +469,7 @@ router.put('/foundations/:id/verify', authenticateAdmin, async (req, res) => {
         
         console.log('📋 New status:', status);
         
-        const [result] = await db.execute(
+        const [result] = await adminDb.execute(
             'UPDATE foundation SET status = ? WHERE foundation_id = ?',
             [status, id]
         );
@@ -516,7 +517,7 @@ router.get('/volunteers', authenticateAdmin, async (req, res) => {
         query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
         params.push(parseInt(limit), offset);
         
-        const [volunteers] = await db.execute(query, params);
+        const [volunteers] = await adminDb.execute(query, params);
         
         res.json({
             success: true,
@@ -538,7 +539,7 @@ router.put('/volunteers/:id/verify', authenticateAdmin, async (req, res) => {
         
         const status = action === 'approve' ? 'approved' : 'rejected';
         
-        await db.execute(
+        await adminDb.execute(
             'UPDATE volunteers SET status = ?, admin_notes = ?, verified_at = NOW() WHERE id = ?',
             [status, notes || null, id]
         );
@@ -561,7 +562,7 @@ router.get('/volunteers/nearby/:eventId', authenticateAdmin, async (req, res) =>
         const { eventId } = req.params;
         
         // Get event location first
-        const [eventResult] = await db.execute(
+        const [eventResult] = await adminDb.execute(
             'SELECT location FROM events WHERE id = ?',
             [eventId]
         );
@@ -576,7 +577,7 @@ router.get('/volunteers/nearby/:eventId', authenticateAdmin, async (req, res) =>
         const eventLocation = eventResult[0].location;
         
         // Find volunteers in the same area (simplified matching by location name)
-        const [volunteers] = await db.execute(`
+        const [volunteers] = await adminDb.execute(`
             SELECT id, name, email, phone, location, skills, availability
             FROM volunteers 
             WHERE status = 'approved' 
@@ -600,7 +601,7 @@ router.get('/volunteers/nearby/:eventId', authenticateAdmin, async (req, res) =>
 // Category Management Routes
 router.get('/categories', authenticateAdmin, async (req, res) => {
     try {
-        const [categories] = await db.execute(`
+        const [categories] = await adminDb.execute(`
             SELECT c.*, COUNT(e.id) as event_count
             FROM categories c
             LEFT JOIN events e ON c.id = e.category_id
@@ -632,7 +633,7 @@ router.post('/categories', authenticateAdmin, async (req, res) => {
             });
         }
         
-        const [result] = await db.execute(
+        const [result] = await adminDb.execute(
             'INSERT INTO categories (name, icon, description, active, created_at) VALUES (?, ?, ?, true, NOW())',
             [name, icon, description || null]
         );
@@ -656,7 +657,7 @@ router.put('/categories/:id', authenticateAdmin, async (req, res) => {
         const { id } = req.params;
         const { name, icon, description, active } = req.body;
         
-        await db.execute(
+        await adminDb.execute(
             'UPDATE categories SET name = ?, icon = ?, description = ?, active = ? WHERE id = ?',
             [name, icon, description, active, id]
         );
@@ -679,7 +680,7 @@ router.delete('/categories/:id', authenticateAdmin, async (req, res) => {
         const { id } = req.params;
         
         // Check if category is being used by any events
-        const [eventCheck] = await db.execute(
+        const [eventCheck] = await adminDb.execute(
             'SELECT COUNT(*) as count FROM events WHERE category_id = ?',
             [id]
         );
@@ -691,7 +692,7 @@ router.delete('/categories/:id', authenticateAdmin, async (req, res) => {
             });
         }
         
-        await db.execute('DELETE FROM categories WHERE id = ?', [id]);
+        await adminDb.execute('DELETE FROM categories WHERE id = ?', [id]);
         
         res.json({
             success: true,
@@ -752,7 +753,7 @@ router.get('/analytics/donations', authenticateAdmin, async (req, res) => {
         
         query += ` GROUP BY ${dateGroup} ORDER BY period DESC`;
         
-        const [analytics] = await db.execute(query, params);
+        const [analytics] = await adminDb.execute(query, params);
         
         res.json({
             success: true,
@@ -769,7 +770,7 @@ router.get('/analytics/donations', authenticateAdmin, async (req, res) => {
 
 router.get('/analytics/donations/by-category', authenticateAdmin, async (req, res) => {
     try {
-        const [analytics] = await db.execute(`
+        const [analytics] = await adminDb.execute(`
             SELECT 
                 c.name as category_name,
                 c.icon as category_icon,
@@ -800,7 +801,7 @@ router.get('/analytics/donations/by-category', authenticateAdmin, async (req, re
 // Trending Management Routes
 router.get('/trending', authenticateAdmin, async (req, res) => {
     try {
-        const [trending] = await db.execute(`
+        const [trending] = await adminDb.execute(`
             SELECT e.*, f.name as organizer_name, c.name as category_name
             FROM events e
             LEFT JOIN foundations f ON e.foundation_id = f.id
@@ -825,7 +826,7 @@ router.get('/trending', authenticateAdmin, async (req, res) => {
 // Admin Settings Routes
 router.get('/settings', authenticateAdmin, async (req, res) => {
     try {
-        const [settings] = await db.execute('SELECT * FROM admin_settings');
+        const [settings] = await adminDb.execute('SELECT * FROM admin_settings');
         
         res.json({
             success: true,
@@ -845,7 +846,7 @@ router.put('/settings', authenticateAdmin, async (req, res) => {
         const settings = req.body;
         
         for (const [key, value] of Object.entries(settings)) {
-            await db.execute(
+            await adminDb.execute(
                 'INSERT INTO admin_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = ?',
                 [key, value, value]
             );
