@@ -97,7 +97,7 @@ function initializeFormValidation() {
     }
 
     // NID validation and availability checking
-    const nidInput = document.getElementById('nidNumber');
+    const nidInput = document.getElementById('nid');
     if (nidInput) {
         let nidTimeout;
         nidInput.addEventListener('input', function() {
@@ -310,7 +310,7 @@ async function validateAndSubmit() {
         username: document.getElementById('username').value.trim(),
         email: document.getElementById('email').value.trim(),
         phoneNumber: document.getElementById('phoneNumber').value.trim(),
-        nid: document.getElementById('nidNumber').value.trim(),
+        nid: document.getElementById('nid').value.trim(),
         dateOfBirth: document.getElementById('dateOfBirth').value,
         houseNo: document.getElementById('houseNo').value.trim(),
         roadNo: document.getElementById('roadNo').value.trim(),
@@ -327,7 +327,7 @@ async function validateAndSubmit() {
     console.log('📋 Form data collected:', formData);
 
     // Basic required fields check
-    const requiredFields = ['firstName', 'lastName', 'username', 'email', 'phoneNumber', 'nidNumber', 'dateOfBirth', 'houseNo', 'roadNo', 'area', 'district', 'division', 'zipCode', 'bkashNumber', 'bankAccount', 'password', 'confirmPassword'];
+    const requiredFields = ['firstName', 'lastName', 'username', 'email', 'phoneNumber', 'nid', 'dateOfBirth', 'houseNo', 'roadNo', 'area', 'district', 'division', 'zipCode', 'bkashNumber', 'bankAccount', 'password', 'confirmPassword'];
     
     for (let field of requiredFields) {
         if (!formData[field]) {
@@ -380,7 +380,7 @@ async function submitRegistration(formData) {
                 username: formData.username,
                 email: formData.email,
                 phoneNumber: formData.phoneNumber,
-                nid: formData.nidNumber,
+                nid: formData.nid,
                 dateOfBirth: formData.dateOfBirth,
                 houseNo: formData.houseNo,
                 roadNo: formData.roadNo,
