@@ -243,71 +243,71 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('adminLoginForm');
-            const errorMessage = document.getElementById('errorMessage');
-            const loginBtn = document.getElementById('loginBtn');
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('adminLoginForm');
+        const errorMessage = document.getElementById('errorMessage');
+        const loginBtn = document.getElementById('loginBtn');
 
-            form.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
-                
-                // Show loading state
-                loginBtn.disabled = true;
-                loginBtn.innerHTML = '<span class="loading"></span>Logging in...';
-                errorMessage.style.display = 'none';
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<span class="loading"></span>Logging in...';
+            errorMessage.style.display = 'none';
 
-                // Frontend-only authentication - no backend required
-                if (username === 'admin' && password === '1234') {
-                    // Show success animation
+            try {
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const result = await response.json();
+                if (result.success && result.token) {
+                    // Store token for dashboard
+                    localStorage.setItem('adminToken', result.token);
                     loginBtn.innerHTML = '<i class="fas fa-check"></i> Login Successful!';
                     loginBtn.style.background = 'linear-gradient(135deg, #38a169 0%, #48bb78 100%)';
-                    
-                    // Redirect after short delay
                     setTimeout(() => {
                         window.location.href = 'index.html';
-                    }, 1000);
+                    }, 800);
                 } else {
-                    errorMessage.textContent = 'Invalid credentials. Please use admin/1234';
+                    errorMessage.textContent = result.message || 'Invalid credentials.';
                     errorMessage.style.display = 'block';
-                    
-                    // Reset button
                     loginBtn.disabled = false;
                     loginBtn.innerHTML = 'Login to Admin Panel';
-                    
-                    // Add shake animation to form
                     form.style.animation = 'shake 0.5s';
-                    setTimeout(() => {
-                        form.style.animation = '';
-                    }, 500);
+                    setTimeout(() => { form.style.animation = ''; }, 500);
                 }
-            });
-
-            // Add some visual feedback for input focus
-            const inputs = document.querySelectorAll('input');
-            inputs.forEach(input => {
-                input.addEventListener('focus', function() {
-                    this.parentNode.style.transform = 'translateY(-2px)';
-                });
-                
-                input.addEventListener('blur', function() {
-                    this.parentNode.style.transform = 'translateY(0)';
-                });
-            });
+            } catch (err) {
+                errorMessage.textContent = 'Login failed. Please try again.';
+                errorMessage.style.display = 'block';
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = 'Login to Admin Panel';
+            }
         });
 
-        // Add shake animation
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes shake {
-                0%, 100% { transform: translateX(0); }
-                25% { transform: translateX(-5px); }
-                75% { transform: translateX(5px); }
-            }
-        `;
-        document.head.appendChild(style);
+        // Add some visual feedback for input focus
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentNode.style.transform = 'translateY(-2px)';
+            });
+            input.addEventListener('blur', function() {
+                this.parentNode.style.transform = 'translateY(0)';
+            });
+        });
+    });
+    // Add shake animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+    `;
+    document.head.appendChild(style);
     </script>
 </body>
 </html>

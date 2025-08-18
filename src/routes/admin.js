@@ -25,6 +25,8 @@ const authenticateAdmin = (req, res, next) => {
     next();
 };
 
+// ...existing code... (no allowPublicRead in production)
+
 // Dashboard Overview
 router.get('/dashboard/stats', authenticateAdmin, async (req, res) => {
     try {

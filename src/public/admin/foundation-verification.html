@@ -349,13 +349,13 @@
             <div class="section-header">
                 <h2>Foundation Applications</h2>
                 <div class="filter-buttons">
-                    <button class="filter-btn active" onclick="filterFoundations('unverified')">
+                    <button class="filter-btn active" onclick="filterFoundations('unverified', this)">
                         <i class="fas fa-clock"></i> Pending
                     </button>
-                    <button class="filter-btn" onclick="filterFoundations('verified')">
+                    <button class="filter-btn" onclick="filterFoundations('verified', this)">
                         <i class="fas fa-check"></i> Verified
                     </button>
-                    <button class="filter-btn" onclick="filterFoundations('all')">
+                    <button class="filter-btn" onclick="filterFoundations('all', this)">
                         <i class="fas fa-list"></i> All
                     </button>
                 </div>
@@ -416,17 +416,24 @@
             }
         ];
 
-        function loadFoundations() {
-            console.log('🔄 Loading foundations from API...');
-            // Try API first, then fallback to real data
-            fetch('/api/admin/foundations', {
-                headers: {
-                    'Authorization': 'test-admin-token',
-                    'Content-Type': 'application/json'
-                }
+        function loadFoundations(status = 'unverified') {
+            currentFilter = status;
+            console.log('🔄 Loading foundations from API... status=', status);
+            // Build URL: omit status param when requesting "all"
+            const apiUrl = status === 'all' ? '/api/admin/foundations' : `/api/admin/foundations?status=${status}`;
+
+            // Try API first, include credentials (session cookie). If 401, redirect to login.
+            fetch(apiUrl, {
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
             })
             .then(response => {
                 console.log('📡 API Response status:', response.status, response.statusText);
+                if (response.status === 401) {
+                    console.warn('🔐 API returned 401 - showing inline admin login modal');
+                    showAdminLoginModal();
+                    throw new Error('Unauthorized');
+                }
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
@@ -434,21 +441,27 @@
             })
             .then(data => {
                 console.log('📊 API Response:', data);
-                if (data.success && data.data && data.data.length > 0) {
+                if (data.success && data.data && Array.isArray(data.data)) {
                     console.log('✅ API foundations loaded:', data.data.length, 'foundations');
-                    console.log('📋 Foundation data:', data.data);
                     allFoundations = data.data;
                 } else {
-                    throw new Error('API returned no data');
+                    // API returned empty list
+                    console.log('⚠️ API returned empty list');
+                    allFoundations = [];
                 }
+
+                // Compute displayed list based on the requested status
+                const displayed = status === 'all' ? allFoundations : allFoundations.filter(f => f.status === status);
                 updateStats();
-                filterFoundations(currentFilter);
+                displayFoundations(displayed);
             })
             .catch(error => {
-                console.error('❌ API failed, using fallback data:', error.message);
-                // Use fallback data from our database
-                allFoundations = fallbackFoundationData;
-                console.log('📋 Fallback foundations loaded:', allFoundations.length);
+                console.error('❌ API failed or unavailable:', error.message);
+                // Use fallback data only if the API was unreachable (not on unauthorized)
+                if (allFoundations.length === 0) {
+                    allFoundations = fallbackFoundationData;
+                    console.log('📋 Fallback foundations loaded:', allFoundations.length);
+                }
                 updateStats();
                 filterFoundations(currentFilter);
             });
@@ -464,20 +477,15 @@
             document.getElementById('verifiedCount').textContent = verified;
         }
 
-        function filterFoundations(status) {
-            currentFilter = status;
-            
+        function filterFoundations(status, e) {
             // Update filter button states
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-            event.target.classList.add('active');
+            if (e && e.currentTarget) e.currentTarget.classList.add('active');
 
-            const filteredFoundations = status === 'all' 
-                ? allFoundations 
-                : allFoundations.filter(f => f.status === status);
-
-            displayFoundations(filteredFoundations);
+            // Load foundations for the selected status (server-side filter)
+            loadFoundations(status);
         }
 
         function displayFoundations(foundations) {
@@ -530,8 +538,72 @@
             window.location.href = `foundation-details.html?id=${foundationId}`;
         }
 
-        // Load foundations when page loads
-        window.addEventListener('load', loadFoundations);
+    // Load foundations when page loads (default to unverified)
+    window.addEventListener('load', () => loadFoundations('unverified'));
+</script>
+
+    <!-- Inline Admin Login Modal -->
+    <style>
+        .admin-login-modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); z-index: 2000; }
+        .admin-login-modal.active { display: flex; }
+        .admin-login-box { background: white; padding: 24px; border-radius: 12px; width: 360px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .admin-login-box h3 { margin-bottom: 12px; }
+        .admin-login-box .form-row { margin-bottom: 10px; }
+        .admin-login-box input { width: 100%; padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 6px; }
+        .admin-login-box button { margin-top: 8px; padding: 10px 12px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; }
+    </style>
+
+    <div id="adminLoginModal" class="admin-login-modal" role="dialog" aria-hidden="true">
+        <div class="admin-login-box">
+            <h3>Admin Login</h3>
+            <div class="form-row">
+                <label>Username</label>
+                <input id="adminModalUsername" type="text" value="admin">
+            </div>
+            <div class="form-row">
+                <label>Password</label>
+                <input id="adminModalPassword" type="password" value="1234">
+            </div>
+            <div style="text-align:right">
+                <button id="adminModalLoginBtn">Login</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showAdminLoginModal() {
+            const m = document.getElementById('adminLoginModal');
+            if (!m) return;
+            m.classList.add('active');
+        }
+
+        async function submitAdminLogin() {
+            const user = document.getElementById('adminModalUsername').value;
+            const pass = document.getElementById('adminModalPassword').value;
+
+            try {
+                const resp = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: user, password: pass }),
+                    credentials: 'include'
+                });
+
+                const data = await resp.json();
+                if (data.success) {
+                    document.getElementById('adminLoginModal').classList.remove('active');
+                    // Reload foundations now that session cookie is set
+                    loadFoundations(currentFilter);
+                } else {
+                    alert('Login failed');
+                }
+            } catch (err) {
+                console.error('Login error', err);
+                alert('Login error');
+            }
+        }
+
+        document.getElementById('adminModalLoginBtn').addEventListener('click', submitAdminLogin);
     </script>
 </body>
 </html>
