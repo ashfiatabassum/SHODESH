@@ -513,7 +513,7 @@ router.post('/signin', async (req, res) => {
         lastName: individual.last_name,
         email: individual.email,
         phoneNumber: individual.mobile,      // FIXED: Use phoneNumber
-        nidNumber: individual.nid,           // FIXED: Use nidNumber
+        nid: individual.nid,           // FIXED: Use nidNumber
         dateOfBirth: individual.dob,
         memberSince: "2024" // You can calculate this from a created_at field if you have one
       },
@@ -588,7 +588,7 @@ router.get('/profile/:individualId', async (req, res) => {
         lastName: individual.last_name,
         email: individual.email,
         phoneNumber: individual.mobile,      // FIXED: Use phoneNumber instead of phoneNID
-        nidNumber: individual.nid,
+        nid: individual.nid,
         dateOfBirth: individual.dob,
         memberSince: "2024"
       },
