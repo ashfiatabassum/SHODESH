@@ -98,167 +98,76 @@ document.getElementById("signin").addEventListener("click", async () => {
     return;
   }
   
-  // Show loading state
-  const signinBtn = document.getElementById("signin");
-  const originalText = signinBtn.textContent;
-  signinBtn.textContent = "Signing in...";
-  signinBtn.disabled = true;
-  signinBtn.style.opacity = "0.7";
-  
   // Show loading alert
-  showCustomAlert('🔐 Verifying your credentials... Please wait.', 'loading');
-  
+  const loadingAlert = showCustomAlert('Signing in...', 'loading');
+
+  // Simulate API call
   try {
-    console.log('🔐 Attempting to sign in with username:', user);
-    
-    // Try individual signin first
-    console.log('🔐 Checking individual credentials...');
-    let response = await fetch('/api/individual/signin', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    // In a real app, you'd fetch from your server, e.g.:
+    // const response = await fetch('/api/auth/signin', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({ username: user, password: pass })
+    // });
+    // const data = await response.json();
+    // if (!response.ok) throw new Error(data.message || 'Sign-in failed');
+
+    // Mocking a successful response for demonstration
+    await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
+    const mockResponse = {
+      success: true,
+      user: {
         username: user,
-        password: pass
-      })
-    });
-    
-    console.log('📊 Individual response status:', response.status);
-    
-    // Handle different response types
-    let data;
-    try {
-      data = await response.json();
-    } catch (parseError) {
-      console.error('❌ Failed to parse individual response as JSON:', parseError);
-      data = { success: false, message: 'Server response error' };
-    }
-    
-    console.log('📋 Individual sign in response:', data);
-    
-    if (response.ok && data.success) {
-      // Remove loading alert
-      removeLoadingAlert();
-      
-      // Store individual data and redirect to profile
-      localStorage.setItem('individualId', data.individualId);
-      localStorage.setItem('individualData', JSON.stringify(data.individualData));
-      localStorage.setItem('userType', 'individual');
-      
-      showCustomAlert(
-        `🎉 <strong>Welcome back, ${data.individualData.personalInfo.firstName}!</strong><br><br>
-        Successfully signed in as an <strong>Individual</strong>.<br><br>
-        <small>Redirecting to your profile...</small>`, 
-        'success', 
-        3000
-      );
-      
-      // Redirect to individual profile after delay
-      setTimeout(() => {
-        window.location.href = 'profileindividual.html';
-      }, 3000);
-      return;
-    }
-    
-    // If individual signin failed, try donor signin
-    console.log('🔐 Individual signin failed, trying donor signin...');
-    console.log('Individual error message:', data.message);
-    
-    // Update loading message
+        role: 'staff' // Assume role is returned from backend
+      }
+    };
+
     removeLoadingAlert();
-    showCustomAlert('🔐 Checking donor credentials... Please wait.', 'loading');
-    
-    response = await fetch('/api/donor/signin', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        username: user,
-        password: pass
-      })
-    });
-    
-    console.log('📊 Donor response status:', response.status);
-    
-    // Handle different response types for donor
-    try {
-      data = await response.json();
-    } catch (parseError) {
-      console.error('❌ Failed to parse donor response as JSON:', parseError);
-      data = { success: false, message: 'Server response error' };
-    }
-    
-    console.log('📋 Donor sign in response:', data);
-    
-    // Remove loading alert
-    removeLoadingAlert();
-    
-    if (response.ok && data.success) {
-      // Store donor data and redirect to profile
-      localStorage.setItem('donorId', data.donorId);
-      localStorage.setItem('donorData', JSON.stringify(data.donorData));
-      localStorage.setItem('userType', 'donor');
+
+    if (mockResponse.success) {
+      showCustomAlert('Sign-in successful! Redirecting...', 'success');
+      // Store user info if needed, e.g., in localStorage
+      localStorage.setItem('loggedInUser', JSON.stringify(mockResponse.user));
       
-      showCustomAlert(
-        `🎉 <strong>Welcome back, ${data.donorData.personalInfo.firstName}!</strong><br><br>
-        Successfully signed in as a <strong>Donor</strong>.<br><br>
-        <small>Redirecting to your profile...</small>`, 
-        'success', 
-        3000
-      );
-      
-      // Redirect to donor profile after delay
+      // Redirect based on role
       setTimeout(() => {
-        window.location.href = 'profiledonor.html';
-      }, 3000);
-      return;
+        if (mockResponse.user.role === 'staff') {
+          window.location.href = 'staff_profile.html';
+        } else {
+          // Redirect to a general user dashboard or homepage
+          window.location.href = 'index.html';
+        }
+      }, 1500);
+    } else {
+      // This part would be used if the mockResponse could fail
+      // showCustomAlert(data.message, 'error');
     }
-    
-    // Both signin attempts failed - show detailed error message
-    console.log('❌ Both signin attempts failed');
-    console.log('Donor error message:', data.message);
-    
-    let errorMessage = 'Invalid username or password.';
-    
-    // Check if it's a server error
-    if (response.status >= 500) {
-      errorMessage = 'Server error occurred. Please try again later.';
-    } else if (data.message) {
-      errorMessage = data.message;
-    }
-    
-    showCustomAlert(
-      `<strong>Sign In Failed</strong><br><br>
-      ${errorMessage}<br><br>
-      <small>Make sure you're using the correct username and password for your account.</small><br><br>
-      <strong>Account Types:</strong><br>
-      • Individual Account<br>
-      • Donor Account<br><br>
-      <small>If you don't have an account, please register first.</small>`, 
-      'error', 
-      10000
-    );
-    
   } catch (error) {
-    console.error('❌ Sign in error:', error);
     removeLoadingAlert();
-    
-    showCustomAlert(
-      `<strong>Connection Error</strong><br><br>
-      Unable to connect to the server. Please check your internet connection and try again.<br><br>
-      <small>Error: ${error.message}</small><br><br>
-      <small>Make sure the server is running on the correct port.</small>`, 
-      'error', 
-      10000
-    );
-  } finally {
-    // Reset button state
-    signinBtn.textContent = originalText;
-    signinBtn.disabled = false;
-    signinBtn.style.opacity = "1";
+    // In a real app, you'd get the error message from the catch block
+    showCustomAlert('Invalid username or password.', 'error');
+    console.error('Sign-in error:', error);
   }
+});
+
+// Ripple effect for the button
+document.getElementById("signin").addEventListener("mousedown", function(e) {
+    const ripple = document.createElement("div");
+    ripple.className = "button-ripple";
+    this.appendChild(ripple);
+
+    const rect = this.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = e.clientX - rect.left - size / 2;
+    const y = e.clientY - rect.top - size / 2;
+
+    ripple.style.width = ripple.style.height = `${size}px`;
+    ripple.style.left = `${x}px`;
+    ripple.style.top = `${y}px`;
+
+    ripple.addEventListener("animationend", () => {
+        ripple.remove();
+    });
 });
 
 // ...rest of the code remains the same...
@@ -281,6 +190,97 @@ document.addEventListener('DOMContentLoaded', function() {
       if (e.key === 'Enter') {
         document.getElementById("signin").click();
       }
+    });
+  }
+
+  // Real-time validation feedback for username
+  if (usernameField) {
+    usernameField.addEventListener('input', function() {
+      const value = this.value.trim();
+      if (value.length > 0 && value.length < 4) {
+        this.style.borderColor = '#ff4757';
+        this.style.boxShadow = '0 0 10px rgba(255, 71, 87, 0.3)';
+        this.title = 'Username must be at least 4 characters';
+      } else if (value.length >= 4) {
+        this.style.borderColor = '#2ed573';
+        this.style.boxShadow = '0 0 10px rgba(46, 213, 115, 0.3)';
+        this.title = 'Username looks good';
+      } else {
+        this.style.borderColor = '';
+        this.style.boxShadow = '';
+        this.title = '';
+      }
+    });
+
+    // Clear validation on focus
+    usernameField.addEventListener('focus', function() {
+      if (this.value.trim() === '') {
+        this.style.borderColor = '';
+        this.style.boxShadow = '';
+        this.title = '';
+      }
+    });
+  }
+
+  // Real-time validation feedback for password
+  if (passwordField) {
+    passwordField.addEventListener('input', function() {
+      const value = this.value;
+      if (value.length > 0 && value.length < 6) {
+        this.style.borderColor = '#ff4757';
+        this.style.boxShadow = '0 0 10px rgba(255, 71, 87, 0.3)';
+        this.title = 'Password must be at least 6 characters';
+      } else if (value.length >= 6) {
+        this.style.borderColor = '#2ed573';
+        this.style.boxShadow = '0 0 10px rgba(46, 213, 115, 0.3)';
+        this.title = 'Password looks good';
+      } else {
+        this.style.borderColor = '';
+        this.style.boxShadow = '';
+        this.title = '';
+      }
+    });
+
+    // Clear validation on focus
+    passwordField.addEventListener('focus', function() {
+      if (this.value === '') {
+        this.style.borderColor = '';
+        this.style.boxShadow = '';
+        this.title = '';
+      }
+    });
+  }
+
+  // Add visual feedback to signin button
+  const signinBtn = document.getElementById("signin");
+  if (signinBtn) {
+    signinBtn.addEventListener('mouseenter', function() {
+      if (!this.disabled) {
+        this.style.transform = 'translateY(-2px)';
+        this.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.2)';
+      }
+    });
+
+    signinBtn.addEventListener('mouseleave', function() {
+     
+        this.style.transform = 'translateY(0)';
+        this.style.boxShadow = '';
+      }
+    });
+  }
+
+  // Add account type indicator (only individual and donor)
+  const formContainer = document.querySelector('.signin-form') || document.querySelector('form');
+  if (formContainer && !document.querySelector('.account-types-info')) {
+    const accountTypesInfo = document.createElement('div');
+    accountTypesInfo.className = 'account-types-info';
+    accountTypesInfo.innerHTML = `
+      <div class="account-types-header">
+        <i class="fas fa-info-circle"></i>
+        <span>Supported Account Types</span>
+      </div>
+      <div class="account-types-list">
+        <div class="account-type">
     });
   }
 

@@ -1,19 +1,51 @@
-// Volunteer Page JavaScript
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.querySelector('#volunteerApplicationForm');
+    const usernameInput = document.querySelector('#username');
+    const usernameMessage = document.querySelector('#username-message');
 
-// Function to handle volunteer application
-function applyAsVolunteer() {
-    // Check if user is signed in (you can modify this logic based on your authentication system)
-    const isSignedIn = checkUserSignInStatus();
-    
-    if (!isSignedIn) {
-        // If not signed in, redirect to volunteer sign in page
-        window.location.href = 'volunteer_signin.html';
-        return;
+    let debounceTimer;
+    usernameInput.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            const username = usernameInput.value;
+            if (username) {
+                checkUsername(username);
+            } else {
+                usernameMessage.textContent = '';
+            }
+        }, 500); // 500ms delay
+    });
+
+    async function checkUsername(username) {
+        try {
+            const response = await fetch('/api/staff/check-username', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username }),
+            });
+            const data = await response.json();
+            if (data.exists) {
+                usernameMessage.textContent = 'Username is already taken.';
+                usernameMessage.style.color = 'red';
+            } else {
+                usernameMessage.textContent = 'Username is available.';
+                usernameMessage.style.color = 'green';
+            }
+        } catch (error) {
+            console.error('Error checking username:', error);
+            usernameMessage.textContent = 'Error checking username.';
+            usernameMessage.style.color = 'red';
+        }
     }
-    
-    // If signed in, show application form
-    showVolunteerApplicationForm();
-}
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        // ... rest of the form submission logic
+    });
+});
+
 
 // Function to check if user is signed in (placeholder - implement based on your auth system)
 function checkUserSignInStatus() {

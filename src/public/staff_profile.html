@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Staff Profile - Shodesh</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="staff_profile.css" />
+  </head>
+  <body>
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div>MAIL: contact@shodesh.org</div>
+      <div>PHONE: +880 1712 345 678</div>
+    </div>
+
+    <!-- Navbar -->
+    <div class="navbar">
+      <div class="logo"><strong>SHODESH</strong></div>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="#">About</a>
+        <a href="#">Projects</a>
+        <a href="#">Gallery</a>
+        <a href="#">News</a>
+        <a href="#">Contact</a>
+        <a href="resources.html">Resources</a>
+        <a href="search.html">Search</a>
+        <a href="signin.html"><button class="signin-btn">Sign Out</button></a>
+        <a href="volunteer.html"
+          ><button class="join-team-btn">Join Our Team</button></a
+        >
+      </div>
+    </div>
+
+    <!-- Profile Section -->
+    <div class="profile-container">
+      <div class="profile-header">
+        <h1>Welcome, <span id="staff-name-header"></span>!</h1>
+        <p>This is your personal staff dashboard.</p>
+      </div>
+
+      <div class="profile-card">
+        <div class="profile-avatar">
+          <img
+            src="https://i.pravatar.cc/150?u=a042581f4e29026704d"
+            alt="Staff Avatar"
+          />
+        </div>
+        <div class="profile-details">
+          <h2 id="staff-name"></h2>
+          <p class="staff-role">Field Staff</p>
+          <div class="profile-info">
+            <div class="info-item">
+              <strong>Email:</strong>
+              <span id="staff-email"></span>
+            </div>
+            <div class="info-item">
+              <strong>Phone:</strong>
+              <span id="staff-phone"></span>
+            </div>
+            <div class="info-item">
+              <strong>Location:</strong>
+              <span id="staff-location"></span>
+            </div>
+            <div class="info-item">
+              <strong>Joined:</strong>
+              <span id="staff-join-date"></span>
+            </div>
+          </div>
+          <div class="profile-actions">
+            <button class="edit-profile-btn">Edit Profile</button>
+            <button class="view-tasks-btn">View Assigned Tasks</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-summary">
+        <h2>Activity Summary</h2>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <h3>Tasks Completed</h3>
+            <p>0</p>
+          </div>
+          <div class="summary-item">
+            <h3>Beneficiaries Verified</h3>
+            <p>0</p>
+          </div>
+          <div class="summary-item">
+            <h3>Reports Submitted</h3>
+            <p>0</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="volunteer-footer">
+      <div class="container">
+        <p>&copy; 2025 Shodesh. Building a better Bangladesh together.</p>
+      </div>
+    </footer>
+
+    <script src="staff_profile.js"></script>
+  </body>
+</html>
