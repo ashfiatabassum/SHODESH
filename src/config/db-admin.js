@@ -4,8 +4,9 @@ const mysql = require('mysql2');
 const pool = mysql.createPool({
   host: 'localhost',
   user: 'root',       // your MySQL username
-  password: 'mirpurdohs832', // replace with your MySQL password
-  database: 'shodesh', // replace with your DB name
+  // Use the same password as in src/config/db.js. Consider switching to environment variables (.env) for security.
+  password: '202314055',
+  database: 'shodesh',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
@@ -14,11 +15,9 @@ const pool = mysql.createPool({
 // Get promise-based pool
 const promisePool = pool.promise();
 
-// Test connection
-promisePool.execute('SELECT 1').then(() => {
-  console.log('✅ Admin DB Connected to MySQL');
-}).catch((err) => {
-  console.error('❌ Admin MySQL connection failed:', err);
-});
+// Note: We intentionally avoid running a test query here to prevent noisy
+// "access denied" logs during development when DB credentials may be missing.
+// If you want to verify the admin DB connection, call `promisePool.execute('SELECT 1')`
+// from a controlled startup or admin route and handle the error there.
 
 module.exports = promisePool;

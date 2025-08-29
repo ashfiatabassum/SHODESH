@@ -7,6 +7,7 @@ const adminRoutes = require('./routes/admin');
 const donorRoutes = require('./routes/donor');
 const foundationRoutes = require('./routes/foundation');
 const individualRoutes = require('./routes/individual');
+const staffRoutes = require('./routes/staff');
 
 const app = express();
 
@@ -46,6 +47,8 @@ app.use('/api/foundation', foundationRoutes);
 console.log('✅ Foundation routes registered');
 app.use('/api/individual', individualRoutes);
 console.log('✅ Individual routes registered');
+app.use('/api/staff', staffRoutes);
+console.log('✅ Staff routes registered');
 
 // ✅ Test route for API functionality
 app.get('/api/test', (req, res) => {
