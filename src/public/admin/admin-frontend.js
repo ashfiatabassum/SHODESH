@@ -1003,6 +1003,18 @@ class FoundationVerification {
                     ${foundation.certificate ? '<button class="btn btn-view" onclick="foundationVerifier.viewCertificate()">View Certificate</button>' : ''}
                 </div>
             </div>
+
+            <div class="detail-actions" style="display:flex; gap:12px; margin-top:18px;">
+                <button id="foundationApproveBtn" class="btn btn-success" onclick="verifyFoundation('approve')">
+                    <i class="fas fa-check"></i>
+                    Approve
+                </button>
+                <button id="foundationSuspendBtn" class="btn btn-danger" onclick="verifyFoundation('suspend')">
+                    <i class="fas fa-times"></i>
+                    Suspend
+                </button>
+                <button class="btn btn-secondary" onclick="closeFoundationModal()">Close</button>
+            </div>
         `;
     }
 
@@ -1108,8 +1120,18 @@ function closeFoundationModal() {
     foundationVerifier.closeFoundationModal();
 }
 
-function verifyFoundation(action) {
-    foundationVerifier.verifyFoundation(action);
+async function verifyFoundation(action) {
+    // Disable buttons to show processing state
+    const approveBtn = document.getElementById('foundationApproveBtn');
+    const suspendBtn = document.getElementById('foundationSuspendBtn');
+    if (approveBtn) approveBtn.disabled = true;
+    if (suspendBtn) suspendBtn.disabled = true;
+
+    await foundationVerifier.verifyFoundation(action);
+
+    // Re-enable buttons after processing
+    if (approveBtn) approveBtn.disabled = false;
+    if (suspendBtn) suspendBtn.disabled = false;
 }
 
 // Update the showSection function to load foundations when the section is shown

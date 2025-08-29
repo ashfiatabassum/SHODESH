@@ -401,7 +401,7 @@ router.get('/foundations/:id/certificate', authenticateAdmin, async (req, res) =
         console.log('🖼️ GET /api/admin/foundations/:id/certificate - Request received');
         const { id } = req.params;
         
-        const [foundation] = await adminadminDb.execute(`
+        const [foundation] = await adminDb.execute(`
             SELECT certificate FROM foundation WHERE foundation_id = ?
         `, [id]);
         
@@ -459,36 +459,73 @@ router.get('/foundations/:id/certificate', authenticateAdmin, async (req, res) =
 });
 
 router.put('/foundations/:id/verify', authenticateAdmin, async (req, res) => {
+    // Robust verification: transactional update with validation and clear responses
+    const { id } = req.params;
+    const { action } = req.body;
+
+    // Validate input
+    if (!id) {
+        return res.status(400).json({ success: false, message: 'Foundation id is required' });
+    }
+
+    if (!['approve', 'suspend'].includes(action)) {
+        return res.status(400).json({ success: false, message: "Invalid action. Must be 'approve' or 'suspend'" });
+    }
+
+    const newStatus = action === 'approve' ? 'verified' : 'suspended';
+
+    let connection;
     try {
-        console.log('📋 PUT /api/admin/foundations/:id/verify - Request received');
-        const { id } = req.params;
-        const { action, notes } = req.body;
-        
-        console.log('📋 Foundation ID:', id);
-        console.log('📋 Action:', action);
-        
-        const status = action === 'approve' ? 'verified' : 'suspended';
-        
-        console.log('📋 New status:', status);
-        
-        const [result] = await adminDb.execute(
-            'UPDATE foundation SET status = ? WHERE foundation_id = ?',
-            [status, id]
+        // Acquire a dedicated connection for the transaction
+        connection = await adminDb.getConnection();
+        await connection.beginTransaction();
+
+        // Lock the foundation row to avoid race conditions
+        const [rows] = await connection.execute(
+            'SELECT foundation_id, status FROM foundation WHERE foundation_id = ? FOR UPDATE',
+            [id]
         );
-        
-        console.log('📋 Update result:', result);
-        
-        res.json({
-            success: true,
-            message: `Foundation ${action === 'approve' ? 'verified' : 'suspended'} successfully`
-        });
+
+        if (rows.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ success: false, message: 'Foundation not found' });
+        }
+
+        const currentStatus = rows[0].status;
+
+        // If already in desired state, commit and return the current state
+        if (currentStatus === newStatus) {
+            await connection.commit();
+            return res.json({ success: true, message: `Foundation already ${newStatus}`, foundationId: id, status: newStatus });
+        }
+
+        // Perform the update using a single safe statement
+        const [updateResult] = await connection.execute(
+            'UPDATE foundation SET status = ? WHERE foundation_id = ?',
+            [newStatus, id]
+        );
+
+        // Ensure update affected a row
+        if (updateResult.affectedRows === 0) {
+            await connection.rollback();
+            return res.status(500).json({ success: false, message: 'Failed to update foundation status' });
+        }
+
+        await connection.commit();
+
+        // Return the updated foundation summary
+        const [updatedRows] = await adminDb.execute(
+            'SELECT foundation_id, foundation_name, email, mobile, status FROM foundation WHERE foundation_id = ?',
+            [id]
+        );
+
+        return res.json({ success: true, message: `Foundation ${newStatus} successfully`, data: updatedRows[0] });
     } catch (error) {
         console.error('❌ Foundation verification error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to update foundation status',
-            error: error.message
-        });
+        try { if (connection) await connection.rollback(); } catch (e) { /* ignore */ }
+        return res.status(500).json({ success: false, message: 'Failed to update foundation status', error: error.message });
+    } finally {
+        try { if (connection) connection.release(); } catch (e) { /* ignore */ }
     }
 });
 

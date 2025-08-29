@@ -805,36 +805,62 @@
             `;
         }
 
-        function verifyFoundation(foundationId, action) {
-            const actionText = action === 'approved' ? 'approve' : 'reject';
-            
-            if (!confirm(`Are you sure you want to ${actionText} this foundation?`)) {
+        async function verifyFoundation(foundationId, action) {
+            // Map local action tokens to API actions
+            const actionMap = {
+                'approved': 'approve',
+                'rejected': 'suspend'
+            };
+
+            const apiAction = actionMap[action] || action;
+
+            if (!confirm(`Are you sure you want to ${apiAction} this foundation?`)) {
                 return;
             }
 
-            // Disable buttons
-            document.querySelectorAll('.action-btn').forEach(btn => {
+            // Disable buttons and show spinner
+            const buttons = document.querySelectorAll('.action-btn');
+            buttons.forEach(btn => {
                 btn.disabled = true;
+                btn.dataset.orig = btn.innerHTML;
                 btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing...`;
             });
 
-            // Simulate API call
-            setTimeout(() => {
-                // Update local data
-                if (foundationData[foundationId]) {
-                    foundationData[foundationId].status = action === 'approved' ? 'verified' : 'rejected';
+            try {
+                const res = await fetch(`/api/admin/foundations/${encodeURIComponent(foundationId)}/verify`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // Server currently accepts any non-empty Authorization; use admin-authenticated
+                        'Authorization': 'admin-authenticated'
+                    },
+                    body: JSON.stringify({ action: apiAction })
+                });
+
+                const json = await res.json().catch(() => null);
+
+                if (!res.ok) {
+                    const message = (json && json.message) ? json.message : `Request failed with status ${res.status}`;
+                    throw new Error(message);
                 }
 
-                showNotification(
-                    `Foundation ${actionText}ed successfully!`,
-                    'success'
-                );
+                if (json && json.success) {
+                    showNotification(`Foundation ${apiAction}ed successfully!`, 'success');
+                    // Option: update local state or reload to reflect DB change
+                    setTimeout(() => location.reload(), 800);
+                    return;
+                }
 
-                // Reload the page to show updated status
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
-            }, 2000);
+                throw new Error((json && json.message) ? json.message : 'Unknown error from server');
+            } catch (err) {
+                console.error('Verify API error:', err);
+                showNotification(`Error updating foundation: ${err.message}`, 'error');
+                // Re-enable buttons and restore text
+                buttons.forEach(btn => {
+                    btn.disabled = false;
+                    if (btn.dataset.orig) btn.innerHTML = btn.dataset.orig;
+                });
+            }
         }
 
         function showNotification(message, type) {
