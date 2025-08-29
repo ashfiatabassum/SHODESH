@@ -392,3 +392,274 @@ CREATE TABLE DONATION (
   INDEX IDX_DON_EVENT (creation_id, paid_at),
   INDEX IDX_DON_DONOR (donor_id, paid_at)
 );
+
+
+DELIMITER $$
+
+/* Block deleting an INDIVIDUAL that still owns events */
+DROP TRIGGER IF EXISTS BD_INDIVIDUAL_BLOCK_IF_EVENTS $$
+CREATE TRIGGER BD_INDIVIDUAL_BLOCK_IF_EVENTS
+BEFORE DELETE ON INDIVIDUAL
+FOR EACH ROW
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM EVENT_CREATION
+    WHERE creator_type='individual'
+      AND individual_id = OLD.individual_id
+    LIMIT 1
+  ) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Cannot delete individual: events still reference this account (reassign or deactivate first)';
+  END IF;
+END $$
+
+/* Block deleting a FOUNDATION that still owns events */
+DROP TRIGGER IF EXISTS BD_FOUNDATION_BLOCK_IF_EVENTS $$
+CREATE TRIGGER BD_FOUNDATION_BLOCK_IF_EVENTS
+BEFORE DELETE ON FOUNDATION
+FOR EACH ROW
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM EVENT_CREATION
+    WHERE creator_type='foundation'
+      AND foundation_id = OLD.foundation_id
+    LIMIT 1
+  ) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Cannot delete foundation: events still reference this account (reassign or deactivate first)';
+  END IF;
+END $$
+
+DELIMITER ;
+
+
+
+DELIMITER $$
+
+/* -----------------------------------------------------------------------
+   BI_EVENT_VERIFICATION_ENFORCE  (BEFORE INSERT on EVENT_VERIFICATION)
+   Purpose:
+     - Validate round_no ∈ {1,2}
+     - Enforce pairing:
+         round 1 -> staff_id MUST be NULL
+         round 2 -> staff_id MUST be NOT NULL
+     - If round 2, ensure the event is actually waiting for staff
+       (EVENT_CREATION.second_verification_required = 1)
+     - Zero out request_staff_verification when not round 1
+     - On violation -> raise an error (SIGNAL 45000)
+   ----------------------------------------------------------------------- */
+DROP TRIGGER IF EXISTS BI_EVENT_VERIFICATION_ENFORCE $$
+CREATE TRIGGER BI_EVENT_VERIFICATION_ENFORCE
+BEFORE INSERT ON EVENT_VERIFICATION
+FOR EACH ROW
+BEGIN
+  DECLARE v_need_staff TINYINT DEFAULT 0;
+
+  -- round_no must be 1 or 2
+  IF NEW.round_no NOT IN (1,2) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='round_no must be 1 or 2';
+  END IF;
+
+  -- pairing: round 1 has no staff_id, round 2 requires staff_id
+  IF (NEW.round_no = 1 AND NEW.staff_id IS NOT NULL) OR
+     (NEW.round_no = 2 AND NEW.staff_id IS NULL) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT='Invalid verifier: round 1 -> no staff_id; round 2 -> staff_id required';
+  END IF;
+
+  -- request flag only meaningful for round 1
+  IF NEW.round_no <> 1 THEN
+    SET NEW.request_staff_verification = 0;
+  END IF;
+
+  -- if round 2, ensure the event is waiting for staff
+  IF NEW.round_no = 2 THEN
+    SELECT second_verification_required
+      INTO v_need_staff
+    FROM EVENT_CREATION
+    WHERE creation_id = NEW.creation_id
+    FOR UPDATE;
+
+    IF v_need_staff <> 1 THEN
+      SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT='Staff follow-up was not requested for this event';
+    END IF;
+  END IF;
+END $$
+
+/* -----------------------------------------------------------------------
+   AI_EVENT_VERIFICATION_APPLY  (AFTER INSERT on EVENT_VERIFICATION)
+   Purpose:
+     - Apply the decision to EVENT_CREATION state:
+       * Round 1, verified + request_staff=0  -> verified + active
+       * Round 1, verified + request_staff=1  -> unverified + inactive + waiting for staff
+       * Round 1, unverified                  -> unverified + inactive
+       * Round 2, verified                    -> verified + active
+       * Round 2, unverified                  -> unverified + inactive
+   ----------------------------------------------------------------------- */
+DROP TRIGGER IF EXISTS AI_EVENT_VERIFICATION_APPLY $$
+CREATE TRIGGER AI_EVENT_VERIFICATION_APPLY
+AFTER INSERT ON EVENT_VERIFICATION
+FOR EACH ROW
+BEGIN
+  -- Round 1 (initial)
+  IF NEW.round_no = 1 THEN
+    IF NEW.decision = 'verified' THEN
+      IF NEW.request_staff_verification = 1 THEN
+        UPDATE EVENT_CREATION
+        SET second_verification_required = 1,
+            verification_status = 'unverified',
+            lifecycle_status    = 'inactive'
+        WHERE creation_id = NEW.creation_id;
+      ELSE
+        UPDATE EVENT_CREATION
+        SET second_verification_required = 0,
+            verification_status = 'verified',
+            lifecycle_status    = 'active'
+        WHERE creation_id = NEW.creation_id;
+      END IF;
+    ELSE
+      UPDATE EVENT_CREATION
+      SET second_verification_required = 0,
+          verification_status = 'unverified',
+          lifecycle_status    = 'inactive'
+      WHERE creation_id = NEW.creation_id;
+    END IF;
+  END IF;
+
+  -- Round 2 (staff follow-up)
+  IF NEW.round_no = 2 THEN
+    UPDATE EVENT_CREATION
+    SET second_verification_required = 0,
+        verification_status = CASE WHEN NEW.decision='verified' THEN 'verified' ELSE 'unverified' END,
+        lifecycle_status    = CASE WHEN NEW.decision='verified' THEN 'active'    ELSE 'inactive'    END
+    WHERE creation_id = NEW.creation_id;
+  END IF;
+END $$
+
+DELIMITER ;
+
+
+/* =======================================================================
+   TRIGGERS: DONATION  (eligibility gating + running totals)
+   ======================================================================= */
+DELIMITER $$
+
+/* -----------------------------------------------------------------------
+   BI_DONATION_ENFORCE  (BEFORE INSERT on DONATION)
+   Purpose:
+     - Validate amount > 0
+     - Ensure event is donation-eligible:
+         verification_status='verified' AND lifecycle_status='active'
+     - Prevent over-funding:
+         current + NEW.amount <= amount_needed
+     - On violation -> raise an error (SIGNAL 45000)
+   ----------------------------------------------------------------------- */
+DROP TRIGGER IF EXISTS BI_DONATION_ENFORCE $$
+CREATE TRIGGER BI_DONATION_ENFORCE
+BEFORE INSERT ON DONATION
+FOR EACH ROW
+BEGIN
+  DECLARE v_ver  ENUM('unverified','verified');
+  DECLARE v_life ENUM('inactive','active','closed');
+  DECLARE v_need DECIMAL(12,2);
+  DECLARE v_have DECIMAL(12,2);
+
+  IF NEW.amount IS NULL OR NEW.amount <= 0 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Invalid donation amount';
+  END IF;
+
+  SELECT verification_status, lifecycle_status, amount_needed, amount_received
+    INTO v_ver, v_life, v_need, v_have
+  FROM EVENT_CREATION
+  WHERE creation_id = NEW.creation_id
+  FOR UPDATE;
+
+  IF v_ver <> 'verified' OR v_life <> 'active' THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Donations allowed only for verified & active events';
+  END IF;
+
+  IF v_have >= v_need THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Event is already fully funded';
+  END IF;
+
+  IF v_have + NEW.amount > v_need THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Donation exceeds remaining required amount';
+  END IF;
+END $$
+
+/* -----------------------------------------------------------------------
+   AI_DONATION_SUM  (AFTER INSERT on DONATION)
+   Purpose:
+     - Add NEW.amount to EVENT_CREATION.amount_received
+     - If target met/exceeded, set lifecycle_status='closed'
+   ----------------------------------------------------------------------- */
+DROP TRIGGER IF EXISTS AI_DONATION_SUM $$
+CREATE TRIGGER AI_DONATION_SUM
+AFTER INSERT ON DONATION
+FOR EACH ROW
+BEGIN
+  UPDATE EVENT_CREATION
+  SET amount_received = amount_received + NEW.amount
+  WHERE creation_id = NEW.creation_id;
+
+  UPDATE EVENT_CREATION
+  SET lifecycle_status = 'closed'
+  WHERE creation_id = NEW.creation_id
+    AND verification_status = 'verified'
+    AND amount_received >= amount_needed
+    AND lifecycle_status <> 'closed';
+END $$
+
+/* -----------------------------------------------------------------------
+   AU_DONATION_SUM  (AFTER UPDATE on DONATION)
+   Purpose:
+     - Adjust total when a donation row’s amount changes:
+         amount_received = amount_received - OLD.amount + NEW.amount
+     - Keep lifecycle_status:
+         'closed' if target met, else 'active' (when verified)
+   ----------------------------------------------------------------------- */
+DROP TRIGGER IF EXISTS AU_DONATION_SUM $$
+CREATE TRIGGER AU_DONATION_SUM
+AFTER UPDATE ON DONATION
+FOR EACH ROW
+BEGIN
+  UPDATE EVENT_CREATION
+  SET amount_received = amount_received - OLD.amount + NEW.amount
+  WHERE creation_id = NEW.creation_id;
+
+  UPDATE EVENT_CREATION
+  SET lifecycle_status = CASE
+      WHEN amount_received >= amount_needed THEN 'closed'
+      ELSE 'active'
+    END
+  WHERE creation_id = NEW.creation_id
+    AND verification_status = 'verified';
+END $$
+
+/* -----------------------------------------------------------------------
+   AD_DONATION_SUM  (AFTER DELETE on DONATION)
+   Purpose:
+     - Subtract OLD.amount from amount_received
+     - If it was 'closed' but now below target, reopen to 'active'
+   ----------------------------------------------------------------------- */
+DROP TRIGGER IF EXISTS AD_DONATION_SUM $$
+CREATE TRIGGER AD_DONATION_SUM
+AFTER DELETE ON DONATION
+FOR EACH ROW
+BEGIN
+  UPDATE EVENT_CREATION
+  SET amount_received = amount_received - OLD.amount
+  WHERE creation_id = OLD.creation_id;
+
+  UPDATE EVENT_CREATION
+  SET lifecycle_status = 'active'
+  WHERE creation_id = OLD.creation_id
+    AND verification_status = 'verified'
+    AND amount_received < amount_needed
+    AND lifecycle_status = 'closed';
+END $$
+
+DELIMITER ;
