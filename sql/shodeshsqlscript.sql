@@ -92,3 +92,55 @@ INSERT INTO FOUNDATION VALUES
 ('F000001','Helping Hands',NULL,'LIC123456789','01777777777','help@example.com','helpme77','10','1','Tejgaon','Dhaka','Dhaka','1215','01788888888','456789012345678901','We provide comprehensive support and assistance to underprivileged communities, focusing on education, healthcare, and basic needs. Our vision is to create a society where everyone has equal opportunities to thrive and succeed.','verified'),
 ('F000002','Green Earth',NULL,'LIC987654321','01799999999','green@example.com','green12','22','2','Uttara','Dhaka','Dhaka','1230','01700000000','567890123456789012','Dedicated to environmental conservation and sustainability projects. We work on reforestation, clean energy initiatives, waste management, and environmental awareness programs to protect our planet for future generations.','unverified'),
 ('F000003','Food for All',NULL,'LIC112233445','01712312312','food@example.com','foodpass','30','5','Mirpur','Dhaka','Dhaka','1216','01732132132','678901234567890123','Our mission is to eliminate hunger and malnutrition by providing nutritious meals to underprivileged families, especially children. We also focus on sustainable food programs and nutrition education in rural communities.','verified');
+
+CREATE TABLE STAFF(
+  staff_id VARCHAR(7) NOT NULL,
+  first_name VARCHAR(30) NOT NULL CHECK (first_name REGEXP '^[A-Za-z ]+$'),
+  last_name VARCHAR(30) NOT NULL CHECK (last_name REGEXP '^[A-Za-z ]+$'),
+  username VARCHAR(15) NOT NULL,
+  password VARCHAR(255) NOT NULL CHECK (LENGTH(password) >= 6),
+  mobile VARCHAR(11) NOT NULL CHECK (mobile REGEXP '^0[0-9]{10}$'),
+  email VARCHAR(100) CHECK (email REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}$'),
+  nid VARCHAR(17) NOT NULL CHECK (nid REGEXP '^[0-9]{10,17}$'),
+  dob DATE,
+  house_no VARCHAR(7),
+  road_no VARCHAR(4) CHECK (road_no REGEXP '^[0-9]{1,4}$'),
+  area VARCHAR(30) CHECK (area REGEXP '^[A-Za-z ]+$'),
+  district VARCHAR(30) CHECK (district REGEXP '^[A-Za-z ]+$'),
+  administrative_div VARCHAR(30) CHECK (administrative_div REGEXP '^[A-Za-z ]+$'),
+  zip VARCHAR(4) CHECK (zip REGEXP '^[0-9]{4}$'),
+  CV BLOB NULL,
+  status ENUM('verified','suspended', 'unverified') DEFAULT 'unverified',
+  CONSTRAINT STAFF_STAFF_ID_PK PRIMARY KEY (staff_id),
+  CONSTRAINT STAFF_NID_U UNIQUE (nid)
+);
+CREATE TABLE STAFF_ASSIST (
+  staff_assist_id                VARCHAR(7)  NOT NULL,
+  -- FK fields kept NULLable so rows survive deletes
+  staff_id                       VARCHAR(7)  NULL,
+  individual_id                  VARCHAR(7)  NULL,
+
+  -- when the assist happened
+  created_at                     DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  -- immutable snapshots to preserve attribution
+  staff_name_at_creation         VARCHAR(61) NOT NULL,
+  staff_username_at_creation     VARCHAR(15) NOT NULL,
+  individual_name_at_creation    VARCHAR(61) NOT NULL,
+
+  CONSTRAINT STAFF_ASSIST_PK PRIMARY KEY (staff_assist_id),
+
+  CONSTRAINT STAFF_ASSIST_STAFF_ID_FK
+    FOREIGN KEY (staff_id) REFERENCES STAFF(staff_id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE,
+
+  CONSTRAINT STAFF_ASSIST_INDIVIDUAL_ID_FK
+    FOREIGN KEY (individual_id) REFERENCES INDIVIDUAL(individual_id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE
+);
+
+-- Helpful indexes for lookups
+CREATE INDEX STAFF_ASSIST_IND_ID_CREATED_AT_IDX ON STAFF_ASSIST (individual_id, created_at);
+CREATE INDEX STAFF_ASSIST_STAFF_ID_CREATED_AT_IDX ON STAFF_ASSIST (staff_id, created_at);
