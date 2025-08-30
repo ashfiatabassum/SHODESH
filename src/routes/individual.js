@@ -233,6 +233,11 @@ router.post('/register', async (req, res) => {
       });
     }
 
+
+
+
+
+
     // Check for existing username, email, mobile, or NID
     const checkExistingQuery = `
       SELECT username, email, mobile, nid FROM individual 
@@ -621,5 +626,53 @@ router.get('/profile/:individualId', async (req, res) => {
     });
   }
 });
+
+
+
+
+
+
+
+router.put('/update/:individualId', async (req, res) => {
+  const individualId = req.params.individualId;
+  const { username, newPassword, currentPassword } = req.body;
+
+  if (!currentPassword) {
+    return res.status(400).json({ success: false, message: 'Current password required.' });
+  }
+
+  db.query('SELECT password FROM individual WHERE individual_id = ?', [individualId], (err, results) => {
+    if (err || results.length === 0) {
+      return res.status(400).json({ success: false, message: 'Individual not found.' });
+    }
+    const dbPassword = results[0].password;
+    if (dbPassword !== currentPassword) {
+      return res.status(401).json({ success: false, message: 'Current password is incorrect.' });
+    }
+    
+
+    // Build update query
+    let fields = [];
+    let values = [];
+    if (username) { fields.push('username = ?'); values.push(username); }
+    if (newPassword) { fields.push('password = ?'); values.push(newPassword); }
+    if (fields.length === 0) {
+      return res.status(400).json({ success: false, message: 'No fields to update.' });
+    }
+    values.push(individualId);
+
+    db.query(
+      `UPDATE individual SET ${fields.join(', ')} WHERE individual_id = ?`,
+      values,
+      (err2, result) => {
+        if (err2) {
+          return res.status(500).json({ success: false, message: 'Database error.' });
+        }
+        return res.json({ success: true, message: 'Profile updated successfully.' });
+      }
+    );
+  });
+});
+
 
 module.exports = router;
