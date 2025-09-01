@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Join Our Team - Shodesh</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="volunteer.css" />
+  </head>
+  <body>
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div>MAIL: contact@shodesh.org</div>
+      <div>PHONE: +880 1712 345 678</div>
+    </div>
+
+    <!-- Navbar -->
+    <div class="navbar">
+      <div class="logo"><strong>SHODESH</strong></div>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="about.html" class="about-link">About</a>
+        <a href="#">Gallery</a>
+        <a href="contact.html" class="contact-link">Contact</a>
+        <a href="resources.html">Resources</a>
+        <a href="search.html">Search</a>
+        <a href="browse.html">Categories</a>
+        <a href="signin.html">Sign In</a>
+        <a href="volunteer.html" class="volunteer-link">Join Our Team</a>
+      </div>
+    </div>
+    <style>
+      .nav-links a.active {
+        color: #d32f2f !important; /* Red color for active */
+        text-decoration: underline;
+      }
+      .nav-links a,
+      .nav-links button {
+        color: #176b3a;
+        text-decoration: none;
+        margin: 0 12px;
+        font-weight: 600;
+        font-size: 1.05rem;
+        background: none;
+        border: none;
+        cursor: pointer;
+        transition: color 0.2s;
+        border-radius: 0;
+        padding: 0;
+        box-shadow: none;
+        display: inline;
+      }
+      .nav-links a:hover,
+      .nav-links button:hover {
+        color: #219150;
+        text-decoration: underline;
+        background: none;
+        box-shadow: none;
+      }
+    </style>
+    <!-- Volunteer Hero Section -->
+    <div class="volunteer-hero">
+      <div class="volunteer-content">
+        <h1>Join Our Team</h1>
+        <p>Be part of the change you want to see in Bangladesh</p>
+      </div>
+    </div>
+
+    <!-- Volunteer Info Section -->
+    <div class="volunteer-info-section">
+      <div class="container">
+        <div class="info-card">
+          <h2>About Shodesh</h2>
+          <p>
+            Shodesh is a web-based donation management platform that connects
+            donors, staff, foundations, and individuals in need to create a
+            transparent, trackable, and trustworthy donation ecosystem in
+            Bangladesh.
+          </p>
+          <p>
+            Our mission is to bridge the gap between those who want to help and
+            those who need help, ensuring that every donation reaches its
+            intended destination and makes a real impact in people's lives.
+          </p>
+          <div class="features">
+            <div class="feature">
+              <h3>Transparency</h3>
+              <p>
+                Every donation is tracked and verified to ensure complete
+                transparency
+              </p>
+            </div>
+            <div class="feature">
+              <h3>Impact</h3>
+              <p>
+                Direct connection between donors and beneficiaries for maximum
+                impact
+              </p>
+            </div>
+            <div class="feature">
+              <h3>Innovation</h3>
+              <p>
+                Using technology to revolutionize charitable giving in
+                Bangladesh
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="role-card">
+          <h2>Your Role as a Staff</h2>
+          <p>
+            As a staff with Shodesh, you'll play a crucial role in transforming
+            lives and communities across Bangladesh. Here's what you can expect:
+          </p>
+          <div class="responsibilities">
+            <div class="responsibility">
+              <h4>Field Verification</h4>
+              <p>
+                Visit beneficiaries to verify their needs and ensure donations
+                reach the right people
+              </p>
+            </div>
+            <div class="responsibility">
+              <h4>Data Collection</h4>
+              <p>
+                Gather and update information about individuals and families in
+                need
+              </p>
+            </div>
+            <div class="responsibility">
+              <h4>Distribution Support</h4>
+              <p>
+                Help organize and distribute donations to beneficiaries in your
+                area
+              </p>
+            </div>
+            <div class="responsibility">
+              <h4>Community Outreach</h4>
+              <p>
+                Spread awareness about Shodesh and help connect more people to
+                our platform
+              </p>
+            </div>
+            <div class="responsibility">
+              <h4>Impact Monitoring</h4>
+              <p>
+                Track and report the impact of donations to ensure
+                accountability
+              </p>
+            </div>
+            <div class="responsibility">
+              <h4>Communication Bridge</h4>
+              <p>
+                Serve as a liaison between donors, beneficiaries, and the
+                Shodesh team
+              </p>
+            </div>
+          </div>
+          <div class="volunteer-benefits">
+            <h3>What You'll Gain</h3>
+            <ul>
+              <li>Make a direct positive impact in your community</li>
+              <li>
+                Gain valuable experience in social work and community
+                development
+              </li>
+              <li>Build a network of like-minded individuals</li>
+              <li>
+                Receive certificates and recognition for your contributions
+              </li>
+              <li>Develop skills in project management and communication</li>
+              <li>Be part of a movement that's changing Bangladesh</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="apply-section">
+          <h2>Ready to Make a Difference?</h2>
+          <p>
+            Join thousands of staff who are already making a positive impact
+            across Bangladesh. Your time and dedication can help transform
+            lives.
+          </p>
+          <a
+            href="volunteer_signup.html"
+            class="apply-btn"
+            style="text-decoration: none"
+            >Apply Now as a Staff</a
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="volunteer-footer">
+      <div class="container">
+        <p>&copy; 2025 Shodesh. Building a better Bangladesh together.</p>
+      </div>
+    </footer>
+
+    <script src="volunteer.js"></script>
+    <script>
+      if (window.location.pathname.endsWith("volunteer.html")) {
+        document.querySelector(".volunteer-link").classList.add("active");
+      }
+    </script>
+  </body>
+</html>

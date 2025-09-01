@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Foundation API</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; border-left: 4px solid #007bff; }
+        .error { border-left-color: #dc3545; background: #f8d7da; }
+        .success { border-left-color: #28a745; background: #d4edda; }
+        button { margin: 5px; padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Foundation API Debug</h1>
+    
+    <button onclick="testFoundationAPI()">Test Foundation API</button>
+    <button onclick="clearLogs()">Clear Logs</button>
+    
+    <div id="logs"></div>
+
+    <script>
+        function log(message, type = 'log') {
+            const logsDiv = document.getElementById('logs');
+            const logDiv = document.createElement('div');
+            logDiv.className = `log ${type}`;
+            logDiv.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            logsDiv.appendChild(logDiv);
+            console.log(message);
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+
+        async function testFoundationAPI() {
+            log('🔍 Starting Foundation API Test...');
+            
+            try {
+                // Test 1: Basic API call
+                log('📡 Testing basic API call...');
+                
+                const url = '/api/admin/foundations?status=unverified';
+                const headers = {
+                    'Authorization': 'test-admin-token',
+                    'Content-Type': 'application/json'
+                };
+                
+                log(`📡 URL: ${url}`);
+                log(`📡 Headers: ${JSON.stringify(headers, null, 2)}`);
+                
+                const response = await fetch(url, { headers });
+                
+                log(`📡 Response Status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                log(`📡 Response Headers: ${JSON.stringify([...response.headers.entries()], null, 2)}`);
+                
+                const data = await response.json();
+                log(`📡 Response Data: ${JSON.stringify(data, null, 2)}`, data.success ? 'success' : 'error');
+                
+                if (data.success) {
+                    log(`✅ API Test SUCCESS! Found ${data.data.length} foundations`, 'success');
+                    
+                    // Display first foundation details
+                    if (data.data.length > 0) {
+                        const foundation = data.data[0];
+                        log(`🏢 First Foundation: ${foundation.foundation_name} (ID: ${foundation.foundation_id})`, 'success');
+                        log(`📧 Email: ${foundation.email}`);
+                        log(`📱 Mobile: ${foundation.mobile}`);
+                        log(`📍 Location: ${foundation.area}, ${foundation.district}`);
+                        log(`📋 Status: ${foundation.status}`);
+                    }
+                } else {
+                    log(`❌ API Test FAILED: ${data.message}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ FETCH ERROR: ${error.message}`, 'error');
+                log(`❌ Error Stack: ${error.stack}`, 'error');
+            }
+        }
+
+        // Auto-test when page loads
+        window.addEventListener('load', function() {
+            log('📄 Page loaded, starting auto-test...');
+            setTimeout(testFoundationAPI, 1000);
+        });
+    </script>
+</body>
+</html>

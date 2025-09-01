@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Individual Profile - SHODESH</title>
+  <link rel="stylesheet" href="profileindividual.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <!-- Home Button -->
+    <div class="home-button-container">
+      <button class="home-btn" onclick="goHome()" title="Go to Home">
+        <i class="fas fa-home"></i>
+      </button>
+    </div>
+
+    <!-- Header Section -->
+    <header class="profile-header">
+      <div class="header-content">
+        <div class="individual-avatar">
+          <i class="fas fa-user-circle"></i>
+          <div class="status-badge active"></div>
+        </div>
+        <div class="individual-info">
+          <h1 class="individual-name" id="individualName">Loading...</h1>
+          <p class="individual-email" id="individualEmail">Loading...</p>
+          <div class="individual-stats">
+            <div class="stat-item">
+              <span class="stat-value" id="totalRequests">0</span>
+              <span class="stat-label">Help Requests</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value" id="totalReceived">৳0</span>
+              <span class="stat-label">Total Received</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value" id="memberSince">2024</span>
+              <span class="stat-label">Member Since</span>
+            </div>
+          </div>
+        </div>
+        <div class="profile-actions">
+          <button class="btn-primary" onclick="editIndividual()">
+            <i class="fas fa-edit"></i> Edit Profile
+          </button>
+          <button class="btn-primary" onclick="requestHelp()">
+            <i class="fas fa-hand-holding-heart"></i> Request Help
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Personal Information -->
+      <section class="info-card">
+        <div class="card-header">
+          <h2><i class="fas fa-user"></i> Personal Information</h2>
+        </div>
+        <div class="card-content">
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">First Name</span>
+              <span class="value" id="firstName">Loading...</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Last Name</span>
+              <span class="value" id="lastName">Loading...</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Email Address</span>
+              <span class="value" id="email">Loading...</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Phone Number</span>
+              <span class="value" id="phoneNumber">Loading...</span>
+            </div>
+            <div class="info-item">
+              <span class="label">NID Number</span>
+              <span class="value" id="nidNumber">Loading...</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Date of Birth</span>
+              <span class="value" id="dateOfBirth">Loading...</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Address Information -->
+      <section class="info-card">
+        <div class="card-header">
+          <h2><i class="fas fa-map-marker-alt"></i> Address Information</h2>
+          <button class="toggle-btn" onclick="toggleCard('address-info')">
+            <i class="fas fa-chevron-down"></i>
+          </button>
+        </div>
+        <div class="card-content" id="address-info">
+          <div class="address-grid">
+            <div class="info-item">
+              <span class="label">House No.</span>
+              <span class="value" id="houseNo">Loading...</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Road No.</span>
+              <span class="value" id="roadNo">Loading...</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Area</span>
+              <span class="value" id="area">Loading...</span>
+            </div>
+            <div class="info-item">
+              <span class="label">District</span>
+              <span class="value" id="district">Loading...</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Division</span>
+              <span class="value" id="division">Loading...</span>
+            </div>
+            <div class="info-item">
+              <span class="label">ZIP Code</span>
+              <span class="value" id="zipCode">Loading...</span>
+            </div>
+          </div>
+          <div class="address-display">
+            <div class="address-text" id="addressForMap">Loading address...</div>
+            <button class="btn-outline" onclick="showMap()">
+              <i class="fas fa-map"></i> View on Map
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Financial Information -->
+      <section class="info-card">
+        <div class="card-header">
+          <h2><i class="fas fa-credit-card"></i> Financial Information</h2>
+        </div>
+        <div class="card-content">
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">Bkash Number</span>
+              <span class="value" id="bkashNumber">Loading...</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Bank Account</span>
+              <span class="value" id="bankAccount">Loading...</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Help Requests -->
+      <section class="info-card">
+        <div class="card-header">
+          <h2><i class="fas fa-hand-holding-heart"></i> My Help Requests</h2>
+        </div>
+        <div class="card-content">
+          <div class="request-stats">
+            <div class="stat-card">
+              <i class="fas fa-clock"></i>
+              <div>
+                <span class="stat-number" id="activeRequests">0</span>
+                <span class="stat-text">Active Requests</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <span class="stat-number" id="completedRequests">0</span>
+                <span class="stat-text">Completed</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <i class="fas fa-users"></i>
+              <div>
+                <span class="stat-number" id="totalDonors">0</span>
+                <span class="stat-text">Total Helpers</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="requests-list" id="requestsList">
+            <!-- Help requests will be loaded here -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Received Donations -->
+      <section class="info-card">
+        <div class="card-header">
+          <h2><i class="fas fa-heart"></i> Received Help</h2>
+        </div>
+        <div class="card-content">
+          <div class="donations-list" id="donationsList">
+            <!-- Received donations will be loaded here -->
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Edit Modal -->
+  <div class="modal" id="editModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Edit Profile</h3>
+        <button class="close-btn" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="editForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label>First Name <span class="required">*</span></label>
+              <input type="text" id="editFirstName" required>
+            </div>
+            <div class="form-group">
+              <label>Last Name <span class="required">*</span></label>
+              <input type="text" id="editLastName" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Email <span class="required">*</span></label>
+            <input type="email" id="editEmail" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Phone Number <span class="required">*</span></label>
+              <input type="text" id="editPhoneNumber" required>
+            </div>
+            <div class="form-group">
+              <label>NID Number <span class="required">*</span></label>
+              <input type="text" id="editNidNumber" required>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+            <button type="submit" class="btn-primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Request Help Modal -->
+  <div class="modal" id="helpModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Request Help</h3>
+        <button class="close-btn" onclick="closeHelpModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="helpForm">
+          <div class="form-group">
+            <label>Help Category <span class="required">*</span></label>
+            <select id="helpCategory" required>
+              <option value="">Select Category</option>
+              <option value="medical">Medical Emergency</option>
+              <option value="education">Education Support</option>
+              <option value="food">Food Assistance</option>
+              <option value="shelter">Housing/Shelter</option>
+              <option value="emergency">Emergency Relief</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Amount Needed <span class="required">*</span></label>
+            <input type="number" id="helpAmount" min="100" required>
+          </div>
+          <div class="form-group">
+            <label>Title <span class="required">*</span></label>
+            <input type="text" id="helpTitle" placeholder="Brief title for your request" required>
+          </div>
+          <div class="form-group">
+            <label>Description <span class="required">*</span></label>
+            <textarea id="helpDescription" rows="4" placeholder="Explain your situation and why you need help..." required></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" onclick="closeHelpModal()">Cancel</button>
+            <button type="submit" class="btn-primary">Submit Request</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="profileindividual.js"></script>
+</body>
+</html>

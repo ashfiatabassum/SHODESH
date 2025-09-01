@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shodesh - Helping People Through Trusted Money Donations</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      body {
+        background: #fff;
+        font-family: 'Roboto', Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+      .main-banner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 40px;
+        margin-bottom: 40px;
+        position: relative;
+        min-height: 540px;
+      }
+      .main-title {
+        color: #176b3a;
+        font-size: 2.6rem;
+        font-weight: 900;
+        text-align: center;
+        letter-spacing: 1px;
+        margin-bottom: 32px;
+        margin-top: 0;
+        z-index: 2;
+        background: #fff;
+        padding: 18px 32px 12px 32px;
+        border-radius: 18px;
+        box-shadow: 0 2px 12px rgba(34,60,80,0.04);
+        display: inline-block;
+      }
+      .photo-grid {
+        width: 100%;
+        max-width: 1100px;
+        height: 420px;
+        margin: 0 auto;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .photo-jump {
+        position: absolute;
+        width: 180px;
+        height: 180px;
+        object-fit: cover;
+        border-radius: 18px;
+        box-shadow: 0 4px 24px rgba(34,60,80,0.13);
+        opacity: 0;
+        transform: translateY(80px) scale(0.9);
+        animation: jumpIn 0.8s cubic-bezier(.4,2,.6,1) forwards;
+      }
+      .photo-jump.img1 { left: 0; top: 0; animation-delay: 0.1s;}
+      .photo-jump.img2 { right: 0; top: 0; animation-delay: 0.2s;}
+      .photo-jump.img3 { left: 60px; bottom: 0; animation-delay: 0.3s;}
+      .photo-jump.img4 { right: 60px; bottom: 0; animation-delay: 0.4s;}
+      .photo-jump.img6 { left: 50%; top: 60px; transform: translate(-130px,80px) scale(0.9); animation-delay: 0.5s;}
+      .photo-jump.img5 { left: 50%; top: 60px; transform: translate(130px,80px) scale(0.9); animation-delay: 0.6s;}
+      @keyframes jumpIn {
+        0% {
+          opacity: 0;
+          transform: translateY(80px) scale(0.9);
+        }
+        60% {
+          opacity: 1;
+          transform: translateY(-18px) scale(1.05);
+        }
+        80% {
+          transform: translateY(6px) scale(0.98);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+      .donate-section {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 60px;
+        margin-bottom: 0;
+      }
+      .donate-btn {
+        background: #176b3a;
+        color: #fff;
+        font-size: 1.5rem;
+        font-weight: 700;
+        border: none;
+        border-radius: 12px;
+        padding: 18px 48px;
+        cursor: pointer;
+        box-shadow: 0 2px 12px rgba(34,60,80,0.10);
+        transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+        margin-bottom: 32px;
+        margin-top: 0;
+        animation: jumpIn 0.9s cubic-bezier(.4,2,.6,1) 0.8s forwards;
+        opacity: 0;
+      }
+      .donate-btn:hover {
+        background: #219150;
+        transform: scale(1.04);
+        box-shadow: 0 6px 24px rgba(34,60,80,0.13);
+      }
+      .donate-message {
+        color: #176b3a;
+        font-size: 1.25rem;
+        font-weight: 500;
+        text-align: center;
+        margin-top: 32px;
+        margin-bottom: 0;
+        min-height: 40px;
+        opacity: 0;
+        animation: jumpIn 0.8s cubic-bezier(.4,2,.6,1) 1.1s forwards;
+      }
+      .donate-spacer {
+        height: 18px;
+      }
+      @media (max-width: 900px) {
+        .photo-grid {
+          height: 340px;
+        }
+        .photo-jump {
+          width: 120px;
+          height: 120px;
+        }
+        .main-title {
+          font-size: 1.5rem;
+          padding: 10px 8px;
+        }
+        .donate-btn {
+          font-size: 1.1rem;
+          padding: 12px 24px;
+        }
+        .donate-message {
+          font-size: 1rem;
+        }
+      }
+      @media (max-width: 600px) {
+        .main-banner {
+          min-height: 320px;
+        }
+        .photo-grid {
+          height: 220px;
+        }
+        .photo-jump {
+          width: 70px;
+          height: 70px;
+        }
+        .donate-btn {
+          font-size: 1rem;
+          padding: 8px 12px;
+        }
+        .donate-message {
+          font-size: 0.95rem;
+        }
+      }
+    </style>
+    <script>
+      function donateNow() {
+        // Example: open a modal, redirect, or show a message
+        alert("Thank you for your willingness to donate! Our secure donation portal will open soon.");
+        // You can replace this with your actual donation logic
+      }
+    </script>
+  </head>
+  <body>
+    <div class="top-bar">
+      <div>MAIL: contact@shodesh.org</div>
+      <div>PHONE: +880 1712 345 678</div>
+    </div>
+
+   <div class="navbar">
+  <div class="logo"><strong>SHODESH</strong></div>
+  <div class="nav-links">
+   <a href="index.html" class="home-link">Home</a>
+    <a href="about.html" class="about-link">About</a>
+    <a href="#">Gallery</a>
+    <a href="contact.html" class="contact-link">Contact</a>
+    <a href="resources.html">Resources</a>
+    <a href="search.html">Search</a>
+    <a href="browse.html">Categories</a>
+    <a href="signin.html">Sign In</a>
+    <a href="volunteer.html">Join Our Team</a>
+  </div>
+</div>
+
+      <div class="main-banner">
+      <div class="main-title">
+        SHODESH: Helping People Through Trusted Money Donations
+      </div>
+      <div class="photo-grid">
+        <img src="images/1.png" alt="Photo 1" class="photo-jump img1" />
+        <img src="images/2.png" alt="Photo 2" class="photo-jump img2" />
+        <img src="images/3.png" alt="Photo 3" class="photo-jump img3" />
+        <img src="images/4.png" alt="Photo 4" class="photo-jump img4" />
+        <img src="images/6.png" alt="Photo 6" class="photo-jump img6" style="left: 50%; top: 60px; transform: translate(-130px,80px) scale(0.9); animation-delay: 0.5s;" />
+        <img src="images/5.png" alt="Photo 5" class="photo-jump img5" style="left: 28%; top: 60px; transform: translate(130px,80px) scale(0.9); animation-delay: 0.6s;" />
+        <!-- Donate Now Button Positioned Absolutely Below 5 and 6 -->
+        <a href="search.html" class="donate-btn-link" style="text-decoration:none;">
+          <button class="donate-main">Donate Now</button>
+        </a>
+      </div>
+      <div class="donate-message">
+          Together we can bring positive change. Join hands to support health, education, and livelihood across rural Bangladesh
+      </div>
+       
+  <!-- How-To Images Section (same orientation and animation as about page banners) -->
+      <div class="about-banner-row howto-banner-row">
+        <img src="images/howto1.png" alt="How To 1" class="howto-img">
+        <img src="images/howto2.png" alt="How To 2" class="howto-img">
+      </div>
+
+      <!-- Success Stories Section -->
+    <section class="success-stories-section">
+      <h2 class="success-title">Success Stories</h2>
+      <div class="stories-grid">
+        <div class="story-card">
+          <img src="images/story1.jpg" alt="Dreams Fulfilled" class="story-img">
+          <div class="story-content">
+            <h3>Dreams Fulfilled</h3>
+            <p>Money raised for a team of 12 students from MIST to participate in University Rover Challenge Utah, 2025.</p>
+          </div>
+        </div>
+        <div class="story-card">
+          <img src="images/story2.jpg" alt="Education for All" class="story-img">
+          <div class="story-content">
+            <h3>Education for All</h3>
+            <p>Money raised through SHODESH to buy books and tuition support to underprivileged kids in rural areas.</p>
+          </div>
+        </div>
+        <div class="story-card">
+          <img src="images/story3.jpg" alt="Pet's Live Saved, Children Celebrate" class="story-img">
+          <div class="story-content">
+            <h3>Pet's Live Saved, Children Celebrate</h3>
+            <p>Class 3 students and teachers of Cumilla Zila school helped raise money through SHODESH for treatment of Moni, their beloved class pet cat.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+   <footer class="volunteer-footer">
+  <div class="container" style="text-align:center;">
+    <p style="margin:0; color:#fff;">&copy; 2025 Shodesh. Building a better Bangladesh together.</p>
+  </div>
+</footer>
+  <!-- Admin quick link (placed at very bottom of homepage) -->
+  <div style="text-align:center; padding:10px 0 30px 0; background: transparent;">
+    <a href="admin/login.html" style="color:#176b3a; text-decoration:none; font-weight:700;">Admin</a>
+  </div>
+<style>
+.nav-links a.active {
+    color: #d32f2f !important; /* Red color for active Home */
+    text-decoration: underline;
+  }
+
+      .photo-grid {
+        position: relative;
+      }
+      .donate-btn-link {
+        position: absolute;
+        left: 35%;
+        top: 340px;
+        transform: translateX(-50%);
+        z-index: 10;
+        width: 340px;
+        display: flex;
+        justify-content: center;
+        animation: jumpIn 0.9s cubic-bezier(.4,2,.6,1) 0.8s forwards;
+        opacity: 0;
+        pointer-events: all;
+      }
+      .donate-main {
+        width: 100%;
+        background: #176b3a;
+        color: #fff;
+        font-size: 2rem;
+        font-weight: 900;
+        border: none;
+        border-radius: 16px;
+        padding: 22px 0;
+        cursor: pointer;
+        box-shadow: 0 4px 24px rgba(34,60,80,0.13);
+        transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+        letter-spacing: 1px;
+        animation: jumpIn 0.9s cubic-bezier(.4,2,.6,1) 0.8s forwards;
+        opacity: 0;
+      }
+      .donate-main:hover {
+        background: #219150;
+        transform: scale(1.06);
+        box-shadow: 0 8px 32px rgba(34,60,80,0.18);
+      }
+      /* Show button after animation */
+      .donate-btn-link,
+      .donate-main {
+        animation-fill-mode: forwards;
+      }
+      @media (max-width: 900px) {
+        .donate-btn-link {
+          width: 220px;
+          top: 220px;
+        }
+        .donate-main {
+          font-size: 1.2rem;
+          padding: 12px 0;
+        }
+      }
+      @media (max-width: 600px) {
+        .donate-btn-link {
+          width: 120px;
+          top: 120px;
+        }
+        .donate-main {
+          font-size: 1rem;
+          padding: 8px 0;
+        }
+      }
+          .about-banner-row.howto-banner-row {
+          background: #fff;
+          padding: 40px 0 0 0;
+          text-align: center;
+        }
+        .howto-img {
+          max-width: 80%;
+          height: auto;
+          border-radius: 12px;
+          box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+          margin-bottom: 40px;
+          margin-right: 12px;
+          margin-left: 12px;
+          transition: transform 0.35s cubic-bezier(.4,2,.6,1), box-shadow 0.35s;
+          cursor: pointer;
+          background: #fff;
+          display: inline-block;
+          opacity: 0;
+          transform: translateY(80px) scale(0.96);
+          animation: aboutBannerJump 0.8s cubic-bezier(.4,2,.6,1) forwards;
+        }
+        .howto-img:nth-child(1) {
+          animation-delay: 0.1s;
+        }
+        .howto-img:nth-child(2) {
+          animation-delay: 0.2s;
+        }
+        .howto-img:hover {
+          transform: scale(1.04) rotate(-1.5deg);
+          box-shadow: 0 8px 32px rgba(34,60,80,0.18);
+          z-index: 2;
+        }
+       
+         @keyframes aboutBannerJump {
+  0% { opacity: 0; transform: translateY(80px) scale(0.96);}
+  60% { opacity: 1; transform: translateY(-18px) scale(1.05);}
+  80% { transform: translateY(6px) scale(0.98);}
+  100% { opacity: 1; transform: translateY(0) scale(1);}
+}
+        
+        .success-stories-section {
+        background: #fff;
+        padding: 48px 0 32px 0;
+        margin-top: 40px;
+      }
+      .success-title {
+        text-align: center;
+        color: #176b3a;
+        font-size: 2.1rem;
+        font-weight: 900;
+        margin-bottom: 36px;
+        letter-spacing: 1px;
+      }
+      .stories-grid {
+        display: flex;
+        justify-content: center;
+        gap: 32px;
+        flex-wrap: wrap;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      .story-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 24px rgba(34,60,80,0.10);
+        width: 320px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0 0 18px 0;
+        transition: transform 0.18s, box-shadow 0.18s;
+      }
+      .story-card:hover {
+        transform: translateY(-8px) scale(1.03);
+        box-shadow: 0 8px 32px rgba(34,60,80,0.16);
+      }
+      .story-img {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        border-radius: 16px 16px 0 0;
+        margin-bottom: 12px;
+      }
+      .story-content {
+        padding: 0 18px;
+        text-align: center;
+      }
+       .story-content h3 {
+        color: #176b3a;
+        font-size: 1.18rem;
+        margin: 12px 0 8px 0;
+        font-weight: 700;
+      }
+      .story-content p {
+        color: #333;
+        font-size: 1rem;
+        margin: 0;
+      }
+      @media (max-width: 1000px) {
+        .stories-grid {
+          gap: 18px;
+        }
+        .story-card {
+          width: 90vw;
+          max-width: 340px;
+        }
+      }
+      @media (max-width: 700px) {
+        .stories-grid {
+          flex-direction: column;
+          align-items: center;
+        }
+      }
+       .nav-links a, .nav-links button {
+    color: #176b3a;
+    text-decoration: none;
+    margin: 0 12px;
+    font-weight: 600;
+    font-size: 1.05rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    display: inline;
+  }
+  .nav-links a:hover, .nav-links button:hover {
+    color: #219150;
+    text-decoration: underline;
+    background: none;
+    box-shadow: none;
+  }
+      .volunteer-footer {
+    background: #176b3a;
+    padding: 32px 0 18px 0;
+    margin-top: 0;
+    width: 100%;
+  }
+    </style>  
+    <script>
+  // Highlight Home link only on homepage
+  if (
+    window.location.pathname.endsWith("index.html") ||
+    window.location.pathname === "/" ||
+    window.location.pathname === "/SHODESH/" // adjust if your homepage is at a subfolder
+  ) {
+    document.querySelector('.home-link').classList.add('active');
+  }
+</script>

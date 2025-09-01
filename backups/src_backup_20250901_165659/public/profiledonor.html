@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Donor Profile - SHODESH</title>
+  <link rel="stylesheet" href="profiledonor.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <!-- Background Pattern -->
+    <div class="background-pattern"></div>
+      <!-- Home Button -->
+    <div class="home-button-container">
+      <button class="home-btn" onclick="goHome()" title="Go to Home">
+        <i class="fas fa-home"></i>
+      </button>
+    </div>
+    
+    <!-- Header Section -->
+    <header class="profile-header">
+      <div class="header-content">
+        <div class="profile-avatar">
+          <i class="fas fa-user-circle"></i>
+          <div class="avatar-status online"></div>
+        </div>
+        <div class="profile-info">
+          <h1 class="donor-name" id="donorName">Loading...</h1>
+          <p class="donor-username" id="donorUsername">@loading</p>
+          <div class="donor-stats">
+            <div class="stat-item">
+              <span class="stat-value" id="totalDonations">0</span>
+              <span class="stat-label">Total Donations</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value" id="totalAmount">৳0</span>
+              <span class="stat-label">Total Amount</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value" id="memberSince">2024</span>
+              <span class="stat-label">Member Since</span>
+            </div>
+          </div>
+        </div>
+        <div class="profile-actions">
+          <button class="btn-primary" onclick="editProfile()">
+            <i class="fas fa-edit"></i> Edit Profile
+          </button>
+          <button class="btn-secondary" onclick="shareProfile()">
+            <i class="fas fa-share"></i> Share
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Personal Information Card -->
+      <section class="info-card">
+        <div class="card-header">
+          <h2><i class="fas fa-user"></i> Personal Information</h2>
+          <button class="toggle-btn" onclick="toggleCard('personal-info')">
+            <i class="fas fa-chevron-down"></i>
+          </button>
+        </div>
+        <div class="card-content" id="personal-info">
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">Full Name</span>
+              <span class="value" id="fullName">Loading...</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Email</span>
+              <span class="value" id="email">Loading...</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Date of Birth</span>
+              <span class="value" id="dateOfBirth">Loading...</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Country</span>
+              <span class="value" id="country">Loading...</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Division</span>
+              <span class="value" id="division">Loading...</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Location Information Card -->
+      <section class="info-card">
+        <div class="card-header">
+          <h2><i class="fas fa-map-marker-alt"></i> Location Information</h2>
+          <button class="toggle-btn" onclick="toggleCard('location-info')">
+            <i class="fas fa-chevron-down"></i>
+          </button>
+        </div>
+        <div class="card-content" id="location-info">
+          <div class="location-display">
+            <div class="location-text">
+              <div class="location-item">
+                <i class="fas fa-globe"></i>
+                <span id="locationCountry">Loading...</span>
+              </div>
+              <div class="location-item" id="locationDivisionContainer" style="display: none;">
+                <i class="fas fa-map-pin"></i>
+                <span id="locationDivision">-</span>
+              </div>
+            </div>
+            <button class="btn-outline" onclick="showCountryOnMap()">
+              <i class="fas fa-map"></i> View Country on Map
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Donation History Card -->
+      <section class="info-card">
+        <div class="card-header">
+          <h2><i class="fas fa-history"></i> Donation History</h2>
+          <div class="header-actions">
+            <select id="sortFilter" onchange="sortDonations()">
+              <option value="recent">Most Recent</option>
+              <option value="amount">Highest Amount</option>
+              <option value="oldest">Oldest First</option>
+            </select>
+            <button class="toggle-btn" onclick="toggleCard('donation-history')">
+              <i class="fas fa-chevron-down"></i>
+            </button>
+          </div>
+        </div>
+        <div class="card-content" id="donation-history">
+          <div class="donation-stats">
+            <div class="stat-card">
+              <i class="fas fa-hand-holding-heart"></i>
+              <div>
+                <span class="stat-number" id="thisMonth">৳0</span>
+                <span class="stat-text">This Month</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <i class="fas fa-calendar-year"></i>
+              <div>
+                <span class="stat-number" id="thisYear">৳0</span>
+                <span class="stat-text">This Year</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <i class="fas fa-trophy"></i>
+              <div>
+                <span class="stat-number" id="largestDonation">৳0</span>
+                <span class="stat-text">Largest Donation</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="donations-list" id="donationsList">
+            <!-- Donations will be loaded here -->
+          </div>
+          
+          <div class="load-more-container">
+            <button class="btn-outline" onclick="loadMoreDonations()">
+              <i class="fas fa-plus"></i> Load More
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Achievement Card -->
+      <section class="info-card">
+        <div class="card-header">
+          <h2><i class="fas fa-medal"></i> Achievements</h2>
+          <button class="toggle-btn" onclick="toggleCard('achievements')">
+            <i class="fas fa-chevron-down"></i>
+          </button>
+        </div>
+        <div class="card-content" id="achievements">
+          <div class="achievements-grid" id="achievementsList">
+            <!-- Achievements will be loaded here -->
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="profile-footer">
+      <p>&copy; 2024 SHODESH. Making a difference together.</p>
+    </footer>
+  </div>
+
+  <!-- Modal for editing profile -->
+  <div class="modal" id="editModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Edit Profile</h3>
+        <button class="close-btn" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="editForm">
+          <div class="form-group">
+            <label>First Name <span class="required">*</span></label>
+            <input type="text" id="editFirstName" required>
+          </div>
+          <div class="form-group">
+            <label>Last Name <span class="required">*</span></label>
+            <input type="text" id="editLastName" required>
+          </div>
+          <div class="form-group">
+            <label>Email <span class="required">*</span></label>
+            <input type="email" id="editEmail" required>
+          </div>
+          <div class="form-group">
+            <label>Date of Birth <span class="required">*</span></label>
+            <input type="date" id="editDateOfBirth" required>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+            <button type="submit" class="btn-primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="profiledonor.js"></script>
+</body>
+</html>

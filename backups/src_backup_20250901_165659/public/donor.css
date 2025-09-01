@@ -1,0 +1,408 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #fff;
+  color: #000;
+}
+
+/* Container */
+.container {
+  position: relative;
+  width: 1440px;
+  min-height: 1350px; /* Increased container height */
+  margin: 0 auto;
+  background: url('images/donorbggg.png') no-repeat left top;
+  background-size: 800px auto;
+}
+
+/* Background pattern placeholder - REMOVED */
+.background-pattern {
+  display: none;
+}
+
+/* Heading */
+h1 {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  max-width: 1359px;
+  margin: 0 auto;
+  font-weight: 900;
+  font-size: 31px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  font-family: 'Roboto Condensed', Helvetica, sans-serif;
+  text-align: center;
+  color: #AF3E3E;
+}
+
+/* Form card - INCREASED HEIGHT TO FIT ALL CONTENT WITHOUT SCROLL */
+.form-card {
+  position: absolute;
+  top: 108px;
+  left: 750px;
+  width: 650px;
+  height: 1200px; /* Increased significantly to fit all content */
+  background: #4a7c59;
+  border-radius: 15px;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  /* Removed overflow-y: auto - no scroll needed */
+}
+
+/* Two column row */
+.row {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+.half-width {
+  flex: 1;
+}
+
+/* Country code and phone number styling */
+.country-code {
+  flex: 0 0 160px; /* Fixed width for country code */
+}
+.phone-number {
+  flex: 1; /* Takes remaining space */
+}
+
+/* Inputs & selects */
+input[type="text"],
+input[type="email"],
+input[type="date"],
+input[type="password"],
+input[type="tel"],
+select {
+  width: 100%;
+  height: 55px;
+  background: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 400;
+  text-align: center;
+  outline-offset: 0;
+  outline-color: transparent;
+  transition: outline-color 0.3s;
+  padding: 0 15px;
+}
+input:focus,
+select:focus {
+  outline-color: #4a9782;
+}
+
+/* Placeholder text styling */
+input::placeholder {
+  font-size: 16px;
+  color: #666;
+}
+
+/* Custom date input styling */
+.date-input-wrapper {
+  position: relative;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.date-input-wrapper input[type="date"] {
+  width: 100%;
+  color: transparent;
+}
+
+.date-input-wrapper input[type="date"]:focus,
+.date-input-wrapper input[type="date"]:valid {
+  color: #000;
+}
+
+.date-placeholder {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 18px;
+  color: #666;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.date-input-wrapper input[type="date"]:focus + .date-placeholder,
+.date-input-wrapper input[type="date"]:valid + .date-placeholder {
+  opacity: 0;
+}
+
+/* Button */
+button {
+  
+  width: 320px;
+  height: 80px;
+  background: rgba(248, 248, 248, 0.5);
+  border: none;
+  border-radius: 50px;
+  font-size: 18px;
+  font-weight: 800;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  align-self: flex-end;
+  margin-top: 15px;
+}
+button:hover {
+  background: rgba(74, 151, 130, 0.63);
+} 
+
+/* Label styling for donor form */
+.field-label {
+  position: relative;
+  top: -5px;
+  left: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+  font-family: "Roboto", sans-serif;
+  background: transparent;
+  margin-bottom: 6px;
+  display: block;
+  z-index: 1;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Red asterisk styling */
+.required {
+  color: #ff0000;
+  font-weight: bold;
+  margin-left: 3px;
+  font-size: 15px;
+}
+
+/* Input field containers with proper spacing */
+.input-container {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.input-container input,
+.input-container select {
+  margin-top: 3px;
+}
+
+/* Date input wrapper adjustments */
+.date-input-wrapper .field-label {
+  margin-bottom: 6px;
+}
+
+.date-input-wrapper .date-placeholder {
+  display: none;
+}
+
+/* Row container adjustments */
+.row .input-container {
+  margin-bottom: 0;
+}
+
+/* Half width input containers in rows */
+.input-container.half-width {
+  flex: 1;
+}
+
+/* Country code and phone number containers */
+.input-container.country-code {
+  flex: 0 0 160px;
+  margin-right: 15px;
+}
+
+.input-container.phone-number {
+  flex: 1;
+}
+
+/* Division field styling with label */
+.division-field {
+  display: none;
+  margin-bottom: 20px;
+}
+
+.division-field.show {
+  display: block;
+}
+
+.division-field .field-label {
+  margin-bottom: 6px;
+}
+
+.division-field select {
+  margin-top: 3px;
+  height: 55px; /* Match other selects */
+}
+
+/* Form spacing adjustments */
+.form-card > *:not(.row):not(.input-container):not(.date-input-wrapper):not(.division-field) {
+  margin-bottom: 20px;
+}
+
+/* Button spacing */
+#createAccountBtn {
+  margin-top: 10px;
+}
+
+/* Responsive adjustments for labels */
+@media (max-width: 768px) {
+  .container {
+    min-height: 1400px; /* Increased for mobile */
+  }
+  
+  .field-label {
+    font-size: 13px;
+  }
+  
+  .form-card {
+    left: 20px;
+    width: calc(100% - 40px);
+    height: auto;
+    min-height: 1250px; /* Increased min-height for mobile */
+  }
+  
+  .input-container.half-width {
+    flex: 1;
+  }
+  
+  .input-container.country-code {
+    flex: 0 0 120px;
+  }
+  
+  .input-container.phone-number {
+    flex: 1;
+  }
+  
+  input[type="text"],
+  input[type="email"],
+  input[type="date"],
+  input[type="password"],
+  input[type="tel"],
+  select {
+    height: 50px; /* Smaller on mobile */
+    font-size: 16px;
+  }
+}
+
+/* ... all your existing CSS ... */
+
+/* Container height adjustment to accommodate sign-in section */
+.container {
+  position: relative;
+  width: 1440px;
+  min-height: 1450px; /* Increased from 1350px to accommodate sign-in section */
+  margin: 0 auto;
+  background: url('images/donorbggg.png') no-repeat left top;
+  background-size: 800px auto;
+}
+
+/* Sign In Section Styling */
+.signin-section {
+  position: absolute;
+  top: 1340px; /* Positioned below the form card */
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  padding-bottom: 60px; /* Space below the sign-in section */
+}
+
+.signin-text {
+  color: #4a7c59;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  font-family: 'Roboto Condensed', sans-serif;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.signin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #4a7c59 0%, #5a8c69 100%);
+  color: white;
+  text-decoration: none;
+  padding: 14px 32px;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(74, 124, 89, 0.4);
+  font-family: 'Roboto Condensed', sans-serif;
+  border: 2px solid transparent;
+  margin-bottom: 40px; /* Space below the button */
+}
+
+.signin-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(74, 124, 89, 0.5);
+  background: linear-gradient(135deg, #5a8c69 0%, #6a9c79 100%);
+  text-decoration: none;
+  color: white;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.signin-btn:active {
+  transform: translateY(-1px);
+}
+
+.signin-btn i {
+  font-size: 14px;
+}
+
+/* Responsive adjustments for sign in section */
+@media (max-width: 768px) {
+  .container {
+    min-height: 1550px; /* Increased for mobile */
+  }
+  
+  .signin-section {
+    top: 1420px; /* Adjusted for mobile layout */
+    gap: 12px;
+    padding-bottom: 50px;
+  }
+  
+  .signin-text {
+    font-size: 16px;
+  }
+  
+  .signin-btn {
+    padding: 12px 28px;
+    font-size: 15px;
+    margin-bottom: 35px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    min-height: 1600px;
+  }
+  
+  .signin-section {
+    top: 1450px;
+    gap: 10px;
+    padding-bottom: 40px;
+  }
+  
+  .signin-text {
+    font-size: 15px;
+  }
+  
+  .signin-btn {
+    padding: 10px 25px;
+    font-size: 14px;
+    margin-bottom: 30px;
+  }
+}

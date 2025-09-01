@@ -1,0 +1,397 @@
+/* Resources Page Specific Styles */
+
+/* Navbar Button Styles */
+.donate-btn {
+  background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  margin-left: 15px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(229, 62, 62, 0.3);
+}
+
+.donate-btn:hover {
+  background: linear-gradient(135deg, #c53030 0%, #a02626 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(229, 62, 62, 0.4);
+}
+
+.resources-hero {
+  background: linear-gradient(135deg, #2c5f4a 0%, #4a8c6b 100%);
+  color: white;
+  padding: 80px 0 60px;
+  text-align: center;
+}
+
+.resources-hero h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.resources-hero p {
+  font-size: 1.3rem;
+  opacity: 0.9;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.resources-content {
+  padding: 60px 0;
+  background: #f8f9fa;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.emergency-section {
+  margin-bottom: 50px;
+}
+
+.emergency-section h2 {
+  font-size: 2.2rem;
+  color: #2c3e50;
+  margin-bottom: 30px;
+  text-align: center;
+  font-weight: 700;
+}
+
+/* Primary Emergency Card (999) */
+.emergency-card.primary {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+  padding: 30px;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 10px 30px rgba(231, 76, 60, 0.3);
+  margin-bottom: 30px;
+  transition: transform 0.3s ease;
+}
+
+.emergency-card.primary:hover {
+  transform: translateY(-5px);
+}
+
+.emergency-card.primary h3 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.emergency-card.primary p {
+  font-size: 1.1rem;
+  opacity: 0.95;
+  margin-bottom: 15px;
+}
+
+.services {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.service-tag {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.primary-call {
+  background: white !important;
+  color: #e74c3c !important;
+  font-size: 1.3rem !important;
+  font-weight: 700 !important;
+  padding: 15px 30px !important;
+  border-radius: 50px !important;
+  min-width: 150px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.primary-call:hover {
+  background: #f8f9fa !important;
+  transform: scale(1.05);
+}
+
+/* Emergency Grid */
+.emergency-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 25px;
+  margin-top: 30px;
+}
+
+/* Regular Emergency Cards */
+.emergency-card {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.3s ease;
+  border-left: 5px solid #4a8c6b;
+}
+
+.emergency-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.emergency-info h4 {
+  font-size: 1.3rem;
+  color: #2c3e50;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.emergency-info p {
+  color: #7f8c8d;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.call-btn {
+  background: #4a8c6b;
+  color: white;
+  padding: 12px 25px;
+  border-radius: 25px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  min-width: 130px;
+  text-align: center;
+}
+
+.call-btn:hover {
+  background: #3a6d54;
+  transform: scale(1.05);
+}
+
+/* Notes Section */
+.notes-section {
+  background: white;
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.notes-card ul {
+  list-style: none;
+  padding: 0;
+}
+
+.notes-card li {
+  padding: 12px 0;
+  border-bottom: 1px solid #ecf0f1;
+  font-size: 1.1rem;
+  color: #2c3e50;
+  position: relative;
+  padding-left: 30px;
+}
+
+.notes-card li:before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #27ae60;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.notes-card li:last-child {
+  border-bottom: none;
+}
+
+/* Quick Save Section */
+.quick-save-card {
+  background: linear-gradient(135deg, #4a8c6b, #5ea375);
+  color: white;
+  padding: 30px;
+  border-radius: 15px;
+  text-align: center;
+}
+
+.quick-save-card p {
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+}
+
+.save-all-btn {
+  background: white;
+  color: #4a8c6b;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 25px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.save-all-btn:hover {
+  background: #f8f9fa;
+  transform: scale(1.05);
+}
+
+/* Footer */
+.resources-footer {
+  background: #2c3e50;
+  color: white;
+  text-align: center;
+  padding: 30px 0;
+}
+
+.resources-footer p {
+  margin: 5px 0;
+}
+
+.resources-footer small {
+  opacity: 0.8;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .resources-hero h1 {
+    font-size: 2.2rem;
+  }
+  
+  .resources-hero p {
+    font-size: 1.1rem;
+  }
+  
+  .emergency-card.primary {
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+  }
+  
+  .emergency-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .emergency-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 15px;
+  }
+  
+  .services {
+    justify-content: center;
+  }
+  
+  .emergency-section h2 {
+    font-size: 1.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 15px;
+  }
+  
+  .resources-hero {
+    padding: 60px 0 40px;
+  }
+  
+  .resources-hero h1 {
+    font-size: 1.8rem;
+  }
+  
+  .emergency-card.primary {
+    padding: 20px;
+  }
+  
+  .emergency-card {
+    padding: 20px;
+  }
+  
+  .notes-section {
+    padding: 25px;
+  }
+  /* ─── append to resources.css ─── */
+
+.blood-btn-container {
+  text-align: center;
+  margin: 40px 0;
+}
+
+.blood-btn {
+  background: #c0392b;
+  color: white;
+  border: none;
+  padding: 15px 30px;          /* same as .save-all-btn */
+  font-size: 1.2rem;           /* bump up for parity */
+  font-weight: 700;
+  border-radius: 25px;         /* same pill-shape */
+  cursor: pointer;
+  transition: background 0.3s, transform 0.3s;
+  display: inline-block;
+  min-width: 200px;            /* ensure “big” width */
+}
+
+.blood-btn:hover {
+  background: #a93226;
+  transform: translateY(-2px);
+}
+/* ─── Additional Resources Section Styling ─── */
+.blood-btn-container {
+  background: #c0392b;       /* deep red background */
+  color: #8e3232;               /* white text */
+  text-align: center;        /* center all text */
+  padding: 40px 20px;        /* breathing room */
+  border-radius: 25px;       /* rounded corners */
+  margin: 60px auto;         /* space above/below */
+  max-width: 800px;          /* optional width constraint */
+}
+
+.blood-btn-container h2 {
+  font-size: 2rem;
+  font-weight: 900;
+  margin-bottom: 0.5em;
+}
+
+.blood-btn-container p {
+  font-size: 1.1rem;
+  margin: 0 0 1.5em;
+  line-height: 1.4;
+}
+
+/* Big white-on-red pill button */
+.blood-btn-container .blood-btn {
+  background: #fff;          /* white fill */
+  color: #c0392b;            /* match red text */
+  padding: 20px 40px;        /* double size */
+  font-size: 2rem;           /* twice base */
+  font-weight: 900;          /* bold */
+  border: none;
+  border-radius: 50px;       /* pill shape */
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s, color 0.3s;
+  display: inline-block;     /* shrink to content */
+  min-width: 550px;          /* ensure a “big” button */
+  text-align: center;
+}
+
+.blood-btn-container .blood-btn:hover {
+  background: #add0bd;       /* light hover */
+  color: #cb483c;            /* darker red text */
+  transform: translateY(-4px);
+}
+
+
+}

@@ -1,0 +1,220 @@
+.volunteer-hero {
+    background: linear-gradient(rgba(24, 57, 43, 0.8), rgba(88, 139, 118, 0.8)), url('images/jointeam.jpg') no-repeat center center/cover;
+    background-color: #4a7c59; /* Fallback */
+    color: white;
+    text-align: center;
+    padding: 50px 20px;
+    position: relative;
+}
+.search-btn, .signin-btn {
+    background-color: #4a7c59;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    margin-left: 15px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.search-btn:hover, .signin-btn:hover {
+    background-color: #3b664a;
+    transform: translateY(-2px);
+}
+
+.donate-btn {
+    background-color: #e53e3e;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    margin-left: 15px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 2px 4px rgba(229, 62, 62, 0.3);
+}
+.donate-btn:hover {
+    background-color: #c53030;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(229, 62, 62, 0.4);
+}
+.volunteer-content h1 {
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.volunteer-content p {
+    font-size: 18px;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.5;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.volunteer-info-section {
+    padding: 50px 0;
+    background: linear-gradient(180deg, #f4f7f5 0%, #e8ece9 100%);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.info-card, .role-card, .apply-section {
+    background: white;
+    padding: 30px;
+    margin-bottom: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.info-card:hover, .role-card:hover, .apply-section:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.info-card h2, .role-card h2, .apply-section h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a3c2f;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.info-card p, .role-card p, .apply-section p {
+    font-size: 16px;
+    color: #5a6a62;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+.features, .responsibilities {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.feature, .responsibility {
+    padding: 15px;
+    border: 1px solid #e0e6e3;
+    border-radius: 8px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature:hover, .responsibility:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.feature h3, .responsibility h4 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a3c2f;
+    margin-bottom: 10px;
+}
+
+.feature p, .responsibility p {
+    font-size: 14px;
+    color: #5a6a62;
+}
+
+.volunteer-benefits {
+    background: linear-gradient(180deg, #d4e0da 0%, #c5d5ce 100%);
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.volunteer-benefits h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a3c2f;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.volunteer-benefits ul {
+    list-style: none;
+    padding: 0;
+}
+
+.volunteer-benefits li {
+    font-size: 15px;
+    color: #5a6a62;
+    margin-bottom: 10px;
+    position: relative;
+    padding-left: 20px;
+}
+
+.volunteer-benefits li:before {
+    content: '✔';
+    color: #4a7c59;
+    position: absolute;
+    left: 0;
+}
+
+.apply-section {
+    text-align: center;
+    background: white;
+}
+
+.apply-btn {
+    background: linear-gradient(180deg, #f2b5a0 0%, #e8a590 100%);
+    color: #1a3c2f;
+    padding: 14px 28px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.apply-btn:hover {
+    background: linear-gradient(180deg, #e8a590 0%, #df9b87 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.volunteer-footer {
+    background-color: #1a3c2f;
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+.volunteer-footer p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .volunteer-hero {
+        padding: 50px 20px;
+    }
+
+    .volunteer-content h1 {
+        font-size: 28px;
+    }
+
+    .volunteer-content p {
+        font-size: 16px;
+    }
+
+    .info-card, .role-card, .apply-section {
+        padding: 20px;
+    }
+
+    .features, .responsibilities {
+        grid-template-columns: 1fr;
+    }
+}

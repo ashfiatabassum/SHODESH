@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About - Shodesh</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="volunteer.css" />
+    <style>
+        body {
+        background: #e0ebd5;
+      }
+      .about-banner-row {
+        background: #e0ebd5;
+        padding: 40px 0 0 0;
+        text-align: center;
+      }
+      .about-banner-row img {
+        max-width: 80%;
+        height: auto;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        margin-bottom: 40px;
+        transition: transform 0.35s cubic-bezier(.4,2,.6,1), box-shadow 0.35s;
+        cursor: pointer;
+        background: #e0ebd5;
+      }
+      .about-banner-row img:hover {
+        transform: scale(1.04) rotate(-1.5deg);
+        box-shadow: 0 8px 32px rgba(34,60,80,0.18);
+        z-index: 2;
+      }
+       .volunteer-info-section {
+        background: #e0ebd5;
+      }
+       .nav-links a, .nav-links button {
+    color: #176b3a;
+    text-decoration: none;
+    margin: 0 12px;
+    font-weight: 600;
+    font-size: 1.05rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    display: inline;
+  }
+  .nav-links a:hover, .nav-links button:hover {
+    color: #219150;
+    text-decoration: underline;
+    background: none;
+    box-shadow: none;
+  }
+  .nav-links a.active {
+    color: #d32f2f !important; /* Red color for active */
+    text-decoration: underline;
+  }
+    </style>
+  </head>
+  <body>
+    <div class="top-bar">
+      <div>MAIL: contact@shodesh.org</div>
+      <div>PHONE: +880 1712 345 678</div>
+    </div>
+
+   <div class="navbar">
+  <div class="logo"><strong>SHODESH</strong></div>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+     <a href="about.html" class="about-link">About</a>
+    <a href="#">Gallery</a>
+    <a href="contact.html" class="contact-link">Contact</a>
+    <a href="resources.html">Resources</a>
+    <a href="search.html">Search</a>
+    <a href="browse.html">Categories</a>
+    <a href="signin.html">Sign In</a>
+    <a href="volunteer.html">Join Our Team</a>
+  </div>
+</div>
+
+    <!-- Volunteer Info Section with graphics and arrangement -->
+    <div class="volunteer-info-section">
+      <div class="container">
+        <div class="info-card">
+          <h2>About Shodesh</h2>
+          <p>
+            Shodesh is a web-based donation management platform that connects
+            donors, staff, foundations, and individuals in need to create a
+            transparent, trackable, and trustworthy donation ecosystem in
+            Bangladesh.
+          </p>
+          <p>
+            Our mission is to bridge the gap between those who want to help and
+            those who need help, ensuring that every donation reaches its
+            intended destination and makes a real impact in people's lives.
+          </p>
+          <div class="features">
+            <div class="feature">
+              <div class="feature-icon">
+                <img src="https://img.icons8.com/ios-filled/50/219150/visible--v1.png" alt="Transparency" style="width:40px;height:40px;">
+              </div>
+              <h3>Transparency</h3>
+              <p>
+                Every donation is tracked and verified to ensure complete
+                transparency
+              </p>
+            </div>
+            <div class="feature">
+              <div class="feature-icon">
+                <img src="https://img.icons8.com/ios-filled/50/219150/handshake.png" alt="Impact" style="width:40px;height:40px;">
+              </div>
+              <h3>Impact</h3>
+              <p>
+                Direct connection between donors and beneficiaries for maximum
+                impact
+              </p>
+            </div>
+            <div class="feature">
+              <div class="feature-icon">
+                <img src="https://img.icons8.com/ios-filled/50/219150/idea.png" alt="Innovation" style="width:40px;height:40px;">
+              </div>
+              <h3>Innovation</h3>
+              <p>
+                Using technology to revolutionize charitable giving in
+                Bangladesh
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Banner Images with hover and background -->
+    <div class="about-banner-row">
+      <img src="images/shodesh1.png" alt="Shodesh Banner">
+      <img src="images/shodesh2.png" alt="Shodesh Banner 2">
+      <img src="images/shodesh3.png" alt="Shodesh Banner 3">
+    </div>
+<script>
+  // Highlight About link only on about page
+  if (
+    window.location.pathname.endsWith("about.html")
+  ) {
+    document.querySelector('.about-link').classList.add('active');
+  }
+</script>
+    <!-- Footer with volunteer page graphics -->
+    <footer class="volunteer-footer">
+      <div class="container">
+        <p>&copy; 2025 Shodesh. Building a better Bangladesh together.</p>
+      </div>

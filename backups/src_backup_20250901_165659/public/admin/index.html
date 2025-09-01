@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHODESH Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <!-- Admin Her -->
+    <header class="admin-header">
+        <div class="header-left">
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+                <h1>SHODESH Admin</h1>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="admin-profile">
+                <div class="notification-bell">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-count">5</span>
+                </div>
+                <div class="admin-info">
+                    <span class="admin-name">Admin User</span>
+                    <span class="admin-role">System Administrator</span>
+                </div>
+                <div class="admin-avatar">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Admin Sidebar -->
+    <nav class="admin-sidebar">
+        <div class="sidebar-menu">
+            <div class="menu-item active" onclick="showSection('dashboard')">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </div>
+            <div class="menu-item" onclick="showSection('events')">
+                <i class="fas fa-calendar-check"></i>
+                <span>Event Verification</span>
+                <span class="badge">12</span>
+            </div>
+            <div class="menu-item" onclick="showSection('donations')">
+                <i class="fas fa-chart-line"></i>
+                <span>Donation Analytics</span>
+            </div>
+            <div class="menu-item" onclick="showSection('categories')">
+                <i class="fas fa-tags"></i>
+                <span>Manage Categories</span>
+            </div>
+            <div class="menu-item" onclick="showSection('trending')">
+                <i class="fas fa-fire"></i>
+                <span>Trending Management</span>
+            </div>
+            <div class="menu-item" onclick="window.location.href='foundation-verification.html'">
+                <i class="fas fa-building"></i>
+                <span>Foundation Verification</span>
+                <span class="badge">2</span>
+            </div>
+            <div class="menu-item" onclick="showSection('volunteers')">
+                <i class="fas fa-users"></i>
+                <span>Volunteer Verification</span>
+                <span class="badge">8</span>
+            </div>
+            <div class="menu-item" onclick="showSection('reports')">
+                <i class="fas fa-file-alt"></i>
+                <span>Reports</span>
+            </div>
+            <div class="menu-item" onclick="showSection('settings')">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="admin-main">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="admin-section active">
+            <div class="section-header">
+                <h2>Dashboard Overview</h2>
+                <div class="header-actions">
+                    <button class="btn-primary">
+                        <i class="fas fa-download"></i>
+                        Export Report
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>245</h3>
+                        <p>Pending Verifications</p>
+                        <span class="stat-change positive">+12% from last week</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-donate"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>৳2.3M</h3>
+                        <p>Total Donations</p>
+                        <span class="stat-change positive">+8% from last month</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>1,247</h3>
+                        <p>Active Volunteers</p>
+                        <span class="stat-change positive">+15% from last month</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>89</h3>
+                        <p>Verified Foundations</p>
+                        <span class="stat-change neutral">Same as last month</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <h3>Quick Actions</h3>
+                <div class="action-grid">
+                    <button class="action-card" onclick="showSection('events')">
+                        <i class="fas fa-calendar-check"></i>
+                        <span>Verify Events</span>
+                        <small>12 pending</small>
+                    </button>
+                    <button class="action-card" onclick="window.location.href='foundation-verification.html'">
+                        <i class="fas fa-building"></i>
+                        <span>Review Foundations</span>
+                        <small>2 total</small>
+                    </button>
+                    <button class="action-card" onclick="showSection('volunteers')">
+                        <i class="fas fa-users"></i>
+                        <span>Approve Volunteers</span>
+                        <small>8 pending</small>
+                    </button>
+                    <button class="action-card" onclick="showSection('trending')">
+                        <i class="fas fa-fire"></i>
+                        <span>Manage Trending</span>
+                        <small>Update now</small>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="recent-activity">
+                <h3>Recent Activity</h3>
+                <div class="activity-list">
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="activity-content">
+                            <p><strong>Medical Aid Campaign</strong> verified by Admin</p>
+                            <span class="activity-time">2 hours ago</span>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="activity-content">
+                            <p><strong>Dhaka Foundation</strong> registration approved</p>
+                            <span class="activity-time">4 hours ago</span>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                        <div class="activity-content">
+                            <p><strong>Education for All</strong> added to trending</p>
+                            <span class="activity-time">6 hours ago</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Event Verification Section -->
+        <section id="events" class="admin-section">
+            <div class="section-header">
+                <h2>Event Verification</h2>
+                <div class="header-actions">
+                    <select class="filter-select">
+                        <option value="all">All Categories</option>
+                        <option value="medical">Medical</option>
+                        <option value="education">Education</option>
+                        <option value="emergency">Emergency</option>
+                        <option value="food">Food Aid</option>
+                    </select>
+                    <select class="filter-select">
+                        <option value="pending">Pending</option>
+                        <option value="verified">Verified</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="events-grid">
+                <!-- Event verification cards will be populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Donation Analytics Section -->
+        <section id="donations" class="admin-section">
+            <div class="section-header">
+                <h2>Donation Analytics</h2>
+                <div class="header-actions">
+                    <select class="filter-select" id="donationTimeFilter">
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="yearly">Yearly</option>
+                    </select>
+                    <button class="btn-secondary">
+                        <i class="fas fa-download"></i>
+                        Export Data
+                    </button>
+                </div>
+            </div>
+
+            <div class="analytics-content">
+                <div class="chart-container">
+                    <canvas id="donationChart"></canvas>
+                </div>
+                <div class="donation-stats">
+                    <div class="donation-breakdown">
+                        <h3>Donation Breakdown</h3>
+                        <div class="breakdown-list">
+                            <div class="breakdown-item">
+                                <span class="category">Medical</span>
+                                <span class="amount">৳850,000</span>
+                                <span class="percentage">37%</span>
+                            </div>
+                            <div class="breakdown-item">
+                                <span class="category">Education</span>
+                                <span class="amount">৳620,000</span>
+                                <span class="percentage">27%</span>
+                            </div>
+                            <div class="breakdown-item">
+                                <span class="category">Emergency</span>
+                                <span class="amount">৳450,000</span>
+                                <span class="percentage">20%</span>
+                            </div>
+                            <div class="breakdown-item">
+                                <span class="category">Food Aid</span>
+                                <span class="amount">৳380,000</span>
+                                <span class="percentage">16%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Categories Management Section -->
+        <section id="categories" class="admin-section">
+            <div class="section-header">
+                <h2>Manage Categories</h2>
+                <div class="header-actions">
+                    <button class="btn-primary" onclick="showAddCategoryModal()">
+                        <i class="fas fa-plus"></i>
+                        Add Category
+                    </button>
+                </div>
+            </div>
+
+            <div class="categories-grid">
+                <!-- Categories will be populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Foundation Verification Section -->
+        <section id="foundations" class="admin-section">
+            <div class="section-header">
+                <h2>Foundation Verification</h2>
+                <div class="header-actions">
+                    <a href="foundation-verification.html" class="btn-primary">
+                        <i class="fas fa-external-link-alt"></i>
+                        Open Foundation Verification
+                    </a>
+                </div>
+            </div>
+
+            <div class="quick-stats-grid">
+                <div class="quick-stat">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>1</h3>
+                        <p>Pending Verification</p>
+                        <small>Awaiting review</small>
+                    </div>
+                </div>
+                <div class="quick-stat">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>1</h3>
+                        <p>Verified Foundations</p>
+                        <small>Active foundations</small>
+                    </div>
+                </div>
+                <div class="quick-stat">
+                    <div class="stat-icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>2</h3>
+                        <p>Total Applications</p>
+                        <small>All time</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-icon">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+                <div class="info-content">
+                    <h3>Foundation Verification Process</h3>
+                    <p>Click "Open Foundation Verification" to access the dedicated verification system where you can:</p>
+                    <ul>
+                        <li>View all foundation applications with detailed information</li>
+                        <li>Review foundation certificates, licenses, and contact details</li>
+                        <li>Approve or reject foundation registrations</li>
+                        <li>Filter foundations by verification status</li>
+                        <li>Access complete foundation profiles in structured format</li>
+                    </ul>
+                    <div class="info-actions">
+                        <a href="foundation-verification.html" class="btn-primary">
+                            <i class="fas fa-arrow-right"></i>
+                            Go to Foundation Verification
+                        </a>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </section>
+
+        <!-- Other sections will be added here -->
+    </main>
+
+    <!-- Foundation Details Modal -->
+    <div id="foundationDetailsModal" class="modal foundation-modal">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h3>Foundation Verification Details</h3>
+                <button class="close-btn" onclick="closeFoundationModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="foundationDetails" class="foundation-details">
+                    <!-- Foundation details will be populated by JavaScript -->
+                </div>
+                <div class="verification-actions">
+                    <button class="btn-success" onclick="verifyFoundation('approve')">
+                        <i class="fas fa-check"></i>
+                        Approve Foundation
+                    </button>
+                    <button class="btn-danger" onclick="verifyFoundation('reject')">
+                        <i class="fas fa-times"></i>
+                        Suspend Foundation
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div id="addCategoryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Category</h3>
+                <button class="close-btn" onclick="closeModal('addCategoryModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addCategoryForm">
+                    <div class="form-group">
+                        <label>Category Name</label>
+                        <input type="text" id="categoryName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Category Icon</label>
+                        <select id="categoryIcon">
+                            <option value="fas fa-heartbeat">Medical</option>
+                            <option value="fas fa-graduation-cap">Education</option>
+                            <option value="fas fa-exclamation-triangle">Emergency</option>
+                            <option value="fas fa-utensils">Food</option>
+                            <option value="fas fa-leaf">Environment</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="categoryDescription" rows="3"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="closeModal('addCategoryModal')">Cancel</button>
+                        <button type="submit" class="btn-primary">Add Category</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin-frontend.js"></script>
+</body>
+</html>

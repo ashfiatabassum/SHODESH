@@ -3,9 +3,9 @@ const mysql = require('mysql2');
 console.log('Starting MySQL connection test...');
 
 const connection = mysql.createConnection({
-  host: 'localhost',
+  host: '127.0.0.1',
   user: 'root',
-  password: 'ADGJmptw123@#',
+  password: '202314055',
   database: 'shodesh'
 });
 

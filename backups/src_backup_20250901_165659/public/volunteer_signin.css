@@ -1,0 +1,282 @@
+/* Volunteer Sign In Page Styles */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.volunteer-signin-container {
+    height: 100vh;
+    background: linear-gradient(rgba(24, 57, 43, 0.7), rgba(88, 139, 118, 0.7)), url('images/volunteer_signin.jpg') no-repeat center center/cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.volunteer-signin-content {
+    width: 100%;
+    max-width: 1200px;
+    padding: 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+}
+
+.volunteer-signin-header {
+    color: white;
+    text-align: left;
+}
+
+.logo h1 {
+    font-size: 48px;
+    color: #f2b5a0;
+    margin-bottom: 30px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.header-content h2 {
+    font-size: 42px;
+    margin-bottom: 25px;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.motivational-text {
+    font-size: 22px;
+    font-style: italic;
+    margin-bottom: 20px;
+    color: #f2b5a0;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    line-height: 1.4;
+}
+
+.sub-text {
+    font-size: 18px;
+    line-height: 1.6;
+    color: #e8f5e8;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+.volunteer-signin-form-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.form-wrapper {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 50px 40px;
+    border-radius: 15px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 420px;
+    backdrop-filter: blur(10px);
+}
+
+.form-wrapper h3 {
+    font-size: 28px;
+    color: #18392b;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.form-subtitle {
+    color: #666;
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 16px;
+}
+
+.volunteer-signin-form {
+    width: 100%;
+}
+
+.input-group {
+    margin-bottom: 25px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #18392b;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #d0ded8;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+    background: white;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #588b76;
+    box-shadow: 0 0 0 3px rgba(88, 139, 118, 0.1);
+}
+
+.input-group input::placeholder {
+    color: #999;
+}
+
+.signin-submit-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #588b76, #18392b);
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 25px;
+}
+
+.signin-submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(88, 139, 118, 0.3);
+}
+
+.signin-submit-btn:active {
+    transform: translateY(0);
+}
+
+.signup-prompt {
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.signup-prompt p {
+    color: #666;
+    font-size: 16px;
+}
+
+.signup-btn {
+    background: none;
+    border: none;
+    color: #588b76;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    text-decoration: underline;
+    transition: color 0.3s ease;
+}
+
+.signup-btn:hover {
+    color: #18392b;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .volunteer-signin-content {
+        grid-template-columns: 1fr;
+        gap: 30px;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .volunteer-signin-header {
+        text-align: center;
+    }
+    
+    .logo h1 {
+        font-size: 36px;
+        margin-bottom: 20px;
+    }
+    
+    .header-content h2 {
+        font-size: 32px;
+        margin-bottom: 20px;
+    }
+    
+    .motivational-text {
+        font-size: 18px;
+        margin-bottom: 15px;
+    }
+    
+    .sub-text {
+        font-size: 16px;
+    }
+    
+    .form-wrapper {
+        padding: 35px 25px;
+        max-width: 100%;
+    }
+    
+    .form-wrapper h3 {
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .volunteer-signin-container {
+        overflow-y: auto;
+        height: auto;
+        min-height: 100vh;
+        padding: 20px 0;
+    }
+    
+    .logo h1 {
+        font-size: 28px;
+    }
+    
+    .header-content h2 {
+        font-size: 26px;
+    }
+    
+    .motivational-text {
+        font-size: 16px;
+    }
+    
+    .sub-text {
+        font-size: 14px;
+    }
+    
+    .form-wrapper {
+        padding: 25px 20px;
+    }
+}
+
+/* Loading animation for form submission */
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.loading .signin-submit-btn {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.loading .signin-submit-btn:after {
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-left: 10px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
