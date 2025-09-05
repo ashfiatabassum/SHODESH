@@ -612,3 +612,16 @@ body {
     font-size: 1.1rem;
   }
 }
+
+.btn-secondary {
+  background: #fff !important;
+  color: #4a7c59 !important;
+  border: 2px solid #4a7c59;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(60, 60, 120, 0.08);
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.btn-secondary:hover {
+  background: #f7fafd !important;
+  color: #2c4a36 !important;
+  border-color: #2c4a36;

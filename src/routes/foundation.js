@@ -368,4 +368,209 @@ router.post('/check-availability', (req, res) => {
   });
 });
 
+
+
+
+
+
+
+
+// POST /api/foundation/signin - Authenticate foundation
+router.post('/signin', async (req, res) => {
+  console.log('🔐 Foundation sign in request received:', req.body);
+
+  try {
+    const { username, password } = req.body;
+
+    // Input validation
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username and password are required'
+      });
+    }
+
+    // Query to find foundation by name (username)
+    const query = `
+      SELECT foundation_id, foundation_name, email, password, mobile, foundation_license, house_no, road_no, area, district, administrative_div, zip, bkash, bank_account, description, status
+      FROM foundation
+      WHERE foundation_name = ?
+    `;
+
+    const results = await new Promise((resolve, reject) => {
+      db.query(query, [username], (err, results) => {
+        if (err) {
+          console.error('❌ Error fetching foundation:', err);
+          reject(err);
+        } else {
+          resolve(results);
+        }
+      });
+    });
+
+    // Check if foundation exists
+    if (results.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid username or password'
+      });
+    }
+
+    const foundation = results[0];
+
+    // Verify password (plain text comparison)
+    if (foundation.password !== password) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid username or password'
+      });
+    }
+
+    console.log('✅ Foundation authenticated successfully:', foundation.foundation_id);
+
+    // Prepare foundation data for profile
+    const foundationData = {
+      foundationInfo: {
+        foundationName: foundation.foundation_name,
+        email: foundation.email,
+        phone: foundation.mobile,
+        foundationLicense: foundation.foundation_license,
+        bkashNumber: foundation.bkash,
+        bankAccount: foundation.bank_account,
+        visionGoals: foundation.description,
+        operatingSince: "2022",
+        status: foundation.status
+      },
+      address: {
+        houseNo: foundation.house_no,
+        roadNo: foundation.road_no,
+        area: foundation.area,
+        district: foundation.district,
+        division: foundation.administrative_div,
+        zipCode: foundation.zip
+      }
+    };
+
+    // Return success response with foundation data
+    res.status(200).json({
+      success: true,
+      message: 'Sign in successful',
+      foundationId: foundation.foundation_id,
+      foundationData: foundationData
+    });
+
+  } catch (error) {
+    console.error('❌ Error during foundation sign in:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
+
+
+
+
+// Get foundation profile
+router.get('/profile/:foundationId', async (req, res) => {
+  const { foundationId } = req.params;
+  const query = `
+    SELECT foundation_id, foundation_name, email, mobile, foundation_license, house_no, road_no, area, district, administrative_div, zip, bkash, bank_account, description, status
+    FROM foundation
+    WHERE foundation_id = ?
+  `;
+  db.query(query, [foundationId], (err, results) => {
+    if (err) {
+      return res.status(500).json({ success: false, message: 'Database error' });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ success: false, message: 'Foundation not found' });
+    }
+    const foundation = results[0];
+    res.json({
+      success: true,
+      foundationData: {
+        foundationInfo: {
+          foundationName: foundation.foundation_name,
+          email: foundation.email,
+          phone: foundation.mobile,
+          foundationLicense: foundation.foundation_license,
+          bkashNumber: foundation.bkash,
+          bankAccount: foundation.bank_account,
+           visionGoals: foundation.description,
+          operatingSince: "2022",
+          status: foundation.status
+        },
+        address: {
+          houseNo: foundation.house_no,
+          roadNo: foundation.road_no,
+          area: foundation.area,
+          district: foundation.district,
+          division: foundation.administrative_div,
+          zipCode: foundation.zip
+        }
+      }
+    });
+  });
+});
+
+
+
+router.post('/check-username', (req, res) => {
+  const { username, foundationId } = req.body;
+  db.query(
+    'SELECT foundation_id FROM foundation WHERE foundation_name = ? AND foundation_id != ?',
+    [username, foundationId],
+    (err, results) => {
+      if (err) return res.status(500).json({ available: false });
+      res.json({ available: results.length === 0 });
+    }
+  );
+});
+
+
+
+router.put('/update/:foundationId', async (req, res) => {
+  const foundationId = req.params.foundationId;
+  const { username, newPassword, currentPassword } = req.body;
+
+  if (!currentPassword) {
+    return res.status(400).json({ success: false, message: 'Current password required.' });
+  }
+
+  db.query('SELECT password FROM foundation WHERE foundation_id = ?', [foundationId], (err, results) => {
+    if (err || results.length === 0) {
+      return res.status(400).json({ success: false, message: 'Foundation not found.' });
+    }
+    const dbPassword = results[0].password;
+    if (dbPassword !== currentPassword) {
+      return res.status(401).json({ success: false, message: 'Current password is incorrect.' });
+    }
+    
+
+    // Build update query
+    let fields = [];
+    let values = [];
+    if (username) { fields.push('foundation_name = ?'); values.push(username); }
+    if (newPassword) { fields.push('password = ?'); values.push(newPassword); }
+    if (fields.length === 0) {
+      return res.status(400).json({ success: false, message: 'No fields to update.' });
+    }
+    values.push(foundationId);
+
+    db.query(
+      `UPDATE foundation SET ${fields.join(', ')} WHERE foundation_id = ?`,
+      values,
+      (err2, result) => {
+        if (err2) {
+          return res.status(500).json({ success: false, message: 'Database error.' });
+        }
+        return res.json({ success: true, message: 'Profile updated successfully.' });
+      }
+    );
+  });
+});
+
+
+
 module.exports = router;
