@@ -35,6 +35,28 @@ function setupEventListeners() {
         console.error('Form not found!');
     }
     
+    // Setup password toggle functionality for all password fields
+    const togglePasswordButtons = document.querySelectorAll('.toggle-password');
+    
+    togglePasswordButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Find the password input that is a sibling to this button
+            const passwordInput = this.parentElement.querySelector('input[type="password"], input[type="text"]');
+            
+            if (passwordInput) {
+                // Toggle the type attribute
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                
+                // Toggle the eye / eye-slash icon
+                const icon = this.querySelector('i');
+                if (icon) {
+                    icon.className = type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+                }
+            }
+        });
+    });
+    
     // Input validation
     inputs.forEach(input => {
         input.addEventListener('blur', validateField);
@@ -96,10 +118,10 @@ function setupFileUpload() {
         const file = e.target.files[0];
         
         if (file) {
-            // Check file size (5MB limit)
-            const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+            // Check file size (10MB limit)
+            const maxSize = 10 * 1024 * 1024; // 10MB in bytes
             if (file.size > maxSize) {
-                showFieldError(fileInput, 'File size must be less than 5MB');
+                showFieldError(fileInput, 'File size must be less than 10MB');
                 fileInput.value = '';
                 return;
             }
@@ -139,114 +161,26 @@ function handleFormSubmission(e) {
     e.preventDefault();
     console.log('Form submission started');
     
+    if (!validateForm()) {
+        console.log('Form validation failed');
+        return;
+    }
+    
     // Create FormData from the form
     const form = document.getElementById('volunteerSignupForm');
     const formData = new FormData(form);
     
+    // Debug: Log all form data
+    console.log('Form data:');
+    for (let [key, value] of formData.entries()) {
+        console.log(`${key}: ${value instanceof File ? value.name : value}`);
+    }
+    
     // Show loading indicator
     showLoading(true);
     
-    // Check if we're in development mode with no backend
-    const isLocalDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    
-    if (isLocalDevelopment) {
-        // For local development without backend, simulate a successful response
-        setTimeout(() => {
-            console.log('Development mode: Simulating successful signup');
-            showSuccess("Account created successfully! (DEV MODE)");
-            
-            // Store complete form data for development testing
-            const username = formData.get('username');
-            
-            // Create a birth date string
-            const birthDay = formData.get('birthDay');
-            const birthMonth = formData.get('birthMonth');
-            const birthYear = formData.get('birthYear');
-            const birthDate = birthDay && birthMonth && birthYear ? 
-                `${birthYear}-${birthMonth.padStart(2, '0')}-${birthDay.padStart(2, '0')}` : '';
-            
-            // Store complete staff data
-            const staffData = {
-                username: username,
-                first_name: formData.get('firstName'),
-                last_name: formData.get('lastName'),
-                email: formData.get('gmail'),
-                mobile: formData.get('mobileNumber'),
-                nid: formData.get('nid'),
-                birth_date: birthDate,
-                house_no: formData.get('houseNo'),
-                road_no: formData.get('roadNo'),
-                area: formData.get('area'),
-                district: formData.get('district'),
-                administrative_div: formData.get('division'),
-                zip: formData.get('zipCode'),
-                staff_id: 'dev-' + Date.now()
-            };
-            
-            // Save to sessionStorage for immediate use
-            sessionStorage.setItem('staffData', JSON.stringify(staffData));
-            
-            // Save to localStorage for persistent storage (for the profile page)
-            localStorage.setItem('staffUsername', username);
-            localStorage.setItem('staffId', staffData.staff_id);
-            localStorage.setItem('staffSignupData', JSON.stringify(staffData));
-            
-            // Redirect to staff_pending.html after 2 seconds
-            setTimeout(() => {
-                window.location.href = 'staff_pending.html'; // Note: removed the leading slash
-            }, 2000);
-        }, 1500);
-        return;
-    }
-    
-    // If not in development mode, try the actual API
-    fetch('/api/staff/signup', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => {
-        console.log('Server response:', response);
-        if (!response.ok) {
-            throw new Error('Server responded with status: ' + response.status);
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log('Response data:', data);
-        
-        if (data.success) {
-            // Success! Show message and redirect
-            showSuccess("Account created successfully!");
-            
-            // Store user data for future use
-            if (data.staffData) {
-                // Save to localStorage for persistent storage (for the profile page)
-                localStorage.setItem('staffUsername', data.staffData.username);
-                localStorage.setItem('staffId', data.staffData.staff_id);
-                localStorage.setItem('staffSignupData', JSON.stringify(data.staffData));
-                
-                // If a token was provided, store it too
-                if (data.token) {
-                    localStorage.setItem('staffToken', data.token);
-                }
-            }
-            
-            // Redirect to staff_pending.html after 2 seconds
-            setTimeout(() => {
-                window.location.href = 'staff_pending.html'; // Note: removed the leading slash
-            }, 2000);
-        } else {
-            // Show error message
-            showError(data.message || "Failed to create account");
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showError("An error occurred. Please try again.");
-    })
-    .finally(() => {
-        showLoading(false);
-    });
+    // ALWAYS use the real API (no more development mode simulation)
+    createVolunteerAccount(formData);
 }
 
 function validateForm() {
@@ -396,16 +330,26 @@ function validateAge() {
 function checkUsernameAvailability(username) {
     if (!username || username.length < 3) return;
     
-    // Simulate username availability check (replace with actual API call)
-    // For demo purposes, "admin" and "test" are considered taken
-    const takenUsernames = ['admin', 'test', 'volunteer', 'shodesh'];
-    
-    if (takenUsernames.includes(username.toLowerCase())) {
-        showFieldError(document.getElementById('username'), 'This username is already taken');
-    } else {
-        clearFieldError({target: document.getElementById('username')});
-        showFieldSuccess(document.getElementById('username'), 'Username is available');
-    }
+    // Call the real API to check username availability
+    fetch('/api/staff/check-username', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username: username })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.exists || (data.message && data.message.includes('taken'))) {
+            showFieldError(document.getElementById('username'), 'This username is already taken');
+        } else {
+            clearFieldError({target: document.getElementById('username')});
+            showFieldSuccess(document.getElementById('username'), 'Username is available');
+        }
+    })
+    .catch(error => {
+        console.error('Error checking username:', error);
+    });
 }
 
 function showFieldError(field, message) {
@@ -449,31 +393,173 @@ function clearFieldError(e) {
 }
 
 function createVolunteerAccount(formData) {
-    // This would normally send data to your backend API
-    // For now, we'll simulate the process
-    
+    // Send data to the backend API
     try {
-        // Convert FormData to object for processing
-        const accountData = {};
-        for (let [key, value] of formData.entries()) {
-            accountData[key] = value;
+        console.log('Creating volunteer account...');
+        
+        // Make sure we have all required fields
+        const requiredFields = ['firstName', 'lastName', 'username', 'password', 'mobileNumber', 'nid', 'cv'];
+        let missingFields = [];
+        
+        requiredFields.forEach(field => {
+            if (field === 'cv') {
+                const fileInput = document.getElementById('cv');
+                if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+                    missingFields.push('CV file');
+                    console.error('CV file is missing or not properly selected');
+                } else {
+                    console.log('CV file found:', fileInput.files[0].name);
+                    // Ensure the CV file is included in the form data
+                    if (!formData.has('cv')) {
+                        formData.set('cv', fileInput.files[0]);
+                    }
+                }
+            } else if (!formData.get(field)) {
+                missingFields.push(field);
+            }
+        });
+        
+        if (missingFields.length > 0) {
+            showError(`Missing required fields: ${missingFields.join(', ')}`);
+            showLoading(false);
+            return;
         }
         
-        // Simulate API call
-        console.log('Creating volunteer account:', accountData);
+        // Debug: Log all form data
+        console.log('Form data:');
+        for (let [key, value] of formData.entries()) {
+            console.log(`${key}: ${value instanceof File ? value.name : value}`);
+        }
         
-        // Show success message
-        showSuccess('Account created successfully! Please check your email for verification.');
-        
-        // Redirect after a delay
-        setTimeout(() => {
-            window.location.href = 'volunteer_signin.html';
-        }, 3000);
-        
+        // Send the FormData directly to our backend API
+        fetch('/api/staff/signup', {
+            method: 'POST',
+            body: formData, // FormData automatically sets the correct content-type for file uploads
+        })
+        .then(response => {
+            console.log('Server response status:', response.status);
+            
+            // Clone the response before reading its body
+            const responseClone = response.clone();
+            
+            // Always try to parse JSON regardless of status
+            return response.json().then(data => {
+                // Add response status to data for reference
+                data._responseStatus = response.status;
+                return data;
+            }).catch(() => {
+                // If parsing fails, try to get the text content instead
+                return responseClone.text().then(textContent => {
+                    console.log('Raw server response:', textContent);
+                    return {
+                        success: false,
+                        _responseStatus: response.status,
+                        message: `Server error (${response.status}): ${textContent.substring(0, 100)}...`
+                    };
+                }).catch(err => {
+                    // If even text parsing fails, return a basic object
+                    return {
+                        success: false,
+                        _responseStatus: response.status,
+                        message: `Server error (${response.status})`
+                    };
+                });
+            });
+        })
+        .then(data => {
+            console.log('Server response data:', data);
+            
+            // If success is false or response was not ok (status >= 400)
+            if (!data.success || data._responseStatus >= 400) {
+                // Create an error object with the message
+                const error = new Error(data.message || 'Server error occurred');
+                
+                // Add additional properties
+                error.status = data._responseStatus;
+                error.field = data.field;
+                
+                // If it's a 409 conflict error, add special handling
+                if (data._responseStatus === 409) {
+                    console.log('Conflict detected:', data.message);
+                }
+                
+                throw error;
+            }
+            
+            return data;
+        })
+        .then(data => {
+            console.log('Registration successful:', data);
+            
+            // Show success message about verification
+            showSuccess('Account created successfully! Redirecting to verification waiting page...');
+            
+            // Store username in sessionStorage for easier sign-in later
+            sessionStorage.setItem('newStaffUsername', data.staffId || '');
+            
+            // Redirect after a delay to the verification waiting page with staff ID
+            setTimeout(() => {
+                window.location.href = `staff_verification_waiting.html?from=signup&staffId=${data.staffId || ''}`;
+            }, 3000);
+        })
+        .catch(error => {
+            // Show error message in the UI
+            showError(error.message || 'An error occurred while creating your account. Please try again.');
+            console.error('Account creation error:', error);
+            
+            // Handle 409 Conflict errors specifically
+            if (error.status === 409) {
+                // If we know which field caused the error from the server response
+                if (error.field) {
+                    const fieldId = error.field === 'email' ? 'gmail' : error.field;
+                    const fieldInput = document.getElementById(fieldId);
+                    if (fieldInput) {
+                        showFieldError(fieldInput, error.message);
+                        // Scroll to the field with the error
+                        fieldInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                } 
+                // If field wasn't specified, try to guess from the error message
+                else if (error.message) {
+                    if (error.message.includes('username')) {
+                        showFieldError(document.getElementById('username'), error.message);
+                        document.getElementById('username').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } 
+                    else if (error.message.includes('email')) {
+                        showFieldError(document.getElementById('gmail'), error.message);
+                        document.getElementById('gmail').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        
+                        // Add a sign-in link below the email field
+                        const signInSuggestion = document.createElement('div');
+                        signInSuggestion.className = 'signin-suggestion';
+                        signInSuggestion.innerHTML = `
+                            <p style="margin-top: 10px; color: #007bff;">
+                                <a href="volunteer_signin.html" style="text-decoration: underline; color: #007bff;">
+                                    Sign in with this email instead
+                                </a>
+                            </p>
+                        `;
+                        const emailGroup = document.getElementById('gmail').parentNode;
+                        if (emailGroup && !emailGroup.querySelector('.signin-suggestion')) {
+                            emailGroup.appendChild(signInSuggestion);
+                        }
+                    } 
+                    else if (error.message.includes('mobile')) {
+                        showFieldError(document.getElementById('mobileNumber'), error.message);
+                        document.getElementById('mobileNumber').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } 
+                    else if (error.message.includes('NID')) {
+                        showFieldError(document.getElementById('nid'), error.message);
+                        document.getElementById('nid').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            }
+            
+            showLoading(false);
+        });
     } catch (error) {
         showError('An error occurred while creating your account. Please try again.');
         console.error('Account creation error:', error);
-    } finally {
         showLoading(false);
     }
 }
