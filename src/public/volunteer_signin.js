@@ -16,6 +16,37 @@ document.addEventListener('DOMContentLoaded', function() {
         input.addEventListener('blur', validateInput);
         input.addEventListener('input', clearValidationError);
     });
+    
+    // Setup password toggle functionality
+    const togglePassword = document.querySelector('.toggle-password');
+    const passwordInput = document.getElementById('password');
+    
+    if (togglePassword && passwordInput) {
+        togglePassword.addEventListener('click', function() {
+            // Toggle the type attribute
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Toggle the eye / eye-slash icon
+            const icon = this.querySelector('i');
+            if (icon) {
+                icon.className = type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+            }
+        });
+    }
+    
+    // Check if user just signed up and show a welcome message
+    const newStaffUsername = sessionStorage.getItem('newStaffUsername');
+    if (newStaffUsername) {
+        const usernameInput = document.getElementById('username');
+        if (usernameInput) {
+            usernameInput.value = newStaffUsername;
+        }
+        
+        showWelcomeMessage('Welcome! Your account has been created. Please sign in with your password.');
+        // Clear the session storage after using it
+        sessionStorage.removeItem('newStaffUsername');
+    }
 });
 
 function handleVolunteerSignin() {
@@ -31,54 +62,8 @@ function handleVolunteerSignin() {
     // Show loading state
     showLoading(true);
     
-    // Check if we're in development mode with no backend
-    const isLocalDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    
-    if (isLocalDevelopment) {
-        console.log('Development mode: Simulating sign in process');
-        
-        // In development mode, check sessionStorage for the user data
-        // created during the sign-up process
-        const staffDataStr = sessionStorage.getItem('staffData');
-        let staffData = null;
-        
-        if (staffDataStr) {
-            try {
-                staffData = JSON.parse(staffDataStr);
-            } catch (e) {
-                console.error('Error parsing staff data:', e);
-            }
-        }
-        
-        // Simulate a brief delay for the sign-in process
-        setTimeout(() => {
-            // Check if username matches
-            if (staffData && staffData.username === username) {
-                // For dev purposes, accept any password with length >= 6
-                if (password.length >= 6) {
-                    console.log('Development sign-in successful');
-                    
-                    // Store staff data
-                    localStorage.setItem('staffId', staffData.staff_id || 'dev-user-123');
-                    localStorage.setItem('staffUsername', username);
-                    
-                    // Show success message and redirect
-                    showSuccess('Sign in successful! (DEV MODE) Redirecting to your profile...');
-                    setTimeout(() => {
-                        window.location.href = 'staff_profile.html'; // Note: removed the leading slash
-                    }, 1500);
-                } else {
-                    showError('Invalid password. Please try again. (Dev mode: use at least 6 characters)');
-                    showLoading(false);
-                }
-            } else {
-                showError('Username not found. Please check your credentials. (Dev mode)');
-                showLoading(false);
-            }
-        }, 1000);
-        
-        return;
-    }
+    // Always use the real API (no more development mode simulation)
+    console.log('Sending login request to API');
     
     // For production - Send credentials to the backend
     fetch('/api/staff/signin', {
@@ -89,10 +74,47 @@ function handleVolunteerSignin() {
         body: JSON.stringify({ username, password })
     })
     .then(response => {
-        if (!response.ok) {
-            throw new Error('Server responded with status: ' + response.status);
+        console.log('Sign-in response status:', response.status);
+        
+        // Clone the response before reading its body
+        const responseClone = response.clone();
+        
+        // Parse the JSON regardless of response status
+        return response.json().then(data => {
+            // Add status to the data object
+            data._responseStatus = response.status;
+            console.log('Sign-in response data:', data);
+            return data;
+        }).catch(err => {
+            // If we can't parse JSON, try to get the text content
+            console.error('Error parsing JSON response:', err);
+            return responseClone.text().then(textContent => {
+                console.log('Raw server response:', textContent);
+                return { 
+                    success: false, 
+                    _responseStatus: response.status,
+                    message: `Server error: ${textContent.substring(0, 100)}...`
+                };
+            }).catch(textErr => {
+                // If even text parsing fails
+                console.error('Error getting response text:', textErr);
+                return { 
+                    success: false, 
+                    _responseStatus: response.status,
+                    message: 'Server error: Unable to parse response'
+                };
+            });
+        });
+    })
+    .then(data => {
+        console.log('Sign-in response data:', data);
+        
+        // Check if response was not ok (status >= 400)
+        if (data._responseStatus >= 400) {
+            throw new Error(data.message || 'Server error occurred');
         }
-        return response.json();
+        
+        return data;
     })
     .then(data => {
         if (data.success) {
@@ -105,10 +127,22 @@ function handleVolunteerSignin() {
                 localStorage.setItem('staffToken', data.token);
             }
             
+            // Clear any existing staff data first
+            localStorage.removeItem('staffSignupData');
+            sessionStorage.removeItem('staffData');
+            
             // If we received staff data, store it for the profile page
             if (data.staffData) {
+                console.log('Storing staff data:', data.staffData);
                 localStorage.setItem('staffSignupData', JSON.stringify(data.staffData));
                 sessionStorage.setItem('staffData', JSON.stringify(data.staffData));
+            } else {
+                console.warn('No staff data received from server');
+            }
+            
+            // Store staff status
+            if (data.staffStatus) {
+                localStorage.setItem('staffStatus', data.staffStatus);
             }
             
             // Show success message and redirect
@@ -207,6 +241,21 @@ function showSuccess(message) {
     
     const form = document.getElementById('volunteerSigninForm');
     form.insertBefore(successDiv, form.firstChild);
+}
+
+function showWelcomeMessage(message) {
+    removeExistingMessages();
+    
+    const welcomeDiv = document.createElement('div');
+    welcomeDiv.className = 'message welcome-msg';
+    welcomeDiv.innerHTML = `
+        <div style="background: #cce5ff; color: #004085; padding: 12px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #b8daff;">
+            👋 ${message}
+        </div>
+    `;
+    
+    const form = document.getElementById('volunteerSigninForm');
+    form.insertBefore(welcomeDiv, form.firstChild);
 }
 
 function removeExistingMessages() {
