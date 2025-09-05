@@ -100,6 +100,11 @@ app.get('/api/individual/test', (req, res) => {
   });
 });
 
+app.get('/api/donor/donations/test', (req, res) => {
+  res.send('🟢 Donor donations test route works');
+});
+
+
 // ✅ API: Handle donations
 app.post('/donate', (req, res) => {
   const { amount } = req.body;
