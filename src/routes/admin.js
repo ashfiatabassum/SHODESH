@@ -468,13 +468,63 @@ router.put('/foundations/:id/verify', authenticateAdmin, async (req, res) => {
         return res.status(400).json({ success: false, message: 'Foundation id is required' });
     }
 
-    if (!['approve', 'suspend'].includes(action)) {
-        return res.status(400).json({ success: false, message: "Invalid action. Must be 'approve' or 'suspend'" });
-    }
+        if (!['approve', 'delete'].includes(action)) {
+            return res.status(400).json({ success: false, message: "Invalid action. Must be 'approve' or 'delete'" });
+        }
 
-    const newStatus = action === 'approve' ? 'verified' : 'suspended';
+        let connection;
+        try {
+            connection = await adminDb.getConnection();
+            await connection.beginTransaction();
 
-    let connection;
+            // Lock the foundation row to avoid race conditions
+            const [rows] = await connection.execute(
+                'SELECT foundation_id, status FROM foundation WHERE foundation_id = ? FOR UPDATE',
+                [id]
+            );
+
+            if (rows.length === 0) {
+                await connection.rollback();
+                return res.status(404).json({ success: false, message: 'Foundation not found' });
+            }
+
+            if (action === 'approve') {
+                // Approve foundation
+                const [updateResult] = await connection.execute(
+                    'UPDATE foundation SET status = ? WHERE foundation_id = ?',
+                    ['verified', id]
+                );
+                if (updateResult.affectedRows === 0) {
+                    await connection.rollback();
+                    return res.status(500).json({ success: false, message: 'Failed to update foundation status' });
+                }
+                await connection.commit();
+                const [updatedRows] = await adminDb.execute(
+                    'SELECT foundation_id, foundation_name, email, mobile, status FROM foundation WHERE foundation_id = ?',
+                    [id]
+                );
+                return res.json({ success: true, message: 'Foundation verified successfully', data: updatedRows[0] });
+            } else if (action === 'delete') {
+                // Delete foundation
+                const [deleteResult] = await connection.execute(
+                    'DELETE FROM foundation WHERE foundation_id = ?',
+                    [id]
+                );
+                if (deleteResult.affectedRows === 0) {
+                    await connection.rollback();
+                    return res.status(500).json({ success: false, message: 'Failed to delete foundation' });
+                }
+                await connection.commit();
+                return res.json({ success: true, message: 'Foundation deleted successfully', foundationId: id });
+            }
+        } catch (error) {
+            console.error('❌ Foundation verification error:', error);
+            try { if (connection) await connection.rollback(); } catch (e) { /* ignore */ }
+            return res.status(500).json({ success: false, message: 'Failed to update foundation status', error: error.message });
+        } finally {
+            try { if (connection) connection.release(); } catch (e) { /* ignore */ }
+        }
+
     try {
         // Acquire a dedicated connection for the transaction
         connection = await adminDb.getConnection();
