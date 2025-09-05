@@ -37,6 +37,8 @@ typings/
 
 # TypeScript cache
 *.tsbuildinfo
+package.json
+audit-after.json
 
 # Optional npm cache directory
 .npm
