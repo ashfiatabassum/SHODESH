@@ -532,4 +532,56 @@ router.put('/update/:donorId', async (req, res) => {
 
 
 
+
+
+router.get('/donations/:donorId', async (req, res) =>  {
+  const { donorId } = req.params;
+  try {
+    // Fetch donation history with event and creator info (LEFT JOIN to include all donations)
+    const query = `
+      SELECT DISTINCT
+        d.amount,
+        d.paid_at AS date,
+        ec.title AS projectTitle,
+        IF(ec.creator_type='foundation', f.foundation_name, CONCAT(i.first_name, ' ', i.last_name)) AS foundationName
+      FROM donation d
+      LEFT JOIN event_creation ec ON d.creation_id = ec.creation_id
+      LEFT JOIN foundation f ON ec.foundation_id = f.foundation_id
+      LEFT JOIN individual i ON ec.individual_id = i.individual_id
+      WHERE d.donor_id = ?
+      ORDER BY d.paid_at DESC
+    `;
+    const donations = await new Promise((resolve, reject) => {
+      db.query(query, [donorId], (err, results) => {
+        if (err) reject(err);
+        else resolve(results);
+      });
+    });
+
+    // Calculate total donation and largest donation
+    const statsQuery = `
+      SELECT 
+        IFNULL(SUM(amount),0) AS totalDonation,
+        IFNULL(MAX(amount),0) AS largestDonation
+      FROM donation
+      WHERE donor_id = ?
+    `;
+    const stats = await new Promise((resolve, reject) => {
+      db.query(statsQuery, [donorId], (err, results) => {
+        if (err) reject(err);
+        else resolve(results[0]);
+      });
+    });
+
+    res.json({
+      success: true,
+      donations,
+      totalDonation: stats.totalDonation,
+      largestDonation: stats.largestDonation
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to fetch donation history.' });
+  }
+});
+
 module.exports = router;
