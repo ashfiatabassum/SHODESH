@@ -14,244 +14,116 @@
         <div>MAIL: contact@shodesh.org</div>
         <div>PHONE: +880 1712 345 678</div>
     </div>
-
     <!-- Navbar -->
-   <div class="navbar">
-  <div class="logo"><strong>SHODESH</strong></div>
-  <div class="nav-links">
-    <a href="index.html">Home</a>
-    <a href="about.html" class="about-link">About</a>
-    <a href="#">Gallery</a>
-    <a href="contact.html" class="contact-link">Contact</a>
-    <a href="resources.html">Resources</a>
-   <a href="search.html" class="search-link">Search</a>
-    <a href="browse.html">Categories</a>
-    <a href="signin.html">Sign In</a>
-    <a href="volunteer.html">Join Our Team</a>
-  </div>
-</div>
-   <style>
-  .nav-links a, .nav-links button {
-    color: #176b3a;
-    text-decoration: none;
-    margin: 0 12px;
-    font-weight: 600;
-    font-size: 1.05rem;
-    background: none;
-    border: none;
-    cursor: pointer;
-    transition: color 0.2s;
-    border-radius: 0;
-    padding: 0;
-    box-shadow: none;
-    display: inline;
-  }
-    .nav-links a.active {
-    color: #d32f2f !important; /* Red color for active */
-    text-decoration: underline;
-  }
-  .nav-links a:hover, .nav-links button:hover {
-    color: #219150;
-    text-decoration: underline;
-    background: none;
-    box-shadow: none;
-  }
-</style> 
-
-    <!-- Hero Search Section -->
+    <div class="navbar">
+        <div class="logo"><strong>SHODESH</strong></div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="about.html">About</a>
+            <a href="#">Gallery</a>
+            <a href="contact.html">Contact</a>
+            <a href="resources.html">Resources</a>
+            <a href="search.html" class="search-link">Search</a>
+            <a href="browse.html">Categories</a>
+            <a href="signin.html">Sign In</a>
+            <a href="volunteer.html">Join Our Team</a>
+        </div>
+    </div>
+    <!-- Hero Section -->
     <div class="search-hero">
         <div class="search-hero-content">
             <h1>Discover Campaigns That Matter</h1>
             <p class="hero-subtitle">Find and support causes that align with your values and make a real difference</p>
-            
-            <!-- Enhanced Search Bar -->
             <div class="search-container">
                 <div class="search-box">
                     <i class="fas fa-search search-icon"></i>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Search for campaigns (e.g., Education, Medical, Emergency)...">
-                    <button class="search-submit-btn" onclick="performSearch()">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search for campaigns (e.g., Education, Medical, Emergency)..." aria-label="Search for campaigns">
+                    <button class="search-submit-btn" title="Search" aria-label="Search">
                         <i class="fas fa-arrow-right"></i>
+                        <span style="position:absolute;left:-9999px;">Search</span>
                     </button>
                 </div>
-                
-                <!-- Quick Search Tags -->
                 <div class="quick-tags">
-                    <span class="tag-label">Popular:</span>
-                    <button class="quick-tag" onclick="quickSearch('Medical')">Medical</button>
-                    <button class="quick-tag" onclick="quickSearch('Education')">Education</button>
-                    <button class="quick-tag" onclick="quickSearch('Emergency')">Emergency</button>
-                    <button class="quick-tag" onclick="quickSearch('Food')">Food Aid</button>
+                    <!-- Quick tags will be dynamically populated from backend in future -->
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Filter and Results Section -->
+    <!-- Main Content -->
     <div class="main-content">
         <div class="container">
-            <!-- Statistics Section -->
             <div class="stats-section">
                 <div class="stat-card">
-                    <div class="stat-number">1,247</div>
+                    <div class="stat-number" id="totalCampaigns">0</div>
                     <div class="stat-label">Active Campaigns</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number">৳45.2M</div>
+                    <div class="stat-number" id="totalRaised">৳0</div>
                     <div class="stat-label">Raised This Month</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-number">12,580</div>
-                    <div class="stat-label">Lives Impacted</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">64</div>
-                    <div class="stat-label">Districts Covered</div>
-                </div>
             </div>
-
-            <!-- Filter Section -->
             <div class="filter-section">
                 <div class="filter-header">
                     <h2>Explore Campaigns</h2>
                     <div class="view-toggle">
-                        <button class="view-btn active" onclick="toggleView('grid')">
+                        <button class="view-btn active" title="Grid View" aria-label="Grid View">
                             <i class="fas fa-th-large"></i>
+                            <span style="position:absolute;left:-9999px;">Grid View</span>
                         </button>
-                        <button class="view-btn" onclick="toggleView('list')">
+                        <button class="view-btn" title="List View" aria-label="List View">
                             <i class="fas fa-list"></i>
+                            <span style="position:absolute;left:-9999px;">List View</span>
                         </button>
                     </div>
                 </div>
-                
                 <div class="filter-controls">
                     <div class="filter-group">
-                        <label>Category:</label>
-                        <select id="categoryFilter" onchange="applyFilters()">
-                            <option value="">All Categories</option>
-                            <option value="medical">Medical</option>
-                            <option value="education">Education</option>
-                            <option value="emergency">Emergency</option>
-                            <option value="food">Food Aid</option>
-                            <option value="environment">Environment</option>
+                        <label for="categoryFilter">Category:</label>
+                        <select id="categoryFilter">
+                            <!-- Options will be populated dynamically -->
                         </select>
                     </div>
-                    
                     <div class="filter-group">
-                        <label>Location:</label>
-                        <select id="locationFilter" onchange="applyFilters()">
-                            <option value="">All Locations</option>
-                            <option value="dhaka">Dhaka</option>
-                            <option value="chittagong">Chittagong</option>
-                            <option value="sylhet">Sylhet</option>
-                            <option value="rajshahi">Rajshahi</option>
+                        <label for="eventFilter">Event:</label>
+                        <select id="eventFilter">
+                            <!-- Options will be populated dynamically -->
                         </select>
                     </div>
-                    
                     <div class="filter-group">
-                        <label>Sort by:</label>
-                        <select id="sortFilter" onchange="applyFilters()">
+                        <label for="locationFilter">Location:</label>
+                        <select id="locationFilter">
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="sortFilter">Sort by:</label>
+                        <select id="sortFilter">
                             <option value="recent">Most Recent</option>
                             <option value="trending">Trending</option>
                             <option value="urgent">Most Urgent</option>
                             <option value="funded">Well Funded</option>
                         </select>
                     </div>
-                    
-                    <button class="clear-filters" onclick="clearFilters()">
-                        <i class="fas fa-times"></i> Clear All
+                    <button class="clear-filters" title="Clear All Filters" aria-label="Clear All Filters">
+                        <i class="fas fa-times"></i> <span>Clear All</span>
                     </button>
                 </div>
             </div>
-
-            <!-- Loading Animation -->
-            <div class="loading-container" id="loading">
+            <div class="loading-container" id="loadingContainer" style="display:none;">
                 <div class="loading-spinner">
                     <div class="spinner"></div>
                     <p>Finding campaigns for you...</p>
                 </div>
             </div>
-
-            <!-- Search Results -->
             <div class="results-section">
                 <div class="results-header" id="resultsHeader">
-                    <span class="results-count">Showing <span id="resultCount">6</span> campaigns</span>
+                    <span class="results-count">Showing <span id="resultCount">0</span> campaigns</span>
                 </div>
                 <div class="search-results grid-view" id="searchResults"></div>
+                <!-- No dummy campaigns or images. Results will be rendered dynamically. -->
             </div>
         </div>
     </div>
-
-
-    <!-- JavaScript -->
-    <script>
-        const sampleCampaigns = [
-            {
-                title: "Medical Aid for Flood Victims",
-                description: "Support emergency medical supplies for the flood-affected people of Sylhet.",
-                image: "images/medical.jpg",
-                tags: ["trending", "nonprofit"]
-            },
-            {
-                title: "Education for All",
-                description: "Help provide books and tuition support to underprivileged kids in rural areas.",
-                image: "images/education.jpg",
-                tags: ["nonprofit"]
-            },
-            {
-                title: "Safe Sanitation in Slums",
-                description: "Install hygienic toilets and clean water systems in Dhaka’s urban slums.",
-                image: "images/sanitation.jpg",
-                tags: ["near", "trending"]
-            }
-        ];
-
-        const input = document.getElementById("searchInput");
-        const results = document.getElementById("searchResults");
-        const loading = document.getElementById("loading");
-
-        function showCampaigns(filtered) {
-            results.innerHTML = '';
-            loading.style.display = 'block';
-            setTimeout(() => {
-                loading.style.display = 'none';
-                if (filtered.length === 0) {
-                    results.innerHTML = "<p class='no-results'>No campaigns found.</p>";
-                    return;
-                }
-                filtered.forEach((camp, index) => {
-                    const card = document.createElement('div');
-                    card.classList.add('campaign-card');
-                    card.style.animationDelay = `${index * 0.1}s`;
-                    card.innerHTML = `
-                        <img src="${camp.image}" alt="${camp.title}">
-                        <div class="campaign-title">${camp.title}</div>
-                        <div class="campaign-desc">${camp.description}</div>
-                    `;
-                    results.appendChild(card);
-                });
-            }, 500);
-        }
-
-        function filterCampaigns(tag) {
-            const filtered = sampleCampaigns.filter(c => c.tags.includes(tag));
-            showCampaigns(filtered);
-        }
-
-        input.addEventListener('input', () => {
-            const val = input.value.toLowerCase();
-            const filtered = sampleCampaigns.filter(c =>
-                c.title.toLowerCase().includes(val) || c.description.toLowerCase().includes(val)
-            );
-            showCampaigns(filtered);
-        });
-
-        // Show all initially
-        if (
-    window.location.pathname.endsWith("search.html")
-  ) {
-    document.querySelector('.search-link').classList.add('active');
-  }
-        showCampaigns(sampleCampaigns);
-    </script>
+    <script src="search.js"></script>
 </body>
 </html>
