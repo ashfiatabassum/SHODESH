@@ -180,8 +180,12 @@
     </div>
 
    <div class="navbar">
+    
   <div class="logo"><strong>SHODESH</strong></div>
   <div class="nav-links">
+     <button class="profile-btn" onclick="goToProfile()" title="Profile" style="background:none; border:none; cursor:pointer;">
+    <img src="images/profile-icon.png" alt="Profile" style="width:32px; height:32px; vertical-align:middle; border-radius:50%; margin-right:8px;">
+  </button>
    <a href="index.html" class="home-link">Home</a>
     <a href="about.html" class="about-link">About</a>
     <a href="#">Gallery</a>
@@ -465,7 +469,33 @@
     margin-top: 0;
     width: 100%;
   }
+  .profile-btn img {
+  box-shadow: 0 2px 8px rgba(34,60,80,0.10);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.profile-btn:hover img {
+  box-shadow: 0 6px 18px rgba(34,60,80,0.18);
+  transform: scale(1.08);
+}
+
     </style>  
+
+
+<script>
+function goToProfile() {
+  // Check which user type is signed in
+  if (localStorage.getItem('foundationId')) {
+    window.location.href = "profilefoundation.html";
+  } else if (localStorage.getItem('donorId')) {
+    window.location.href = "profiledonor.html";
+  } else if (localStorage.getItem('individualId')) {
+    window.location.href = "profileindividual.html";
+  } else {
+    // Not signed in, go to sign in page
+    window.location.href = "signin.html";
+  }
+}
+</script>
     <script>
   // Highlight Home link only on homepage
   if (
