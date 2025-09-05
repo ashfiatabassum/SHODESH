@@ -1,0 +1,139 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #4a7c59 100%);
+  min-height: 100vh;
+  position: relative;
+}
+.background-pattern {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: url('pattern.svg'), linear-gradient(135deg, #e0e7ff 0%, #f8fafc 100%);
+  opacity: 0.08;
+  z-index: 0;
+  pointer-events: none; /* <-- This line allows interaction with form elements */
+}
+.container {
+  max-width: 420px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(60, 60, 120, 0.15);
+  padding: 32px 24px 24px 24px;
+  position: relative;
+  z-index: 1;
+}
+.home-button-container {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+}
+.home-btn {
+  background: linear-gradient(135deg, #4a7c59, #7cd296);
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  padding: 8px 18px;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(60, 60, 120, 0.08);
+  transition: background 0.2s;
+}
+.home-btn:hover {
+  background: linear-gradient(135deg, #7cd296, #4a7c59);
+}
+.edit-header {
+  text-align: center;
+  margin-bottom: 18px;
+}
+.edit-header h2 {
+  color: #4a7c59;
+  font-size: 2rem;
+  margin-bottom: 6px;
+}
+.edit-header .subtitle {
+  color: #64748b;
+  font-size: 1rem;
+  margin-bottom: 0;
+}
+.edit-form {
+  margin-top: 18px;
+}
+.form-group {
+  margin-bottom: 22px;
+  display: flex;
+  flex-direction: column;
+}
+.form-group label {
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 7px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.input-field {
+  padding: 10px 14px;
+  border: 1.5px solid #c7d2fe;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #f1f5f9;
+  color: #374151;
+  transition: border-color 0.2s;
+}
+.input-field:focus {
+  border-color: #4a7c59;
+  outline: none;
+  background: #fff;
+}
+.required {
+  color: #ef4444;
+  font-size: 1.1em;
+  margin-left: 2px;
+}
+.form-actions {
+  text-align: center;
+  margin-top: 12px;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #4a7c59, #7acf94);
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  padding: 10px 28px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(60, 60, 120, 0.08);
+  transition: background 0.2s;
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, #73b687, #4a7c59);
+}
+#updateMessage {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+#updateMessage.success {
+  color: #22c55e;
+}
+#updateMessage.error {
+  color: #ef4444;
+}
+.edit-footer {
+  text-align: center;
+  margin-top: 32px;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+@media (max-width: 600px) {
+  .container {
+    max-width: 98vw;
+    padding: 18px 6vw 18px 6vw;
+  }
+  .edit-header h2 {
+    font-size: 1.4rem;
+  }
+}
