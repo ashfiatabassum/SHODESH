@@ -196,10 +196,17 @@ document.getElementById("signin").addEventListener("click", async () => {
     removeLoadingAlert();
     
     if (response.ok && data.success) {
-      // Store donor data and redirect to profile
-      localStorage.setItem('donorId', data.donorId);
-      localStorage.setItem('donorData', JSON.stringify(data.donorData));
-      localStorage.setItem('userType', 'donor');
+     // Ensure donorId is inside personalInfo
+   
+
+    // Store donor data and user type in localStorage
+    localStorage.setItem('donorId', data.donorId);
+    localStorage.setItem('donorData', JSON.stringify(data.donorData));
+    localStorage.setItem('userType', 'donor');
+
+
+     data.donorData.personalInfo.donorId = data.donorId;
+
       
       showCustomAlert(
         `🎉 <strong>Welcome back, ${data.donorData.personalInfo.firstName}!</strong><br><br>
@@ -219,6 +226,72 @@ document.getElementById("signin").addEventListener("click", async () => {
     // Both signin attempts failed - show detailed error message
     console.log('❌ Both signin attempts failed');
     console.log('Donor error message:', data.message);
+
+
+
+    
+
+
+    // After donor sign-in fails, try foundation sign-in
+console.log('🔐 Donor signin failed, trying foundation signin...');
+console.log('Donor error message:', data.message);
+
+// Update loading message
+removeLoadingAlert();
+showCustomAlert('🔐 Checking foundation credentials... Please wait.', 'loading');
+
+response = await fetch('/api/foundation/signin', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    username: user,
+    password: pass
+  })
+});
+
+console.log('📊 Foundation response status:', response.status);
+
+try {
+  data = await response.json();
+} catch (parseError) {
+  console.error('❌ Failed to parse foundation response as JSON:', parseError);
+  data = { success: false, message: 'Server response error' };
+}
+
+console.log('📋 Foundation sign in response:', data);
+
+// Remove loading alert
+removeLoadingAlert();
+
+if (response.ok && data.success) {
+  // Store donor data and user type in localStorage
+    localStorage.setItem('foundationId', data.foundationId);
+    localStorage.setItem('foundationData', JSON.stringify(data.foundationData));
+    localStorage.setItem('userType', 'foundation');
+
+
+
+  showCustomAlert(
+    `🎉 <strong>Welcome back, ${data.foundationData.foundationName}!</strong><br><br>
+    Successfully signed in as a <strong>Foundation</strong>.<br><br>
+    <small>Redirecting to your profile...</small>`, 
+    'success', 
+    3000
+  );
+
+  // Redirect to foundation profile after delay
+  setTimeout(() => {
+    window.location.href = 'profilefoundation.html';
+  }, 3000);
+  return;
+}
+
+
+
+
+
     
     let errorMessage = 'Invalid username or password.';
     
