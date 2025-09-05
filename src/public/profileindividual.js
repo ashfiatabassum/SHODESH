@@ -418,6 +418,13 @@ function formatDate(dateString) {
   });
 }
 
+function logout() {
+  if (confirm('Are you sure you want to logout? This will clear your session data.')) {
+    localStorage.clear();
+    window.location.href = 'index.html';
+  }
+}
+
 // Animation function
 function animateCards() {
   const cards = document.querySelectorAll('.info-card, .profile-header');
