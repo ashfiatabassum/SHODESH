@@ -204,8 +204,11 @@ router.post('/register', async (req, res) => {
 
     console.log('🎉 Registration successful for donor:', donorId);
     
-    // Return donor data for profile page
-    res.status(201).json({
+  // Store session (auto sign-in after registration)
+  try { if (req.session) { req.session.donorId = donorId; req.session.donorUsername = username; } } catch(e){ console.warn('⚠️ Unable to persist session after registration:', e.message); }
+
+  // Return donor data for profile page
+  res.status(201).json({
       success: true,
       message: 'Donor registered successfully!',
       donorId: donorId,
@@ -344,8 +347,11 @@ router.post('/signin', async (req, res) => {
       ]
     };
 
-    // Return success response with donor data
-    res.status(200).json({
+  // Persist donor session
+  try { if (req.session){ req.session.donorId = donor.donor_id; req.session.donorUsername = donor.username; } } catch(e){ console.warn('⚠️ Unable to set donor session:', e.message);}    
+
+  // Return success response with donor data
+  res.status(200).json({
       success: true,
       message: 'Sign in successful',
       donorId: donor.donor_id,
@@ -533,3 +539,24 @@ router.put('/update/:donorId', async (req, res) => {
 
 
 module.exports = router;
+// --- Additional session-based helper routes ---
+// GET /api/donor/me -> returns current signed in donor session (lightweight)
+router.get('/me', (req, res) => {
+  if (req.session && req.session.donorId) {
+    return res.json({ success:true, signedIn:true, donorId: req.session.donorId, username: req.session.donorUsername });
+  }
+  res.json({ success:true, signedIn:false });
+});
+
+// POST /api/donor/signout -> destroy donor session
+router.post('/signout', (req, res) => {
+  if (!req.session) return res.json({ success:true, signedIn:false });
+  const id = req.session.donorId;
+  req.session.destroy(err => {
+    if (err) {
+      console.error('❌ Error destroying donor session:', err);
+      return res.status(500).json({ success:false, message:'Failed to sign out' });
+    }
+    res.json({ success:true, message:'Signed out', donorId:id });
+  });
+});
