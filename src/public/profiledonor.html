@@ -133,21 +133,7 @@
           </div>
         </div>
         <div class="card-content" id="donation-history">
-          <div class="donation-stats">
-            <div class="stat-card">
-              <i class="fas fa-hand-holding-heart"></i>
-              <div>
-                <span class="stat-number" id="thisMonth">৳0</span>
-                <span class="stat-text">This Month</span>
-              </div>
-            </div>
-            <div class="stat-card">
-              <i class="fas fa-calendar-year"></i>
-              <div>
-                <span class="stat-number" id="thisYear">৳0</span>
-                <span class="stat-text">This Year</span>
-              </div>
-            </div>
+       
             <div class="stat-card">
               <i class="fas fa-trophy"></i>
               <div>
@@ -161,10 +147,7 @@
             <!-- Donations will be loaded here -->
           </div>
           
-          <div class="load-more-container">
-            <button class="btn-outline" onclick="loadMoreDonations()">
-              <i class="fas fa-plus"></i> Load More
-            </button>
+          
           </div>
         </div>
       </section>
@@ -225,6 +208,14 @@
     </div>
   </div>
 
+  <!-- Add this before the footer section -->
+<div class="logout-section" style="text-align:center; margin: 32px 0 0 0;">
+  <button class="btn-secondary" onclick="logout()" style="padding: 12px 32px; border-radius: 24px; font-size: 1.1rem;">
+    <i class="fas fa-sign-out-alt"></i> Logout
+  </button>
+</div>
+
+
   <script src="profiledonor.js"></script>
 
   <script>
@@ -233,5 +224,8 @@
   }
 </script>
 
+
+
+
 </body>
-</html>
+</html> 
