@@ -1237,3 +1237,54 @@ END $$
 DELIMITER ;
 
 
+INSERT INTO DONOR (
+  donor_id, first_name, last_name, username, email, password, country, division, date_of_birth
+) VALUES
+('D000001', 'Fernaz', 'Rahman', 'fernazr', 'fernaz@example.com', 'securepass1', 'Bangladesh', 'Dhaka', '1992-03-15'),
+('D000002', 'Imran', 'Hossain', 'imranh', 'imran@example.com', 'securepass2', 'Bangladesh', 'Chittagong', '1988-07-22'),
+('D000003', 'Sara', 'Khan', 'sarak', 'sara@example.com', 'securepass3', 'India', NULL, '1995-11-05');
+INSERT INTO DONOR (
+  donor_id, first_name, last_name, username, email, password, country, division, date_of_birth
+) VALUES
+('D000004', 'Nanjiba', 'Farazi', 'nifarazi', 'fnanjiba@example.com', 'securepass1', 'Bangladesh', 'Dhaka', '1992-03-15'),
+('D000005', 'Ashfia', 'Tabassum', 'ashfia', 'ashfian@example.com', 'securepass2', 'Bangladesh', 'Chittagong', '1988-07-22'),
+('D000006', 'Prionti', 'Nazia', 'nazia', 'nazia@example.com', 'securepass3', 'India', NULL, '1995-11-05');
+
+
+
+-- Individual-created event
+INSERT INTO EVENT_CREATION (
+  creation_id, creator_type, individual_id, foundation_id, ebc_id, title, description, flag,
+  amount_needed, amount_received, division, doc, cover_photo, verification_status, lifecycle_status,
+  second_verification_required, created_at, updated_at
+) VALUES
+('EVT1003', 'individual', 'I000001', NULL, 'EBC0001', 'Flood Relief Banani', 'Emergency flood relief for Banani area.', 0,
+  50000.00, 0.00, 'Dhaka', NULL, NULL, 'verified', 'active', 0, NOW(), NOW());
+
+-- Foundation-created event
+INSERT INTO EVENT_CREATION (
+  creation_id, creator_type, individual_id, foundation_id, ebc_id, title, description, flag,
+  amount_needed, amount_received, division, doc, cover_photo, verification_status, lifecycle_status,
+  second_verification_required, created_at, updated_at
+) VALUES
+('EVT1004', 'foundation', NULL, 'F000001', 'EBC0002', 'Cyclone Relief Uttara', 'Cyclone relief for Uttara.', 0,
+  75000.00, 0.00, 'Dhaka', NULL, NULL, 'verified', 'active', 0, NOW(), NOW());
+ INSERT INTO DONATION (creation_id, donor_id, amount)
+VALUES
+  ('EVT1003', 'D000001', 500.00),
+  ('EVT1003', 'D000001', 1200.00),
+  ('EVT1004', 'D000003', 750.00);
+  
+  INSERT INTO DONATION (creation_id, donor_id, amount)
+VALUES
+  ('EVT1003', 'D000004', 200.00),
+  ('EVT1003', 'D000004', 1200.00),
+  ('EVT1004', 'D000004', 750.00),
+  ('EVT1003', 'D000005', 1200.00),
+  ('EVT1003', 'D000005', 1200.00),
+  ('EVT1003', 'D000006', 1200.00);
+  
+
+
+
+
