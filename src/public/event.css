@@ -1,0 +1,41 @@
+/* SHODESH — Event Detail Page Styles */
+:root {
+  --brand: #4a7c59;
+  --brand-dark: #2d4a35;
+  --text: #1a3c2f;
+  --muted: #64748b;
+  --bg: #f7faf9;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial; }
+
+.header { padding: 16px 24px; background: white; box-shadow: 0 1px 0 rgba(0,0,0,.06); display:flex; align-items:center; justify-content:space-between; }
+.header .brand { font-weight: 700; color: var(--brand-dark); text-decoration: none; letter-spacing: .3px; }
+
+.container { max-width: 1120px; margin: 24px auto; padding: 0 16px; }
+
+.hero { display:grid; grid-template-columns: 1.2fr 1fr; gap: 24px; align-items: start; }
+.hero .media { border-radius: 16px; overflow: hidden; background: #e2e8f0; box-shadow: 0 10px 24px rgba(16,24,40,.08); }
+.hero .media img { width:100%; height: auto; display:block; }
+.hero .meta { padding: 8px 0 0; display:flex; gap: 8px; flex-wrap: wrap; }
+.badge { background: #e6f4ea; color: var(--brand-dark); border: 1px solid #cde7d5; border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 600; }
+
+.title { font-size: 28px; margin: 8px 0 12px; }
+.sub { color: var(--muted); margin: 0 0 16px; }
+.kv { display:flex; gap: 24px; flex-wrap: wrap; }
+.kv .item { background:white; border:1px solid #eef2f7; border-radius:12px; padding:12px 14px; min-width: 180px; }
+.kv .item .k { font-size:12px; color: var(--muted) }
+.kv .item .v { font-size:16px; font-weight:600; }
+
+.progress { height: 10px; background: #edf2f7; border-radius: 999px; overflow:hidden; margin: 14px 0; }
+.progress .bar { height:100%; background: var(--brand); width: 0; transition: width .5s ease; }
+
+.section { margin: 28px 0; background:white; border:1px solid #eef2f7; border-radius:16px; padding: 16px; }
+.section h2 { margin: 0 0 12px; font-size: 18px; }
+
+.actions { display:flex; gap:12px; margin-top: 12px; }
+.btn { appearance:none; border:0; border-radius:10px; padding:10px 14px; font-weight:600; cursor:pointer; }
+.btn.primary { background: var(--brand); color: white; }
+.btn.secondary { background: #eaf3ed; color: var(--brand-dark); }
+
+footer { padding: 32px 0; color: var(--muted); text-align:center; }

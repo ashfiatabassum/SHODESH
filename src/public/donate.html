@@ -1,70 +1,257 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Donate - Shodesh</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Donate • SHODESH</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: 'Roboto', sans-serif;
-      margin: 0;
-      padding: 40px;
-      background-color: #f5f5f5;
-      text-align: center;
+    :root {
+      --brand:#4a7c59;
+      --brand-accent:#2d5c3d;
+      --bg:#f5f9f7;
+      --panel:#ffffff;
+      --border:#e2e8f0;
+      --text:#1a3c2f;
+      --muted:#64748b;
+      --danger:#c2410c;
+      --focus:#2563eb;
+      --radius:18px;
+      --grad:linear-gradient(135deg,#4a7c59 0%, #6aa57b 60%, #8fc99a 100%);
     }
-    form {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      display: inline-block;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    input[type="number"] {
-      padding: 10px;
-      width: 200px;
-      font-size: 16px;
-      margin-bottom: 10px;
-    }
-    button {
-      background-color: #588b76;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      cursor: pointer;
-      font-size: 16px;
-      border-radius: 5px;
-    }
-    #message {
-      margin-top: 15px;
-      font-weight: bold;
-      color: green;
-    }
+    *{box-sizing:border-box;}
+    body {margin:0;font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;}
+    a {text-decoration:none;color:var(--brand-accent);} a:hover{ text-decoration:underline; }
+    header {display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:var(--panel);box-shadow:0 1px 0 rgba(0,0,0,.06);position:sticky;top:0;z-index:10;}
+    header .logo {font-weight:700;font-size:18px;letter-spacing:.5px;color:var(--brand-accent);}    
+    main {max-width:1120px;margin:32px auto;padding:0 20px;display:grid;grid-template-columns: minmax(0,640px) minmax(0,360px);gap:34px;align-items:start;}
+    @media (max-width:1080px){ main{grid-template-columns:1fr;}}
+
+    .panel {background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:28px;box-shadow:0 8px 28px -6px rgba(16,24,40,.08);position:relative;overflow:hidden;}
+    .panel.gradient:before {content:"";position:absolute;inset:0;background:var(--grad);opacity:.10;pointer-events:none;}
+    h1 {margin:0 0 10px;font-size:30px;line-height:1.15;}
+    p.lead {margin:0 0 20px;color:var(--muted);font-size:15px;}
+    .campaign-meta {display:flex;flex-wrap:wrap;gap:10px;margin:8px 0 18px;}
+    .tag {background:#e6f4ea;color:var(--brand-accent);padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid #cfe7d7;}
+
+    .progress-wrap {margin:18px 0 26px;}
+    .progress-bar {height:12px;background:#edf2f7;border-radius:999px;overflow:hidden;position:relative;}
+    .progress-fill {height:100%;background:var(--grad);width:0;transition:width .7s cubic-bezier(.65,.05,.36,1);}
+    .progress-stats {display:flex;justify-content:space-between;font-size:13px;margin-top:6px;color:var(--muted);font-weight:500;}
+
+    form#donateForm {display:flex;flex-direction:column;gap:18px;}
+    .amount-row {display:flex;flex-wrap:wrap;gap:10px;}
+    .amount-chip {flex:1 1 100px;background:#f1f5f9;border:1px solid #dce4ec;border-radius:12px;padding:10px 14px;text-align:center;font-weight:600;font-size:14px;color:#294237;cursor:pointer;transition:.25s;}
+    .amount-chip:hover {background:#e3efe9;border-color:#c3d9cd;}
+    .amount-chip.active {background:var(--brand);color:#fff;box-shadow:0 0 0 2px #ffffff,0 0 0 4px rgba(74,124,89,.35);}
+
+    .field {display:flex;flex-direction:column;gap:6px;}
+    .field label {font-size:13px;font-weight:600;letter-spacing:.3px;color:#264232;text-transform:uppercase;}
+    .field input[type=number], .field input[type=text], .field input[type=email] {padding:14px 16px;border:1px solid var(--border);border-radius:14px;background:#f8faf9;font-size:15px;transition:.25s;outline:none;}
+    .field input:focus {border-color:var(--brand);background:#ffffff;box-shadow:0 0 0 3px rgba(74,124,89,.25);}
+    .inline-two {display:grid;grid-template-columns:1fr 1fr;gap:14px;} @media (max-width:640px){.inline-two{grid-template-columns:1fr;}}
+
+    .secure-note {display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-top:-4px;}
+    .secure-note i {color:var(--brand);}
+
+    button.primary {appearance:none;border:0;background:var(--grad);color:#fff;font-weight:600;font-size:16px;padding:14px 20px;border-radius:14px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;justify-content:center;box-shadow:0 6px 20px -4px rgba(74,124,89,.35);transition:.3s;}
+    button.primary:hover {transform:translateY(-2px);box-shadow:0 10px 24px -6px rgba(74,124,89,.45);}    
+    button.primary:active {transform:translateY(0);}
+    button.primary:disabled {opacity:.55;cursor:not-allowed;}
+    .small-text {font-size:12px;color:var(--muted);margin-top:10px;line-height:1.4;}
+
+    .summary {display:flex;flex-direction:column;gap:18px;}
+    .summary h2 {margin:0;font-size:20px;}
+    .summary-item {display:flex;justify-content:space-between;font-size:14px;color:var(--text);}
+    .summary-item .k {color:var(--muted);}    
+    .divider {height:1px;background:var(--border);margin:4px 0;}
+    .notif {margin-top:18px;font-size:13px;font-weight:600;}
+    .notif.success {color:#166534;}
+    .notif.error {color:var(--danger);}
+
+    footer {text-align:center;padding:40px 0 60px;font-size:12px;color:var(--muted);}    
   </style>
 </head>
 <body>
-  <h1>Enter Donation Amount</h1>
-  <form id="donateForm">
-    <input type="number" id="amount" placeholder="Enter amount" required />
-    <br>
-    <button type="submit">Submit</button>
-  </form>
-  <p id="message"></p>
+  <header>
+    <a href="search.html" class="logo">SHODESH</a>
+    <nav style="font-size:14px;display:flex;gap:18px;">
+      <a href="index.html">Home</a>
+      <a href="search.html">Explore</a>
+      <a href="resources.html">Resources</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Left: Donation Form -->
+    <section class="panel gradient" id="donatePanel">
+      <h1 id="campaignTitle">Support this Campaign</h1>
+      <p class="lead" id="campaignTagline">Loading campaign details…</p>
+
+      <div class="campaign-meta" id="campaignMeta"></div>
+
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-stats" id="progressStats"><span>৳0 raised</span><span>Goal ৳0</span></div>
+      </div>
+
+  <form id="donateForm" novalidate>
+        <div class="amount-row" id="quickAmounts">
+          <div class="amount-chip" data-amt="500">৳500</div>
+          <div class="amount-chip" data-amt="1000">৳1k</div>
+          <div class="amount-chip" data-amt="2000">৳2k</div>
+          <div class="amount-chip" data-amt="5000">৳5k</div>
+          <div class="amount-chip" data-amt="10000">৳10k</div>
+        </div>
+
+        <div class="field">
+          <label for="amount">Donation Amount (৳)</label>
+          <input type="number" id="amount" min="10" step="10" placeholder="Enter amount (min 10)" required />
+        </div>
+        <div class="secure-note"><i>🔒</i><span>Secure processing — amounts are recorded instantly.</span></div>
+        <button class="primary" id="submitBtn" type="submit">Donate Now</button>
+        <div class="notif" id="formMessage" hidden></div>
+        <p class="small-text">By donating you agree to our community guidelines. Refunds are issued only for accidental duplicate transactions within 24 hours.</p>
+      </form>
+    </section>
+
+    <!-- Right: Summary / Context -->
+    <aside class="panel summary" id="summaryPanel">
+      <h2>Campaign Overview</h2>
+      <div class="summary-item"><span class="k">Campaign</span><span id="sName">—</span></div>
+      <div class="summary-item"><span class="k">Category</span><span id="sCategory">—</span></div>
+      <div class="summary-item"><span class="k">Location</span><span id="sDivision">—</span></div>
+      <div class="divider"></div>
+      <div class="summary-item"><span class="k">Goal</span><span id="sGoal">৳0</span></div>
+      <div class="summary-item"><span class="k">Raised</span><span id="sRaised">৳0</span></div>
+      <div class="summary-item"><span class="k">Progress</span><span id="sPct">0%</span></div>
+      <div class="divider"></div>
+      <div class="summary-item"><span class="k">Organizer</span><span id="sOrganizer">—</span></div>
+      <div class="summary-item"><span class="k">Contact</span><span id="sContact">—</span></div>
+      <div class="divider"></div>
+      <div class="small-text" id="sBlurb">Your contribution helps this initiative move forward. Every taka matters.</div>
+    </aside>
+  </main>
+
+  <footer>© SHODESH • Building Impact Together</footer>
 
   <script>
-    document.getElementById('donateForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const amount = document.getElementById('amount').value;
+    const qs = (s)=>document.querySelector(s);
+    const params = new URLSearchParams(location.search);
+    const creationId = params.get('creation_id');
+  // We'll lazily check session only when submitting
 
-      const res = await fetch('/donate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount })
-      });
+    function formatBDT(n){
+      const num = Number(n||0);
+      return '৳' + num.toLocaleString('en-BD', {maximumFractionDigits:0});
+    }
 
-      const data = await res.json();
-      document.getElementById('message').textContent = data.message;
+    async function loadCampaign(){
+      if(!creationId) return;
+      try {
+        const r = await fetch(`/api/events/${encodeURIComponent(creationId)}`);
+        const j = await r.json();
+        if(!j.success) throw new Error(j.message||'Failed');
+        const e = j.data;
+        qs('#campaignTitle').textContent = e.title;
+        qs('#campaignTagline').textContent = e.event_type_name ? `${e.event_type_name} • ${e.category_name}` : e.category_name;
+        qs('#campaignMeta').innerHTML = `
+          <span class="tag">${e.category_name||''}</span>
+          <span class="tag">${e.event_type_name||''}</span>
+          <span class="tag">${e.division||''}</span>
+        `;
+        const pct = (Number(e.amount_needed)>0)? Math.round((Number(e.amount_received)/Number(e.amount_needed))*100):0;
+        qs('#progressFill').style.width = pct + '%';
+        qs('#progressStats').innerHTML = `<span>${formatBDT(e.amount_received)} raised</span><span>Goal ${formatBDT(e.amount_needed)}</span>`;
+        qs('#sName').textContent = e.title;
+        qs('#sCategory').textContent = e.category_name;
+        qs('#sDivision').textContent = e.division;
+        qs('#sGoal').textContent = formatBDT(e.amount_needed);
+        qs('#sRaised').textContent = formatBDT(e.amount_received);
+        qs('#sPct').textContent = pct + '%';
+        qs('#sOrganizer').textContent = e.organizer || '—';
+        qs('#sContact').textContent = e.contact_phone || e.contact_email || '—';
+        qs('#sBlurb').textContent = 'This initiative depends on community support. Your donation directly accelerates impact.';
+      } catch(err){
+        console.error(err);
+        qs('#campaignTitle').textContent = 'Campaign unavailable';
+        qs('#campaignTagline').textContent = 'We could not load the campaign details.';
+      }
+    }
+
+    async function fetchDonorSession(){
+      try { const r = await fetch('/api/donor/me'); return await r.json(); } catch{ return { signedIn:false }; }
+    }
+
+    function selectQuickAmount(el){
+      document.querySelectorAll('.amount-chip').forEach(c=>c.classList.remove('active'));
+      el.classList.add('active');
+      qs('#amount').value = el.dataset.amt;
+    }
+
+    document.addEventListener('click', e => {
+      const chip = e.target.closest('.amount-chip');
+      if(chip) selectQuickAmount(chip);
     });
+
+    qs('#donateForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const amount = Number(qs('#amount').value);
+      const msgEl = qs('#formMessage');
+      msgEl.hidden = true; msgEl.className = 'notif';
+      if(!amount || amount < 10){
+        msgEl.textContent = 'Minimum donation is 10.'; msgEl.classList.add('error'); msgEl.hidden=false; return;
+      }
+      qs('#submitBtn').disabled = true;
+      try {
+        const res = await fetch('/donate', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ amount, creation_id: creationId })});
+        const data = await res.json();
+        if(res.status === 401){
+          const redirectTarget = encodeURIComponent(location.pathname + location.search);
+            msgEl.innerHTML = `Please <a href="signin.html?redirect=${redirectTarget}" style="color:var(--brand-accent);font-weight:600;">sign in</a> to donate.`;
+            msgEl.classList.add('error');
+            msgEl.hidden = false;
+            return;
+        }
+        if(res.ok){
+          msgEl.textContent = data.message || 'Donation recorded. Thank you!';
+          msgEl.classList.add('success');
+          msgEl.hidden = false;
+          document.querySelectorAll('.amount-chip').forEach(c=>c.classList.remove('active'));
+          qs('#donateForm').reset();
+          // 🔄 Immediately refresh campaign stats to reflect new amount_received
+          try {
+            await loadCampaign();
+          } catch(refreshErr){ console.warn('Post-donation refresh failed:', refreshErr); }
+          // 📢 Broadcast lightweight notification (other tabs/pages can listen via storage event)
+          try { localStorage.setItem('shodesh:lastDonation', JSON.stringify({creationId, amount, ts:Date.now()})); } catch{}
+        } else {
+          throw new Error(data.message || 'Donation failed');
+        }
+      } catch(err){
+        msgEl.textContent = err.message;
+        msgEl.classList.add('error');
+        msgEl.hidden = false;
+      } finally {
+        qs('#submitBtn').disabled = false;
+      }
+    });
+
+    loadCampaign();
+  // No proactive gating; rely on server response.
+  // 👂 Listen for donation events from other tabs; if same campaign updated, refresh numbers.
+  window.addEventListener('storage', ev => {
+    if(ev.key === 'shodesh:lastDonation'){
+      try {
+        const payload = JSON.parse(ev.newValue||'{}');
+        if(payload.creationId === creationId){
+          loadCampaign();
+        }
+      } catch{}
+    }
+  });
   </script>
 </body>
 </html>

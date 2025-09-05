@@ -4,7 +4,8 @@ SHOW VARIABLES LIKE 'secure_file_priv';
 -- NOTE: Added use of functions, GROUP BY, CASE expressions, views, JOINs,
 --       PL/SQL routines, and exception handling where appropriate.
 --       (Grammar fixed for clarity.)
-
+GRANT SELECT ON shodesh.* TO 'root'@'localhost';
+FLUSH PRIVILEGES;
 -- ========================
 -- Table: INDIVIDUAL
 -- ========================
@@ -196,7 +197,7 @@ DROP TABLE IF EXISTS EVENT_CREATION;
 DROP TABLE IF EXISTS EVENT_BASED_ON_CATEGORY;
 DROP TABLE IF EXISTS EVENT_TYPE;
 DROP TABLE IF EXISTS CATEGORY;
-
+SELECT * FROM event_type;
 /* ===================== CATEGORY / EVENT_TYPE ===================== */
 CREATE TABLE CATEGORY (
   category_id    VARCHAR(7)  NOT NULL,
@@ -811,4 +812,428 @@ BEGIN
 END $$
 
 DELIMITER ;
+
+USE shodesh;
+
+START TRANSACTION;
+
+-- 1) INDIVIDUAL (safe upsert)
+INSERT INTO INDIVIDUAL (
+  individual_id, first_name, last_name, username, email, password,
+  mobile, nid, dob, house_no, road_no, area, district,
+  administrative_div, zip, bkash, bank_account
+) VALUES
+('I920010','Naeem','Hasan','naeem_h','naeem.h@example.com','pass920010',
+ '01792100100','1999999999999','1997-01-15','22','7','Mirpur','Dhaka',
+ 'Dhaka','1216','01792100101','123456789012345001')
+ON DUPLICATE KEY UPDATE email=VALUES(email);
+
+-- 2) FOUNDATION (safe upsert)
+INSERT INTO FOUNDATION (
+  foundation_id, foundation_name, certificate, foundation_license,
+  mobile, email, password, house_no, road_no, area, district,
+  administrative_div, zip, bkash, bank_account, description, status
+) VALUES
+('F920010','Aid Bridge',NULL,'LIC920010000',
+ '01792100102','aidbridge@example.com','passF920010','50','3','Mohakhali','Dhaka',
+ 'Dhaka','1212','01792100103','987654321098765001',
+ 'Health + education micro-grants.','verified')
+ON DUPLICATE KEY UPDATE status='verified';
+
+-- (Optional) sanity: ensure these ebc_ids exist in EVENT_BASED_ON_CATEGORY
+-- SELECT ebc_id, category_id, event_type_id FROM EVENT_BASED_ON_CATEGORY WHERE ebc_id IN ('EBC0013','EBC0010');
+
+-- 3) EVENTS — set verified/active directly (no verification table involved)
+
+-- 3a) Individual-created event
+INSERT INTO EVENT_CREATION (
+  creation_id, creator_type, individual_id, foundation_id, ebc_id,
+  title, description, amount_needed, amount_received, division,
+  verification_status, lifecycle_status
+) VALUES
+('EC92001','individual','I920010',NULL,'EBC0013',
+ 'Scholarships for Rural Students',
+ 'Tuition support for 40 low-income students for 1 year.',
+ 280000.00, 0.00, 'Rajshahi',
+ 'verified','active')
+ON DUPLICATE KEY UPDATE
+  title=VALUES(title),
+  description=VALUES(description),
+  amount_needed=VALUES(amount_needed),
+  division=VALUES(division),
+  verification_status='verified',
+  lifecycle_status='active';
+
+-- 3b) Foundation-created event
+INSERT INTO EVENT_CREATION (
+  creation_id, creator_type, individual_id, foundation_id, ebc_id,
+  title, description, amount_needed, amount_received, division,
+  verification_status, lifecycle_status
+) VALUES
+('EC92002','foundation',NULL,'F920010','EBC0010',
+ 'Emergency Dengue Treatment',
+ 'Platelet support, diagnostics, and hospital costs.',
+ 350000.00, 0.00, 'Dhaka',
+ 'verified','active')
+ON DUPLICATE KEY UPDATE
+  title=VALUES(title),
+  description=VALUES(description),
+  amount_needed=VALUES(amount_needed),
+  division=VALUES(division),
+  verification_status='verified',
+  lifecycle_status='active';
+
+COMMIT;
+
+-- Quick checks
+SELECT creation_id, creator_type, individual_id, foundation_id,
+       verification_status, lifecycle_status, amount_needed, amount_received, division
+FROM EVENT_CREATION
+WHERE creation_id IN ('EC92001','EC92002');
+
+
+
+USE shodesh;
+
+-- EC92003–EC92012: more events (verified + active, amount_received = 0)
+
+INSERT INTO EVENT_CREATION (
+  creation_id, creator_type, individual_id, foundation_id, ebc_id,
+  title, description, amount_needed, amount_received, division,
+  verification_status, lifecycle_status
+) VALUES
+-- 1) individual — Education (EBC0013)
+('EC92003','individual','I920010',NULL,'EBC0013',
+ 'STEM Kits for Rural Schools',
+ 'Provide science kits and teacher guides to 15 secondary schools.',
+ 180000.00,0.00,'Khulna','verified','active'),
+
+-- 2) foundation — Health (EBC0010)
+('EC92004','foundation',NULL,'F920010','EBC0010',
+ 'Free Dengue Test Camp — Chattogram',
+ 'Mobile antigen testing and basic treatment referrals for 6 wards.',
+ 220000.00,0.00,'Chattogram','verified','active'),
+
+-- 3) individual — Disaster Relief (EBC0001)
+('EC92005','individual','I920010',NULL,'EBC0001',
+ 'Flood Relief — Sunamganj',
+ 'Dry food, saline, and purification tablets for 1200 households.',
+ 400000.00,0.00,'Sylhet','verified','active'),
+
+-- 4) foundation — Education (EBC0013)
+('EC92006','foundation',NULL,'F920010','EBC0013',
+ 'Girls’ Scholarship — Barishal',
+ 'School fees and uniforms for 60 girls (Class 6–10).',
+ 250000.00,0.00,'Barishal','verified','active'),
+
+-- 5) individual — Health (EBC0010)
+('EC92007','individual','I920010',NULL,'EBC0010',
+ 'Blood & Platelet Support — Mymensingh',
+ 'Support critical patients with screening, transport, and units.',
+ 260000.00,0.00,'Mymensingh','verified','active'),
+
+-- 6) foundation — Disaster Relief (EBC0001)
+('EC92008','foundation',NULL,'F920010','EBC0001',
+ 'Cyclone Recovery — Bhola',
+ 'Tin sheets, hygiene kits, and temporary shelter materials.',
+ 420000.00,0.00,'Barishal','verified','active'),
+
+-- 7) individual — Education (EBC0013)
+('EC92009','individual','I920010',NULL,'EBC0013',
+ 'Coaching Aid — Rangpur',
+ 'Stipends for HSC examinees’ coaching and exam forms.',
+ 160000.00,0.00,'Rangpur','verified','active'),
+
+-- 8) foundation — Health (EBC0010)
+('EC92010','foundation',NULL,'F920010','EBC0010',
+ 'Dengue Awareness & Nets — Dhaka',
+ 'Community sessions, flyers, and 2000 insecticide-treated nets.',
+ 300000.00,0.00,'Dhaka','verified','active'),
+
+-- 9) individual — Disaster Relief (EBC0001)
+('EC92011','individual','I920010',NULL,'EBC0001',
+ 'Flood Clean Water — Gaibandha',
+ 'Emergency tube-wells servicing and bulk water distribution.',
+ 200000.00,0.00,'Rangpur','verified','active'),
+
+-- 10) foundation — Education (EBC0013)
+('EC92012','foundation',NULL,'F920010','EBC0013',
+ 'University Entrance Grants — Rajshahi',
+ 'Application fees, travel, and initial hostel costs for 35 students.',
+ 310000.00,0.00,'Rajshahi','verified','active')
+ON DUPLICATE KEY UPDATE
+  title=VALUES(title),
+  description=VALUES(description),
+  amount_needed=VALUES(amount_needed),
+  division=VALUES(division),
+  verification_status='verified',
+  lifecycle_status='active';
+
+-- Quick sanity check
+SELECT creation_id, creator_type, individual_id, foundation_id,
+       verification_status, lifecycle_status, amount_needed, amount_received, division
+FROM EVENT_CREATION
+WHERE creation_id BETWEEN 'EC92003' AND 'EC92012'
+ORDER BY creation_id;
+
+
+
+-- event searching 
+
+-- 1) All events (joined with taxonomy + creator)
+DROP VIEW IF EXISTS v_event_catalog;
+CREATE VIEW v_event_catalog AS
+SELECT
+  ec.creation_id,
+  ec.title,
+  ec.description,
+  ec.division,
+  ec.verification_status,
+  ec.lifecycle_status,
+  ec.amount_needed,
+  ec.amount_received,
+  CAST(ROUND(IFNULL(ec.amount_received / NULLIF(ec.amount_needed,0) * 100, 0), 1) AS DECIMAL(5,1)) AS progress_pct,
+
+  -- taxonomy
+  ebc.ebc_id,
+  cat.category_id,  cat.category_name,
+  et.event_type_id, et.event_type_name,
+
+  -- creator
+  ec.creator_type,
+  CASE WHEN ec.creator_type='individual'
+       THEN CONCAT(i.first_name,' ',i.last_name)
+       ELSE f.foundation_name
+  END AS creator_name,
+  CASE WHEN ec.creator_type='individual'
+       THEN i.individual_id
+       ELSE f.foundation_id
+  END AS creator_id,
+
+  -- useful for details page
+  CASE WHEN ec.creator_type='individual' THEN i.mobile ELSE f.mobile END AS contact_phone,
+  CASE WHEN ec.creator_type='individual' THEN i.email  ELSE f.email  END AS contact_email,
+  -- quick summary; keep full text in description
+  LEFT(ec.description, 180) AS short_description
+
+FROM EVENT_CREATION ec
+JOIN EVENT_BASED_ON_CATEGORY ebc ON ebc.ebc_id = ec.ebc_id
+LEFT JOIN CATEGORY     cat ON cat.category_id     = ebc.category_id
+LEFT JOIN EVENT_TYPE   et  ON et.event_type_id    = ebc.event_type_id
+LEFT JOIN INDIVIDUAL   i   ON i.individual_id     = ec.individual_id
+LEFT JOIN FOUNDATION   f   ON f.foundation_id     = ec.foundation_id;
+
+-- 2) Only Verified + Active (what the UI actually shows)
+DROP VIEW IF EXISTS v_event_catalog_open;
+CREATE VIEW v_event_catalog_open AS
+SELECT *
+FROM v_event_catalog
+WHERE verification_status = 'verified'
+  AND lifecycle_status    = 'active';
+
+
+-- Distinct categories in open events
+DROP VIEW IF EXISTS v_event_filters_categories;
+CREATE VIEW v_event_filters_categories AS
+SELECT DISTINCT category_id, category_name
+FROM v_event_catalog_open
+WHERE category_id IS NOT NULL
+ORDER BY category_name;
+
+-- Distinct event types in open events
+DROP VIEW IF EXISTS v_event_filters_event_types;
+CREATE VIEW v_event_filters_event_types AS
+SELECT DISTINCT event_type_id, event_type_name, category_id
+FROM v_event_catalog_open
+WHERE event_type_id IS NOT NULL
+ORDER BY event_type_name;
+
+-- Distinct divisions in open events
+DROP VIEW IF EXISTS v_event_filters_divisions;
+CREATE VIEW v_event_filters_divisions AS
+SELECT DISTINCT
+  category_id,
+  event_type_id,
+  division
+FROM v_event_catalog_open
+WHERE division IS NOT NULL
+ORDER BY division;
+
+
+DELIMITER $$
+
+-- Categories endpoint (only those with open events)
+DROP PROCEDURE IF EXISTS sp_get_categories $$
+CREATE PROCEDURE sp_get_categories()
+BEGIN
+  SELECT category_id, category_name
+  FROM v_event_filters_categories;
+END $$
+
+-- Event types endpoint (optionally filtered by category)
+DROP PROCEDURE IF EXISTS sp_get_event_types $$
+CREATE PROCEDURE sp_get_event_types(IN p_category_id VARCHAR(7))
+BEGIN
+  SELECT event_type_id, event_type_name
+  FROM v_event_filters_event_types
+  WHERE (p_category_id IS NULL OR p_category_id = '' OR category_id = p_category_id);
+END $$
+
+-- Divisions endpoint (filtered by category / event type)
+DROP PROCEDURE IF EXISTS sp_get_divisions $$
+CREATE PROCEDURE sp_get_divisions(
+  IN p_category_id   VARCHAR(7),
+  IN p_event_type_id VARCHAR(7)
+)
+BEGIN
+  SELECT division
+  FROM v_event_filters_divisions
+  WHERE (p_category_id   IS NULL OR p_category_id   = '' OR category_id   = p_category_id)
+    AND (p_event_type_id IS NULL OR p_event_type_id = '' OR event_type_id = p_event_type_id)
+  ORDER BY division;
+END $$
+
+-- Search events (complex join via view + optional params + ranking)
+DROP PROCEDURE IF EXISTS sp_search_events $$
+CREATE PROCEDURE sp_search_events(
+  IN p_category_id   VARCHAR(7),
+  IN p_event_type_id VARCHAR(7),
+  IN p_division      VARCHAR(30),
+  IN p_q             VARCHAR(200)
+)
+BEGIN
+  SELECT
+    creation_id, title, description, short_description, division,
+    amount_needed, amount_received, progress_pct,
+    category_id, category_name, event_type_id, event_type_name,
+    creator_type, creator_name, creator_id
+  FROM v_event_catalog_open
+  WHERE (p_category_id   IS NULL OR p_category_id   = '' OR category_id   = p_category_id)
+    AND (p_event_type_id IS NULL OR p_event_type_id = '' OR event_type_id = p_event_type_id)
+    AND (p_division      IS NULL OR p_division      = '' OR division      = p_division)
+    AND (
+      p_q IS NULL OR p_q = '' OR
+      title       LIKE CONCAT('%', p_q, '%') OR
+      description LIKE CONCAT('%', p_q, '%')
+    )
+  ORDER BY
+    progress_pct DESC,                        -- most funded first
+    (amount_needed - amount_received) DESC,   -- then bigger remaining goals
+    title ASC;
+END $$
+
+-- Single event detail
+DROP PROCEDURE IF EXISTS sp_get_event_detail $$
+CREATE PROCEDURE sp_get_event_detail(IN p_creation_id VARCHAR(7))
+BEGIN
+  SELECT
+    creation_id, title, description, short_description, division,
+    amount_needed, amount_received, progress_pct,
+    category_id, category_name, event_type_id, event_type_name,
+    creator_type, creator_name, creator_id,
+    contact_phone, contact_email
+  FROM v_event_catalog
+  WHERE creation_id = p_creation_id
+  LIMIT 1;
+END $$
+
+DELIMITER ;
+
+-- NEW FUNCTIONS , STORED PROCEDURES , FUNCTIONS PLEASE INSERT
+
+
+DROP VIEW IF EXISTS v_event_donation_stats;
+CREATE VIEW v_event_donation_stats AS
+SELECT
+  d.creation_id,
+  COUNT(*)                           AS total_donations,
+  COUNT(DISTINCT d.donor_id)         AS total_donors,
+  SUM(d.amount)                      AS total_raised,
+  SUM(CASE
+        WHEN YEAR(d.paid_at)=YEAR(CURRENT_DATE)
+         AND MONTH(d.paid_at)=MONTH(CURRENT_DATE)
+       THEN d.amount END)            AS raised_this_month,
+  COUNT(DISTINCT CASE
+        WHEN YEAR(d.paid_at)=YEAR(CURRENT_DATE)
+         AND MONTH(d.paid_at)=MONTH(CURRENT_DATE)
+       THEN d.donor_id END)          AS donors_this_month,
+  MAX(d.paid_at)                     AS last_donation_at
+FROM DONATION d
+GROUP BY d.creation_id;
+
+/* 2. Catalog + stats (all events) */
+DROP VIEW IF EXISTS v_event_catalog_with_stats;
+CREATE VIEW v_event_catalog_with_stats AS
+SELECT
+  c.*,
+  s.total_donors,
+  s.total_donations,
+  s.total_raised,
+  s.raised_this_month,
+  s.donors_this_month,
+  s.last_donation_at
+FROM v_event_catalog c
+LEFT JOIN v_event_donation_stats s
+  ON s.creation_id = c.creation_id;
+
+/* 3. Open (public) events + stats */
+DROP VIEW IF EXISTS v_event_catalog_open_with_stats;
+CREATE VIEW v_event_catalog_open_with_stats AS
+SELECT *
+FROM v_event_catalog_with_stats
+WHERE verification_status='verified'
+  AND lifecycle_status='active';
+
+/* 4. Search with stats */
+DROP PROCEDURE IF EXISTS sp_search_events_stats;
+DELIMITER $$
+CREATE PROCEDURE sp_search_events_stats(
+  IN p_category_id   VARCHAR(7),
+  IN p_event_type_id VARCHAR(7),
+  IN p_division      VARCHAR(30),
+  IN p_q             VARCHAR(200)
+)
+BEGIN
+  SELECT
+    creation_id, title, description, short_description, division,
+    amount_needed, amount_received, progress_pct,
+    category_id, category_name, event_type_id, event_type_name,
+    creator_type, creator_name, creator_id,
+    total_donors, total_donations, total_raised,
+    raised_this_month, donors_this_month, last_donation_at
+  FROM v_event_catalog_open_with_stats
+  WHERE (p_category_id   IS NULL OR p_category_id   = '' OR category_id   = p_category_id)
+    AND (p_event_type_id IS NULL OR p_event_type_id = '' OR event_type_id = p_event_type_id)
+    AND (p_division      IS NULL OR p_division      = '' OR division      = p_division)
+    AND (
+      p_q IS NULL OR p_q = '' OR
+      title LIKE CONCAT('%', p_q, '%') OR
+      description LIKE CONCAT('%', p_q, '%')
+    )
+  ORDER BY
+    progress_pct DESC,
+    (amount_needed - amount_received) DESC,
+    title ASC;
+END $$
+DELIMITER ;
+
+/* 5. Single event detail with stats */
+DROP PROCEDURE IF EXISTS sp_get_event_detail_stats;
+DELIMITER $$
+CREATE PROCEDURE sp_get_event_detail_stats(IN p_creation_id VARCHAR(7))
+BEGIN
+  SELECT
+    creation_id, title, description, short_description, division,
+    amount_needed, amount_received, progress_pct,
+    category_id, category_name, event_type_id, event_type_name,
+    creator_type, creator_name, creator_id,
+    contact_phone, contact_email,
+    total_donors, total_donations, total_raised,
+    raised_this_month, donors_this_month, last_donation_at
+  FROM v_event_catalog_with_stats
+  WHERE creation_id = p_creation_id
+  LIMIT 1;
+END $$
+DELIMITER ;
+
 
