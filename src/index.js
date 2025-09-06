@@ -1,15 +1,23 @@
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
-const db = require('./config/db-test');
+const db = require('./config/db');
 
 const adminRoutes = require('./routes/admin');
 const donorRoutes = require('./routes/donor');
 const foundationRoutes = require('./routes/foundation');
 const individualRoutes = require('./routes/individual');
 const staffRoutes = require('./routes/staff');
+const searchRoutes = require('./routes/search');
+const eventRoutes = require('./routes/event');
 
 const app = express();
+
+// 🔍 Startup diagnostics
+console.log('🔧 Bootstrapping SHODESH server');
+console.log('   • index.js path:', __filename);
+console.log('   • NODE_ENV:', process.env.NODE_ENV);
+console.log('   • CWD:', process.cwd());
 
 // ✅ Add request logging middleware
 app.use((req, res, next) => {
@@ -49,6 +57,35 @@ app.use('/api/individual', individualRoutes);
 console.log('✅ Individual routes registered');
 app.use('/api/staff', staffRoutes);
 console.log('✅ Staff routes registered');
+app.use('/api/search', searchRoutes);
+console.log('✅ Search routes registered');
+app.use('/api/event', eventRoutes);
+console.log('✅ Event routes registered');
+
+// 🔍 Debug: list all registered routes (GET only) for troubleshooting
+app.get('/api/debug/routes', (req, res) => {
+  const routes = [];
+  app._router.stack.forEach(mw => {
+    if (mw.route && mw.route.path) {
+      const methods = Object.keys(mw.route.methods).filter(m=>mw.route.methods[m]);
+      routes.push({ path: mw.route.path, methods });
+    } else if (mw.name === 'router' && mw.handle.stack) {
+      mw.handle.stack.forEach(r => {
+        if (r.route && r.route.path) {
+          const methods = Object.keys(r.route.methods).filter(m=>r.route.methods[m]);
+          // Try to capture parent prefix from regexp if possible
+          let prefix = mw.regexp && mw.regexp.source;
+          if (prefix) {
+            // crude extraction like ^\/api\/(?:events)?\/?$ -> /api/events
+            prefix = prefix.replace(/^\\^/, '').replace(/\\\/?\$.*$/, '').replace(/\(\?:\^?/, '').replace(/\(\?:\)/,'');
+          }
+          routes.push({ path: (mw?.regexp && mw.regexp.fast_slash)? r.route.path : (prefix? prefix + r.route.path : r.route.path), methods });
+        }
+      });
+    }
+  });
+  res.json({ success:true, count: routes.length, routes });
+});
 
 // ✅ Test route for API functionality
 app.get('/api/test', (req, res) => {
@@ -103,22 +140,51 @@ app.get('/api/individual/test', (req, res) => {
   });
 });
 
-// ✅ API: Handle donations
-app.post('/donate', (req, res) => {
-  const { amount } = req.body;
 
-  if (!amount || isNaN(amount)) {
-    return res.status(400).json({ message: 'Invalid donation amount' });
+// ✅ API: Handle donations via stored procedure (sp_record_donation) & return eligibility/remaining
+app.post('/donate', async (req, res) => {
+  const { amount, creation_id } = req.body;
+  const donorId = req.session?.donorId;
+
+  if (!donorId) return res.status(401).json({ success:false, message:'You must sign in as a donor before donating.' });
+  if (!creation_id || typeof creation_id !== 'string' || creation_id.length !== 7) return res.status(400).json({ success:false, message:'Valid creation_id is required.' });
+  if (!amount || isNaN(amount) || Number(amount) <= 0) return res.status(400).json({ success:false, message:'Invalid donation amount.' });
+
+  try {
+    // CALL stored procedure (handles validation + triggers maintain totals + lifecycle)
+    await db.promise().query('CALL sp_record_donation(?,?,?)', [creation_id, donorId, amount]);
+  } catch (err) {
+    console.error('❌ sp_record_donation error:', err);
+    // MySQL SIGNAL from procedure/trigger returns 45000 -> adapt message
+    if (err && err.sqlState === '45000') {
+      return res.status(400).json({ success:false, message: err.message || 'Donation rejected by business rule' });
+    }
+    return res.status(500).json({ success:false, message:'Database error', detail: err.message });
   }
 
-  const sql = 'INSERT INTO donations (amount) VALUES (?)';
-  db.query(sql, [amount], (err, result) => {
-    if (err) {
-      console.error('❌ Error inserting donation:', err);
-      return res.status(500).json({ message: 'Database error' });
-    }
-    res.json({ message: '✅ Donation recorded successfully!' });
-  });
+  try {
+    // Fetch post-donation remaining + eligibility using functions
+    const [rows] = await db.promise().query('SELECT fn_event_remaining(?) AS remaining, fn_event_is_eligible(?) AS eligible FROM DUAL', [creation_id, creation_id]);
+    const meta = rows && rows[0] ? rows[0] : { remaining:null, eligible:null };
+    return res.json({ success:true, message:'Donation recorded successfully', remaining: meta.remaining, stillEligible: !!meta.eligible });
+  } catch (err2) {
+    console.warn('⚠️ Post-donation function lookup failed:', err2.message);
+    return res.json({ success:true, message:'Donation recorded successfully', remaining: null, stillEligible: null });
+  }
+});
+
+// ✅ Event funding eligibility snapshot (uses fn_event_remaining & fn_event_is_eligible)
+app.get('/api/events/:id/eligibility', async (req, res) => {
+  const id = req.params.id;
+  if (!id || id.length !== 7) return res.status(400).json({ success:false, message:'Valid creation_id required' });
+  try {
+    const [rows] = await db.promise().query('SELECT fn_event_remaining(?) AS remaining, fn_event_is_eligible(?) AS eligible FROM DUAL', [id, id]);
+    if (!rows.length) return res.status(404).json({ success:false, message:'Event not found' });
+    res.json({ success:true, creation_id:id, remaining: rows[0].remaining, eligible: !!rows[0].eligible });
+  } catch (err) {
+    console.error('Eligibility check error:', err);
+    res.status(500).json({ success:false, message:'Failed to evaluate eligibility', error: err.message });
+  }
 });
 
 // ✅ Admin authentication route
@@ -192,7 +258,10 @@ app.use((req, res) => {
       '/api/donor/*': 'Donor-related endpoints',
       '/api/admin/*': 'Admin-related endpoints',
       '/api/foundation/*': 'Foundation-related endpoints',
-      '/api/individual/*': 'Individual-related endpoints'
+  '/api/individual/*': 'Individual-related endpoints',
+  '/api/search/*': 'Search & filter endpoints',
+  '/api/events/*': 'Event list & detail endpoints',
+  '/api/debug/routes': 'List all registered routes'
     }
   });
 });

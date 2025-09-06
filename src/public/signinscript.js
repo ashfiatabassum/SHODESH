@@ -101,47 +101,180 @@ document.getElementById("signin").addEventListener("click", async () => {
   // Show loading alert
   const loadingAlert = showCustomAlert('Signing in...', 'loading');
 
-  // Simulate API call
+    // Real API calls for authentication
   try {
-    // In a real app, you'd fetch from your server, e.g.:
-    // const response = await fetch('/api/auth/signin', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ username: user, password: pass })
-    // });
-    // const data = await response.json();
-    // if (!response.ok) throw new Error(data.message || 'Sign-in failed');
-
-    // Mocking a successful response for demonstration
-    await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
-    const mockResponse = {
-      success: true,
-      user: {
+    // First try staff sign in
+    showCustomAlert('🔐 Checking staff credentials... Please wait.', 'loading');
+    
+    let response = await fetch('/api/staff/signin', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
         username: user,
-        role: 'staff' // Assume role is returned from backend
-      }
-    };
-
-    removeLoadingAlert();
-
-    if (mockResponse.success) {
-      showCustomAlert('Sign-in successful! Redirecting...', 'success');
-      // Store user info if needed, e.g., in localStorage
-      localStorage.setItem('loggedInUser', JSON.stringify(mockResponse.user));
-      
-      // Redirect based on role
-      setTimeout(() => {
-        if (mockResponse.user.role === 'staff') {
-          window.location.href = 'staff_profile.html';
-        } else {
-          // Redirect to a general user dashboard or homepage
-          window.location.href = 'index.html';
-        }
-      }, 1500);
-    } else {
-      // This part would be used if the mockResponse could fail
-      // showCustomAlert(data.message, 'error');
+        password: pass
+      })
+    });
+    
+    console.log('📊 Staff response status:', response.status);
+    
+    // Handle different response types for staff
+    let data;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      console.error('❌ Failed to parse staff response as JSON:', parseError);
+      data = { success: false, message: 'Server response error' };
     }
+    
+    console.log('📋 Staff sign in response:', data);
+    
+    removeLoadingAlert();
+    
+    if (response.ok && data.success) {
+      showCustomAlert('✅ Sign-in successful! Redirecting...', 'success');
+      
+      // Store staff data
+      localStorage.setItem('staffId', data.staffId);
+      localStorage.setItem('staffData', JSON.stringify(data.staffData));
+      localStorage.setItem('userType', 'staff');
+      localStorage.setItem('loggedInUser', JSON.stringify({
+        username: user,
+        role: 'staff'
+      }));
+      
+      // Redirect to staff profile
+      setTimeout(() => {
+        window.location.href = 'staff_profile.html';
+      }, 1500);
+      return;
+    }
+    
+    // If staff sign-in fails, try donor sign-in
+    showCustomAlert('🔐 Checking donor credentials... Please wait.', 'loading');
+    
+    response = await fetch('/api/donor/signin', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: user,
+        password: pass
+      })
+    });
+    
+    console.log('📊 Donor response status:', response.status);
+    
+    // Handle different response types for donor
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      console.error('❌ Failed to parse donor response as JSON:', parseError);
+      data = { success: false, message: 'Server response error' };
+    }
+    
+    console.log('📋 Donor sign in response:', data);
+    
+    // Remove loading alert
+    removeLoadingAlert();
+    
+    if (response.ok && data.success) {
+      // Ensure donorId is inside personalInfo
+      // Store donor data and user type in localStorage
+      localStorage.setItem('donorId', data.donorId);
+      localStorage.setItem('donorData', JSON.stringify(data.donorData));
+      localStorage.setItem('userType', 'donor');
+      
+      data.donorData.personalInfo.donorId = data.donorId;
+      
+      // Show success and redirect
+      showCustomAlert('✅ Sign-in successful! Redirecting...', 'success');
+      
+      // Redirect to donor profile
+      setTimeout(() => {
+        window.location.href = 'profiledonor.html';
+      }, 1500);
+      return;
+    }
+    
+    // After staff and donor sign-in fails, try foundation sign-in
+    console.log('🔐 Staff and Donor signin failed, trying foundation signin...');
+    
+    // Update loading message
+    removeLoadingAlert();
+    showCustomAlert('🔐 Checking foundation credentials... Please wait.', 'loading');
+    
+    response = await fetch('/api/foundation/signin', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: user,
+        password: pass
+      })
+    });
+    
+    console.log('📊 Foundation response status:', response.status);
+    
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      console.error('❌ Failed to parse foundation response as JSON:', parseError);
+      data = { success: false, message: 'Server response error' };
+    }
+    
+    console.log('📋 Foundation sign in response:', data);
+    
+    // Remove loading alert
+    removeLoadingAlert();
+    
+    if (response.ok && data.success) {
+      // Store foundation data and user type in localStorage
+      localStorage.setItem('foundationId', data.foundationId);
+      localStorage.setItem('foundationData', JSON.stringify(data.foundationData));
+      localStorage.setItem('userType', 'foundation');
+      
+      showCustomAlert(
+        `🎉 <strong>Welcome back, ${data.foundationData.foundationName}!</strong><br><br>
+        Successfully signed in as a <strong>Foundation</strong>.<br><br>
+        <small>Redirecting to your profile...</small>`, 
+        'success', 
+        3000
+      );
+      
+      // Redirect to foundation profile after delay
+      setTimeout(() => {
+        window.location.href = 'profilefoundation.html';
+      }, 3000);
+      return;
+    }
+    
+    // All sign-in attempts failed
+    let errorMessage = 'Invalid username or password.';
+    
+    // Check if it's a server error
+    if (response.status >= 500) {
+      errorMessage = 'Server error occurred. Please try again later.';
+    } else if (data.message) {
+      errorMessage = data.message;
+    }
+    
+    showCustomAlert(
+      `<strong>Sign In Failed</strong><br><br>
+      ${errorMessage}<br><br>
+      <small>Make sure you're using the correct username and password for your account.</small><br><br>
+      <strong>Account Types:</strong><br>
+      • Staff Account<br>
+      • Individual Account<br>
+      • Donor Account<br>
+      • Foundation Account<br><br>
+      <small>If you don't have an account, please register first.</small>`, 
+      'error', 
+      10000
+    );
   } catch (error) {
     removeLoadingAlert();
     // In a real app, you'd get the error message from the catch block

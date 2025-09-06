@@ -204,8 +204,11 @@ router.post('/register', async (req, res) => {
 
     console.log('🎉 Registration successful for donor:', donorId);
     
-    // Return donor data for profile page
-    res.status(201).json({
+  // Store session (auto sign-in after registration)
+  try { if (req.session) { req.session.donorId = donorId; req.session.donorUsername = username; } } catch(e){ console.warn('⚠️ Unable to persist session after registration:', e.message); }
+
+  // Return donor data for profile page
+  res.status(201).json({
       success: true,
       message: 'Donor registered successfully!',
       donorId: donorId,
@@ -344,8 +347,11 @@ router.post('/signin', async (req, res) => {
       ]
     };
 
-    // Return success response with donor data
-    res.status(200).json({
+  // Persist donor session
+  try { if (req.session){ req.session.donorId = donor.donor_id; req.session.donorUsername = donor.username; } } catch(e){ console.warn('⚠️ Unable to set donor session:', e.message);}    
+
+  // Return success response with donor data
+  res.status(200).json({
       success: true,
       message: 'Sign in successful',
       donorId: donor.donor_id,
@@ -468,6 +474,131 @@ router.post('/check-availability', (req, res) => {
         `${field.charAt(0).toUpperCase() + field.slice(1)} is already taken`,
       field: field
     });
+  });
+});
+
+// Additional routes for donor profile management
+router.post('/check-username', (req, res) => {
+  const { username, donorId } = req.body;
+  db.query(
+    'SELECT donor_id FROM donor WHERE username = ? AND donor_id != ?',
+    [username, donorId],
+    (err, results) => {
+      if (err) return res.status(500).json({ available: false });
+      res.json({ available: results.length === 0 });
+    }
+  );
+});
+
+router.put('/update/:donorId', async (req, res) => {
+  const donorId = req.params.donorId;
+  const { username, newPassword, currentPassword } = req.body;
+
+  if (!currentPassword) {
+    return res.status(400).json({ success: false, message: 'Current password required.' });
+  }
+
+  db.query('SELECT password FROM donor WHERE donor_id = ?', [donorId], (err, results) => {
+    if (err || results.length === 0) {
+      return res.status(400).json({ success: false, message: 'Donor not found.' });
+    }
+    const dbPassword = results[0].password;
+    if (dbPassword !== currentPassword) {
+      return res.status(401).json({ success: false, message: 'Current password is incorrect.' });
+    }
+    
+    // Build update query
+    let fields = [];
+    let values = [];
+    if (username) { fields.push('username = ?'); values.push(username); }
+    if (newPassword) { fields.push('password = ?'); values.push(newPassword); }
+    if (fields.length === 0) {
+      return res.status(400).json({ success: false, message: 'No fields to update.' });
+    }
+    values.push(donorId);
+
+    db.query(
+      `UPDATE donor SET ${fields.join(', ')} WHERE donor_id = ?`,
+      values,
+      (err2, result) => {
+        if (err2) {
+          return res.status(500).json({ success: false, message: 'Database error.' });
+        }
+        return res.json({ success: true, message: 'Profile updated successfully.' });
+      }
+    );
+  });
+});
+
+router.get('/donations/:donorId', async (req, res) =>  {
+  const { donorId } = req.params;
+  try {
+    // Fetch donation history with event and creator info (LEFT JOIN to include all donations)
+    const query = `
+      SELECT DISTINCT
+        d.amount,
+        d.paid_at AS date,
+        ec.title AS projectTitle,
+        IF(ec.creator_type='foundation', f.foundation_name, CONCAT(i.first_name, ' ', i.last_name)) AS foundationName
+      FROM donation d
+      LEFT JOIN event_creation ec ON d.creation_id = ec.creation_id
+      LEFT JOIN foundation f ON ec.foundation_id = f.foundation_id
+      LEFT JOIN individual i ON ec.individual_id = i.individual_id
+      WHERE d.donor_id = ?
+      ORDER BY d.paid_at DESC
+    `;
+    const donations = await new Promise((resolve, reject) => {
+      db.query(query, [donorId], (err, results) => {
+        if (err) reject(err);
+        else resolve(results);
+      });
+    });
+
+    // Calculate total donation and largest donation
+    const statsQuery = `
+      SELECT 
+        IFNULL(SUM(amount),0) AS totalDonation,
+        IFNULL(MAX(amount),0) AS largestDonation
+      FROM donation
+      WHERE donor_id = ?
+    `;
+    const stats = await new Promise((resolve, reject) => {
+      db.query(statsQuery, [donorId], (err, results) => {
+        if (err) reject(err);
+        else resolve(results[0]);
+      });
+    });
+
+    res.json({
+      success: true,
+      donations,
+      totalDonation: stats.totalDonation,
+      largestDonation: stats.largestDonation
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to fetch donation history.' });
+  }
+});
+
+// --- Additional session-based helper routes ---
+// GET /api/donor/me -> returns current signed in donor session (lightweight)
+router.get('/me', (req, res) => {
+  if (req.session && req.session.donorId) {
+    return res.json({ success:true, signedIn:true, donorId: req.session.donorId, username: req.session.donorUsername });
+  }
+  res.json({ success:true, signedIn:false });
+});
+
+// POST /api/donor/signout -> destroy donor session
+router.post('/signout', (req, res) => {
+  if (!req.session) return res.json({ success:true, signedIn:false });
+  const id = req.session.donorId;
+  req.session.destroy(err => {
+    if (err) {
+      console.error('❌ Error destroying donor session:', err);
+      return res.status(500).json({ success:false, message:'Failed to sign out' });
+    }
+    res.json({ success:true, message:'Signed out', donorId:id });
   });
 });
 
