@@ -451,6 +451,8 @@ router.post('/signin', async (req, res) => {
       }
     };
 
+    console.log('Event:', project.creation_id, 'Donors:', donors);
+
     // Return success response with foundation data
     res.status(200).json({
       success: true,
@@ -572,5 +574,26 @@ router.put('/update/:foundationId', async (req, res) => {
 });
 
 
+router.get('/projects/:foundationId', async (req, res) => {
+  const { foundationId } = req.params;
+  try {
+    const projectsQuery = `
+      SELECT creation_id, title, description, amount_needed, amount_received
+      FROM event_creation
+      WHERE foundation_id = ?
+      ORDER BY created_at DESC
+    `;
+    const projects = await new Promise((resolve, reject) => {
+      db.query(projectsQuery, [foundationId], (err, results) => {
+        if (err) reject(err);
+        else resolve(results);
+      });
+    });
+
+    res.json({ success: true, projects }); // Only projects, no donors
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Database error' });
+  }
+});
 
 module.exports = router;

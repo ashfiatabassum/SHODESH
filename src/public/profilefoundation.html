@@ -34,10 +34,6 @@
               <span class="stat-value" id="totalReceived">৳0</span>
               <span class="stat-label">Total Received</span>
             </div>
-            <div class="stat-item">
-              <span class="stat-value" id="beneficiaries">0</span>
-              <span class="stat-label">Beneficiaries</span>
-            </div>
           </div>
         </div>
         <div class="profile-actions">
@@ -126,94 +122,7 @@
         </div>
       </section>
 
-      <!-- Recent Donations -->
-      <section class="info-card">
-        <div class="card-header">
-          <h2><i class="fas fa-heart"></i> Recent Donations</h2>
-        </div>
-        <div class="card-content">
-          <div class="donations-list" id="donationsList">
-            <!-- Donations will be loaded here -->
-          </div>
-        </div>
-      </section>
-    </main>
-  </div>
-
-  <!-- Edit Modal -->
-  <div class="modal" id="editModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Edit Foundation Profile</h3>
-        <button class="close-btn" onclick="closeModal()">&times;</button>
-      </div>
-      <div class="modal-body">
-        <form id="editForm">
-          <div class="form-group">
-            <label>Foundation Name <span class="required">*</span></label>
-            <input type="text" id="editFoundationName" required>
-          </div>
-          <div class="form-group">
-            <label>Email <span class="required">*</span></label>
-            <input type="email" id="editEmail" required>
-          </div>
-          <div class="form-group">
-            <label>Phone <span class="required">*</span></label>
-            <input type="tel" id="editPhone" required>
-          </div>
-          <div class="form-group">
-            <label>Vision & Goals <span class="required">*</span></label>
-            <textarea id="editVisionGoals" rows="4" required></textarea>
-          </div>
-          <div class="form-actions">
-            <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
-            <button type="submit" class="btn-primary">Save Changes</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- Add Project Modal -->
-  <div class="modal" id="projectModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Add New Project</h3>
-        <button class="close-btn" onclick="closeProjectModal()">&times;</button>
-      </div>
-      <div class="modal-body">
-        <form id="projectForm">
-          <div class="form-group">
-            <label>Project Title <span class="required">*</span></label>
-            <input type="text" id="projectTitle" required>
-          </div>
-          <div class="form-group">
-            <label>Category <span class="required">*</span></label>
-            <select id="projectCategory" required>
-              <option value="">Select Category</option>
-              <option value="emergency">Emergency Relief</option>
-              <option value="education">Education</option>
-              <option value="healthcare">Healthcare</option>
-              <option value="environment">Environment</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Target Amount <span class="required">*</span></label>
-            <input type="number" id="projectTarget" required>
-          </div>
-          <div class="form-group">
-            <label>Description <span class="required">*</span></label>
-            <textarea id="projectDescription" rows="3" required></textarea>
-          </div>
-          <div class="form-actions">
-            <button type="button" class="btn-secondary" onclick="closeProjectModal()">Cancel</button>
-            <button type="submit" class="btn-primary">Create Project</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
+  
 
   <div class="logout-section" style="text-align:center; margin: 32px 0 0 0;">
   <button class="btn-secondary" onclick="logout()" style="padding: 12px 32px; border-radius: 24px; font-size: 1.1rem;">

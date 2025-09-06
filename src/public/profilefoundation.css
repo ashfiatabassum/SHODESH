@@ -625,3 +625,32 @@ body {
   background: #f7fafd !important;
   color: #2c4a36 !important;
   border-color: #2c4a36;
+}
+
+
+.project-dropdown {
+  margin-bottom: 18px;
+}
+.project-title-btn {
+  background: linear-gradient(135deg, #4a7c59, #5a8c69);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background 0.2s;
+}
+.project-title-btn:hover {
+  background: linear-gradient(135deg, #5a8c69, #6bbf59);
+}
+.project-details {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-top: 6px;
+  border-left: 4px solid #4a7c59;
+}
