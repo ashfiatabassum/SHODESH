@@ -592,24 +592,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Setup password toggle functionality
     const setupPasswordToggles = () => {
-        const toggleButtons = document.querySelectorAll('.toggle-password');
-        
-        toggleButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                // Find the password input that is a sibling to this button
-                const passwordInput = this.parentElement.querySelector('input[type="password"], input[type="text"]');
-                
-                if (passwordInput) {
-                    // Toggle the type attribute
-                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                    passwordInput.setAttribute('type', type);
-                    
-                    // Toggle the eye / eye-slash icon
-                    const icon = this.querySelector('i');
-                    if (icon) {
-                        icon.className = type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
-                    }
-                }
+        document.querySelectorAll('.toggle-password').forEach(btn => {
+            if (btn.dataset.bound === '1') return; // prevent duplicate binding
+            btn.dataset.bound = '1';
+            btn.addEventListener('click', function(e){
+                e.preventDefault();
+                const container = this.closest('.password-container');
+                if(!container) return;
+                const input = container.querySelector('input');
+                if(!input) return;
+                const showing = input.type === 'text';
+                input.type = showing ? 'password' : 'text';
+                const icon = this.querySelector('i');
+                const label = this.querySelector('small');
+                if(icon) icon.className = showing ? 'fas fa-eye' : 'fas fa-eye-slash';
+                if(label) label.textContent = showing ? 'Show' : 'Hide';
+                this.setAttribute('title', showing ? 'Show password' : 'Hide password');
+                this.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
             });
         });
     };
