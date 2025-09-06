@@ -66,11 +66,15 @@ router.get('/:id', async (req, res) => {
       c.category_name,
       et.event_type_name,
       ec.cover_photo,
-      f.foundation_name,
+  f.foundation_name,
   f.email AS foundation_email,
   f.mobile AS foundation_phone,
+  f.bkash AS foundation_bkash,
+  f.bank_account AS foundation_bank_account,
   i.first_name AS individual_first_name,
-  i.mobile AS individual_phone
+  i.mobile AS individual_phone,
+  i.bkash AS individual_bkash,
+  i.bank_account AS individual_bank_account
     FROM EVENT_CREATION ec
     JOIN EVENT_BASED_ON_CATEGORY ebc ON ec.ebc_id = ebc.ebc_id
     JOIN CATEGORY c ON ebc.category_id = c.category_id
@@ -122,9 +126,11 @@ router.get('/:id', async (req, res) => {
         category_name: row.category_name,
         event_type_name: row.event_type_name,
         cover_photo_url,
-        organizer: row.foundation_name || row.individual_first_name || null,
+  organizer: row.foundation_name || row.individual_first_name || null,
   contact_phone: row.foundation_phone || row.individual_phone || null,
-  contact_email: row.foundation_email || null
+  contact_email: row.foundation_email || null,
+  contact_bkash: row.foundation_bkash || row.individual_bkash || null,
+  bank_account: row.foundation_bank_account || row.individual_bank_account || null
       }
     });
   } catch (err) {

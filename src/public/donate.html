@@ -130,6 +130,8 @@
       <div class="divider"></div>
       <div class="summary-item"><span class="k">Organizer</span><span id="sOrganizer">—</span></div>
       <div class="summary-item"><span class="k">Contact</span><span id="sContact">—</span></div>
+  <div class="summary-item"><span class="k">bKash</span><span id="sBkash">—</span></div>
+  <div class="summary-item"><span class="k">Bank Account</span><span id="sBank">—</span></div>
       <div class="divider"></div>
       <div class="small-text" id="sBlurb">Your contribution helps this initiative move forward. Every taka matters.</div>
     </aside>
@@ -172,7 +174,10 @@
         qs('#sRaised').textContent = formatBDT(e.amount_received);
         qs('#sPct').textContent = pct + '%';
         qs('#sOrganizer').textContent = e.organizer || '—';
-        qs('#sContact').textContent = e.contact_phone || e.contact_email || '—';
+  qs('#sContact').textContent = e.contact_phone || e.contact_email || '—';
+  // Payment info if provided by organizer profile
+  qs('#sBkash').textContent = e.contact_bkash || '—';
+  qs('#sBank').textContent = e.bank_account || '—';
         qs('#sBlurb').textContent = 'This initiative depends on community support. Your donation directly accelerates impact.';
       } catch(err){
         console.error(err);
