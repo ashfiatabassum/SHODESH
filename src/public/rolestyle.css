@@ -239,3 +239,33 @@ body {
     font-size: 3.5vw;
   }
 }
+
+
+/* Gradient shaded style for role selection buttons */
+.desktop .rectangle,
+.desktop .rectangle-2 {
+  background: linear-gradient(90deg, #4a7c59 0%, #6bbf59 100%);
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(74, 124, 89, 0.18), 0 1.5px 6px rgba(74, 124, 89, 0.10);
+  transition: box-shadow 0.3s, background 0.3s, transform 0.2s;
+}
+
+/* Hover effect: brighten and lift */
+.desktop .overlap:hover .rectangle,
+.desktop .overlap-group:hover .rectangle-2,
+.desktop .overlap-2:hover .rectangle-2,
+.desktop .overlap-3:hover .rectangle-2 {
+  background: linear-gradient(90deg, #5fcf80 0%, #6bbf59 100%);
+  box-shadow: 0 8px 32px rgba(74, 124, 89, 0.28), 0 3px 12px rgba(74, 124, 89, 0.16);
+  transform: translateY(-2px) scale(1.03);
+}
+
+/* Active/click effect: darken and press down */
+.desktop .overlap:active .rectangle,
+.desktop .overlap-group:active .rectangle-2,
+.desktop .overlap-2:active .rectangle-2,
+.desktop .overlap-3:active .rectangle-2 {
+  background: linear-gradient(90deg, #366d64 0%, #4a7c59 100%);
+  box-shadow: 0 2px 8px rgba(74, 124, 89, 0.12);
+  transform: translateY(1px) scale(0.98);
+}
