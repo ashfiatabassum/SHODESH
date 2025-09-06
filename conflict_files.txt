@@ -1,0 +1,9 @@
+Files with conflicts:
+- sql/shodeshsqlscript.sql
+- src/config/db.js
+- src/index.js
+- src/public/editdonor.css
+- src/public/editindividual.css
+- src/public/profiledonor.html
+- src/public/signinscript.js
+- src/routes/donor.js

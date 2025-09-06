@@ -332,7 +332,8 @@ document.addEventListener('contextmenu', function(e) {
   }
 });
 
-// Service Worker registration for offline functionality (optional)
+// Service Worker registration DISABLED to fix fetch errors
+/*
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
     navigator.serviceWorker.register('/sw.js').then(function(registration) {
@@ -340,5 +341,15 @@ if ('serviceWorker' in navigator) {
     }).catch(function(registrationError) {
       console.log('SW registration failed: ', registrationError);
     });
+  });
+}
+*/
+// Unregister any service workers instead
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function(registrations) {
+    for(let registration of registrations) {
+      registration.unregister();
+      console.log('Service Worker unregistered from resources.js');
+    }
   });
 }

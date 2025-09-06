@@ -23,15 +23,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (togglePassword && passwordInput) {
         togglePassword.addEventListener('click', function() {
-            // Toggle the type attribute
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            
-            // Toggle the eye / eye-slash icon
+            const currentlyPassword = passwordInput.type === 'password';
+            passwordInput.type = currentlyPassword ? 'text' : 'password';
             const icon = this.querySelector('i');
-            if (icon) {
-                icon.className = type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
-            }
+            const textSpan = this.querySelector('span');
+            if (icon) icon.className = passwordInput.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+            if (textSpan) textSpan.textContent = passwordInput.type === 'password' ? 'Show' : 'Hide';
+            this.setAttribute('aria-label', passwordInput.type === 'password' ? 'Show password' : 'Hide password');
         });
     }
     

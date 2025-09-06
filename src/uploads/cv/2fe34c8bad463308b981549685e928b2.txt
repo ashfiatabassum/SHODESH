@@ -1,0 +1,125 @@
+🔹 What is Concurrent Execution?
+
+Concurrent execution means multiple transactions are allowed to run at the same time in the database system, rather than one after another (serial execution).
+
+Example:
+
+Transaction T1 is reading data from disk.
+
+Transaction T2 can simultaneously use the CPU for some computation.
+
+🔹 Why Run Transactions Concurrently?
+1. Increased Resource Utilization
+
+CPU, memory, and disk are used more efficiently.
+
+While one transaction waits for disk I/O, another can use the CPU.
+
+Result: Higher throughput (more transactions completed per unit time).
+
+Example:
+
+T1 reads a large file (CPU idle while waiting).
+
+T2 calculates something in memory (CPU active).
+
+2. Reduced Average Response Time
+
+Short transactions don’t have to wait for long transactions to finish.
+
+This reduces waiting time for transactions that are quick to complete.
+
+Example:
+
+T1 is a long bank transfer.
+
+T2 is a quick balance check.
+
+With concurrency, T2 can finish while T1 is still processing.
+
+🔹 Problem with Concurrent Execution
+
+If multiple transactions access the same data at the same time, it may destroy database consistency.
+
+Example:
+
+T1 is transferring money from A to B.
+
+T2 reads the balance of A before T1 finishes.
+
+T2 might get wrong data, leading to inconsistent results.
+
+🔹 Solution: Concurrency Control
+
+Concurrency control schemes are mechanisms to ensure isolation among transactions.
+
+They control interactions among concurrent transactions so that the database remains consistent.
+
+Types include locking, timestamp ordering, and optimistic methods (details usually in later chapters).
+
+Goal: Make concurrent execution correct, meaning the final state is as if transactions ran one after another (serially).
+
+✅ In short:
+
+Concurrent execution improves performance and response time.
+
+But it can create conflicts between transactions.
+
+Concurrency control ensures that concurrent transactions don’t violate consistency.
+
+If you want, I can also draw a simple diagram showing two transactions running concurrently and how concurrency control prevents conflicts — it makes it much easier to visualize.
+
+
+🔹 1. Serial Schedule
+
+Definition: Transactions are executed one after another, with no overlap.
+
+Example:
+
+T1: Read(A), Write(A)
+T1: Read(B), Write(B)
+T2: Read(A), Write(A)
+T2: Read(B), Write(B)
+
+
+Here, T1 completes fully before T2 starts.
+
+Advantages:
+
+Always correct and consistent.
+
+No concurrency problems (no conflicts, no deadlocks).
+
+Disadvantages:
+
+Poor performance: Transactions wait in line.
+
+CPU and disk are underutilized.
+
+🔹 2. Serializable Schedule
+
+Definition: Transactions are executed concurrently, but the schedule is equivalent to some serial schedule (produces the same result as if they ran one after another).
+
+Advantages:
+
+Improved performance: Multiple transactions run concurrently.
+
+CPU, memory, and disk are used efficiently.
+
+Short transactions don’t wait unnecessarily behind long ones.
+
+Disadvantages:
+
+Needs concurrency control to avoid conflicts.
+
+Slightly more complex to implement
+
+✅ Which One is Better?
+
+For correctness: Serial schedules are trivially correct.
+
+For performance and efficiency: Serializable schedules are better because they allow concurrent execution without losing correctness.
+
+In practice:
+
+DBMS always aims for serializable schedules, not strict serial schedules, because we need both correctness and efficiency.

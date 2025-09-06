@@ -1,0 +1,67 @@
+.MODEL SMALL
+.STACK 100H
+.DATA
+    MSG DB 'LOWERCASE ALPHABET$'
+    MSG2 DB 'UPPERCASE ALPHABET$'
+    MSG3 DB 'NUMBER$'
+    MSG4 DB 'SPECIAL CHARACTER$'
+.CODE
+
+MAIN PROC
+    MOV AX,@DATA
+    MOV DS, AX
+    MOV AH,01H
+    INT 21H
+    MOV BL,AL
+    
+    MOV AH,02H
+    MOV DL, 13
+    INT 21H
+    MOV DL,10
+    INT 21H
+     
+    CMP BL,'a'
+    JGE MLCA
+    CMP BL, 'A'
+    JGE MUCA
+    CMP BL, '0'
+    JGE MNUM
+    JMP SC
+MLCA:
+    CMP BL,'z'
+    JLE LCA
+    RET
+MUCA:
+    CMP BL,'Z'
+    JLE UCA
+    RET
+MNUM:
+    CMP BL, '9'
+    JLE NUM
+    RET
+LCA:
+    LEA DX, MSG
+    MOV AH,09H
+    INT 21H
+    JMP SESH
+UCA:
+    LEA DX, MSG2
+    MOV AH, 09H
+    INT 21H
+    JMP SESH
+NUM:
+    LEA DX, MSG3
+    MOV AH, 09H
+    INT 21H
+    JMP SESH
+SC:
+    LEA DX, MSG4
+    MOV AH, 09H
+    INT 21H
+        
+SESH:
+    MOV AH,4CH
+    INT 21H
+    
+    MAIN ENDP
+END MAIN

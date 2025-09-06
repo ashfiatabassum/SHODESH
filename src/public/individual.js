@@ -369,12 +369,26 @@ async function submitRegistration(formData) {
         showCustomAlert('🔄 Registering your account... Please wait.', 'loading');
 
         console.log('📤 Sending request to /api/individual/register...');
-        const response = await fetch('/api/individual/register', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
+        
+        // Use XMLHttpRequest instead of fetch
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/individual/register', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        
+        return new Promise((resolve, reject) => {
+            xhr.onload = function() {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    resolve(JSON.parse(xhr.responseText));
+                } else {
+                    reject(new Error(`Server responded with status ${xhr.status}: ${xhr.statusText}`));
+                }
+            };
+            
+            xhr.onerror = function() {
+                reject(new Error('Network error occurred'));
+            };
+            
+            xhr.send(JSON.stringify({
                 firstName: formData.firstName,
                 lastName: formData.lastName,
                 username: formData.username,
@@ -391,10 +405,11 @@ async function submitRegistration(formData) {
                 bkashNumber: formData.bkashNumber,
                 bankAccount: formData.bankAccount,
                 password: formData.password
-            })
+            }));
         });
-
-        console.log('📥 Response received:', response.status, response.statusText);
+        
+        const data = await response;
+        console.log('📥 Response received:', data);
 
         // Remove loading alert
         removeLoadingAlert();
@@ -475,33 +490,49 @@ async function submitRegistration(formData) {
 
 // Function to check username/email/mobile/nid availability
 function checkAvailability(field, value, inputElement) {
-    fetch('/api/individual/check-availability', {
+    // Add cache-busting parameter
+    const cacheBuster = new Date().getTime();
+    // Make a direct XMLHttpRequest instead of fetch to bypass service worker
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `/api/individual/check-availability?_cb=${cacheBuster}`, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                try {
+                    const data = JSON.parse(xhr.responseText);
+                    if (data.success) {
+                        if (data.available) {
+                            inputElement.style.borderColor = '#2ed573';
+                            inputElement.style.boxShadow = '0 0 10px rgba(46, 213, 115, 0.3)';
+                            inputElement.title = `✅ ${data.message}`;
+                        } else {
+                            inputElement.style.borderColor = '#ff4757';
+                            inputElement.style.boxShadow = '0 0 10px rgba(255, 71, 87, 0.3)';
+                            inputElement.title = `❌ ${data.message}`;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error parsing response:', error);
+                }
+            } else {
+                console.error('Request failed with status:', xhr.status);
+            }
+        }
+    };
+    xhr.onerror = function() {
+        console.error('Error checking availability:', 'Network error');
+    };
+    xhr.send(JSON.stringify({ field: field, value: value }));
+    
+    /* Original fetch code - commented out
+    fetch(`/api/individual/check-availability?_cb=${cacheBuster}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({ field: field, value: value })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            if (data.available) {
-                inputElement.style.borderColor = '#2ed573';
-                inputElement.style.boxShadow = '0 0 10px rgba(46, 213, 115, 0.3)';
-                inputElement.title = `✅ ${data.message}`;
-            } else {
-                inputElement.style.borderColor = '#ff4757';
-                inputElement.style.boxShadow = '0 0 10px rgba(255, 71, 87, 0.3)';
-                inputElement.title = `❌ ${data.message}`;
-            }
-        }
-    })
-    .catch(error => {
-        console.error('Error checking availability:', error);
-        inputElement.style.borderColor = '';
-        inputElement.style.boxShadow = '';
-        inputElement.title = '';
-    });
+    */
 }
 
 // Custom alert functions (same as signin and donor registration)

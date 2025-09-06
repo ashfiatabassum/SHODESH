@@ -4,29 +4,17 @@ const db = require('../config/db-test');
 const multer = require('multer');
 const path = require('path');
 const crypto = require('crypto');
-const fs = require('fs');
 
 // Create uploads directory if it doesn't exist
-const uploadDir = path.join(__dirname, '../uploads/cv/');
-console.log('Creating upload directory at:', uploadDir);
+const fs = require('fs');
+const uploadDir = 'uploads/cv/';
 if (!fs.existsSync(uploadDir)) {
-    try {
-        fs.mkdirSync(uploadDir, { recursive: true });
-        console.log('✅ Upload directory created successfully');
-    } catch (error) {
-        console.error('❌ Error creating upload directory:', error);
-    }
+    fs.mkdirSync(uploadDir, { recursive: true });
 }
 
 // Configure multer for CV upload
 const storage = multer.diskStorage({
-    destination: function(req, file, cb) {
-        // Make sure directory exists before upload
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-        }
-        cb(null, uploadDir);
-    },
+    destination: uploadDir,
     filename: function(req, file, cb) {
         crypto.randomBytes(16, (err, buf) => {
             if (err) return cb(err);
@@ -39,11 +27,8 @@ const upload = multer({
     storage: storage,
     limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
     fileFilter: (req, file, cb) => {
-        console.log('Processing file upload for:', file ? file.originalname : 'unknown file');
-        
         // Check if file exists
         if (!file) {
-            console.error('No file provided in request');
             return cb(new Error('CV file is required'), false);
         }
         
@@ -51,11 +36,9 @@ const upload = multer({
         const allowedTypes = /pdf|doc|docx|txt/;
         const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
         if (!extname) {
-            console.error(`Invalid file type: ${file.originalname}`);
             return cb(new Error('Only PDF, Word documents, and TXT files are allowed'), false);
         }
         
-        console.log('File passed validation:', file.originalname);
         return cb(null, true);
     }
 });
@@ -84,16 +67,8 @@ router.post('/check-username', async (req, res) => {
 router.post('/signup', (req, res, next) => {
     console.log('📥 Staff signup request initiated');
     console.log('Headers:', req.headers);
-    console.log('Content-Type:', req.headers['content-type']);
     console.log('Request body keys:', Object.keys(req.body || {}));
     console.log('Request files:', req.files);
-    
-    // Check if the request includes a file
-    if (req.is('multipart/form-data') || req.headers['content-type']?.includes('multipart/form-data')) {
-        console.log('✅ Multipart form detected, processing file upload');
-    } else {
-        console.log('⚠️ Warning: Request may not be multipart/form-data');
-    }
     
     upload.single('cv')(req, res, (err) => {
         if (err) {
@@ -111,25 +86,14 @@ router.post('/signup', (req, res, next) => {
             });
         }
         
-        console.log('✅ File upload processed');
+        console.log('✅ File upload processed:', req.file);
         if (!req.file) {
             console.error('❌ No file was received in the request');
-            console.log('Request body:', req.body);
-            console.log('Form fields received:', Object.keys(req.body));
-            
             return res.status(400).json({
                 success: false,
                 message: 'CV file is required but was not received'
             });
         }
-        
-        console.log('📄 File details:', {
-            fieldname: req.file.fieldname,
-            originalname: req.file.originalname,
-            mimetype: req.file.mimetype,
-            size: req.file.size,
-            path: req.file.path
-        });
         
         console.log('📄 File details:', {
             fieldname: req.file.fieldname,
@@ -147,7 +111,6 @@ router.post('/signup', (req, res, next) => {
     
     try {
         // Extract data from the form submission
-        // Accept both 'administrativeDiv' and legacy/front-end 'division'
         const {
             firstName,
             lastName,
@@ -163,11 +126,9 @@ router.post('/signup', (req, res, next) => {
             roadNo,
             area,
             district,
-            administrativeDiv: administrativeDivRaw,
-            division: divisionFallback,
+            administrativeDiv,
             zipCode
         } = req.body;
-        const administrativeDiv = administrativeDivRaw || divisionFallback || null;
 
         // Check required fields
         if (!firstName || !lastName || !username || !password || !mobileNumber || !email || !nid) {
@@ -317,71 +278,51 @@ router.post('/signup', (req, res, next) => {
 
         // Check for existing username, email, mobile, or NID one by one to give more specific error messages
         console.log('🔍 Checking for existing username...');
-        try {
-            const [existingUsernames] = await db.execute('SELECT username FROM staff WHERE username = ?', [username]);
-            
-            if (existingUsernames.length > 0) {
-                console.log(`❌ Username '${username}' already exists`);
-                return res.status(409).json({
-                    success: false,
-                    message: 'This username is already taken. Please choose a different username.',
-                    field: 'username'
-                });
-            }
-        } catch (usernameCheckError) {
-            console.error('Error checking for existing username:', usernameCheckError);
-            // Continue with registration process even if the check fails
+        const [existingUsernames] = await db.execute('SELECT username FROM STAFF WHERE username = ?', [username]);
+        
+        if (existingUsernames.length > 0) {
+            console.log(`❌ Username '${username}' already exists`);
+            return res.status(409).json({
+                success: false,
+                message: 'This username is already taken. Please choose a different username.',
+                field: 'username'
+            });
         }
         
         console.log('🔍 Checking for existing email...');
-        try {
-            const [existingEmails] = await db.execute('SELECT email FROM staff WHERE email = ?', [email]);
-            
-            if (existingEmails.length > 0) {
-                console.log(`❌ Email '${email}' already registered`);
-                return res.status(409).json({
-                    success: false,
-                    message: 'An account with this email address already exists. Please use a different email or try signing in.',
-                    field: 'email'
-                });
-            }
-        } catch (emailCheckError) {
-            console.error('Error checking for existing email:', emailCheckError);
-            // Continue with registration process even if the check fails
+        const [existingEmails] = await db.execute('SELECT email FROM STAFF WHERE email = ?', [email]);
+        
+        if (existingEmails.length > 0) {
+            console.log(`❌ Email '${email}' already registered`);
+            return res.status(409).json({
+                success: false,
+                message: 'An account with this email address already exists. Please use a different email or try signing in.',
+                field: 'email'
+            });
         }
 
         console.log('🔍 Checking for existing mobile number...');
-        try {
-            const [existingMobiles] = await db.execute('SELECT mobile FROM staff WHERE mobile = ?', [mobileNumber]);
-            
-            if (existingMobiles.length > 0) {
-                console.log(`❌ Mobile number '${mobileNumber}' already registered`);
-                return res.status(409).json({
-                    success: false,
-                    message: 'This mobile number is already registered. Please use a different number or try signing in.',
-                    field: 'mobile'
-                });
-            }
-        } catch (mobileCheckError) {
-            console.error('Error checking for existing mobile:', mobileCheckError);
-            // Continue with registration process even if the check fails
+        const [existingMobiles] = await db.execute('SELECT mobile FROM STAFF WHERE mobile = ?', [mobileNumber]);
+        
+        if (existingMobiles.length > 0) {
+            console.log(`❌ Mobile number '${mobileNumber}' already registered`);
+            return res.status(409).json({
+                success: false,
+                message: 'This mobile number is already registered. Please use a different number or try signing in.',
+                field: 'mobile'
+            });
         }
         
         console.log('🔍 Checking for existing NID...');
-        try {
-            const [existingNIDs] = await db.execute('SELECT nid FROM staff WHERE nid = ?', [nid]);
-            
-            if (existingNIDs.length > 0) {
-                console.log(`❌ NID '${nid}' already registered`);
-                return res.status(409).json({
-                    success: false,
-                    message: 'An account with this NID already exists.',
-                    field: 'nid'
-                });
-            }
-        } catch (nidCheckError) {
-            console.error('Error checking for existing NID:', nidCheckError);
-            // Continue with registration process even if the check fails
+        const [existingNIDs] = await db.execute('SELECT nid FROM STAFF WHERE nid = ?', [nid]);
+        
+        if (existingNIDs.length > 0) {
+            console.log(`❌ NID '${nid}' already registered`);
+            return res.status(409).json({
+                success: false,
+                message: 'An account with this NID already exists.',
+                field: 'nid'
+            });
         }
         
         console.log('✅ No duplicate records found');
@@ -422,54 +363,37 @@ router.post('/signup', (req, res, next) => {
             }
         }
         
-        // Generate a unique staff_id
-        const staffIdPrefix = 'STF';
-        const randomNum = Math.floor(1000 + Math.random() * 9000); // 4-digit random number
-        const generatedStaffId = `${staffIdPrefix}${randomNum}`;
+        // Insert data into database
+        console.log('🔧 Inserting staff data into database');
         
-        console.log('🔧 Inserting staff data into database with ID:', generatedStaffId);
-        // Prepare CV BLOB (schema has column CV BLOB, not a filename column)
-        let cvBuffer = null;
-        try {
-            if (req.file && req.file.path) {
-                cvBuffer = fs.readFileSync(req.file.path);
-            }
-        } catch (cvReadErr) {
-            console.warn('⚠️ Could not read CV file into buffer, continuing without BLOB:', cvReadErr.message);
-        }
-
-        // Align with actual STAFF table columns:
-        // staff_id, first_name, last_name, username, password, mobile, email, nid, dob,
-        // house_no, road_no, area, district, administrative_div, zip, CV, status
         const insertQuery = `
-            INSERT INTO STAFF (
-                staff_id,
-                first_name,
-                last_name,
-                username,
-                password,
-                mobile,
-                email,
-                nid,
-                dob,
-                house_no,
-                road_no,
-                area,
-                district,
-                administrative_div,
-                zip,
-                CV,
-                status
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'unverified')`;
-
+            INSERT INTO staff (
+                username, 
+                password, 
+                first_name, 
+                last_name, 
+                email, 
+                mobile, 
+                nid, 
+                dob, 
+                house_no, 
+                road_no, 
+                area, 
+                district, 
+                administrative_div, 
+                zip, 
+                cv_path, 
+                profile_image
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+        
         const values = [
-            generatedStaffId,
+            username,
+            password, // In production, you should hash passwords
             firstName,
             lastName,
-            username,
-            password, // TODO: hash in production
-            mobileNumber,
             email,
+            mobileNumber,
             nid,
             dob,
             houseNo || null,
@@ -478,18 +402,20 @@ router.post('/signup', (req, res, next) => {
             district || null,
             administrativeDiv || null,
             zipCode || null,
-            cvBuffer
+            cvPath,
+            profileImagePath
         ];
-
+        
         const [result] = await db.execute(insertQuery, values);
-        // Use the generated staff ID
-        console.log(`✅ Staff registration successful with ID: ${generatedStaffId} and result:`, result);
+        const staffId = result.insertId;
+        
+        console.log(`✅ Staff registration successful with ID: ${staffId}`);
         
         // Return success response
         res.status(201).json({
             success: true,
             message: 'Registration successful. You can now sign in.',
-            staffId: generatedStaffId,
+            staffId: staffId,
             staffData: {
                 username,
                 firstName,
@@ -510,28 +436,9 @@ router.post('/signup', (req, res, next) => {
         });
     } catch (error) {
         console.error('❌ Registration error:', error);
-        console.error('Error stack:', error.stack);
-        
-        // Provide more specific error messages
-        if (error.code === 'ER_DUP_ENTRY') {
-            // MySQL duplicate entry error
-            let field = 'entry';
-            if (error.message.includes('username')) field = 'username';
-            if (error.message.includes('email')) field = 'email';
-            if (error.message.includes('mobile')) field = 'mobileNumber';
-            if (error.message.includes('nid')) field = 'nid';
-            
-            return res.status(409).json({
-                success: false,
-                message: `This ${field} is already registered. Please use a different ${field}.`,
-                field: field
-            });
-        }
-        
         res.status(500).json({
             success: false,
-            message: 'An error occurred during registration. Please try again.',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+            message: 'An error occurred during registration. Please try again.'
         });
     }
 });
@@ -576,16 +483,13 @@ router.post('/signin', async (req, res) => {
             });
         }
         
-        // TEMPORARY FIX: Allow login regardless of verification status
-        console.log(`⚠️ Login status check bypassed for ${username} (current status: ${user.status})`);
-        
-        // Automatically update the user's status to verified for easier development
-        try {
-            await db.execute('UPDATE staff SET status = ? WHERE username = ?', ['verified', username]);
-            console.log(`✅ Account automatically verified for: ${username}`);
-        } catch (err) {
-            console.error('Error updating status:', err);
-            // Continue anyway even if update fails
+        // Check if account is verified
+        if (user.status !== 'active') {
+            console.log(`❌ Account not active: ${username} (status: ${user.status})`);
+            return res.status(403).json({
+                success: false,
+                message: 'Your account is pending verification. Please wait for admin approval.'
+            });
         }
         
         console.log(`✅ Successful signin: ${username}`);
@@ -668,33 +572,8 @@ router.put('/update/:staffId', async (req, res) => {
     try {
         console.log('🔄 Processing staff profile update request');
         
-        let { staffId } = req.params;
-        console.log('Raw staff ID from params:', staffId);
-        
-        // Check if we were given a username instead of a staff_id
-        let isUsername = false;
-        if (isNaN(staffId) && !staffId.startsWith('STF')) {
-            isUsername = true;
-            console.log('Staff ID appears to be a username:', staffId);
-            
-            // Try to get the actual staff ID from the database
-            try {
-                const [users] = await db.execute(
-                    'SELECT staff_id FROM staff WHERE username = ?',
-                    [staffId]
-                );
-                
-                if (users.length > 0) {
-                    const actualStaffId = users[0].staff_id;
-                    console.log(`Found actual staff ID ${actualStaffId} for username ${staffId}`);
-                    staffId = actualStaffId;
-                } else {
-                    console.log(`Could not find a staff record for username: ${staffId}`);
-                }
-            } catch (error) {
-                console.error('Error looking up staff ID by username:', error);
-            }
-        }
+        const { staffId } = req.params;
+        console.log('Staff ID from params:', staffId);
         
         const {
             username,
@@ -727,9 +606,6 @@ router.put('/update/:staffId', async (req, res) => {
             hasNewPassword: !!newPassword,
             hasConfirmPassword: !!confirmPassword
         }, null, 2));
-        
-        // Log the entire request body to help with debugging
-        console.log('Full request body:', JSON.stringify(req.body, null, 2));
 
         // First check if username is taken by another user
         if (username) {
@@ -864,19 +740,8 @@ router.put('/update/:staffId', async (req, res) => {
             });
         }
 
-        // Make sure staffId is correctly formatted (should start with STF)
-        if (!staffId.startsWith('STF')) {
-            console.log('Adding STF prefix to staff ID if needed');
-            if (!isNaN(staffId)) {
-                // It's numeric, add STF prefix
-                staffId = 'STF' + staffId;
-            }
-        }
-        
         // Add staffId to values array
         values.push(staffId);
-        
-        console.log('Final staff ID for update:', staffId);
 
         const query = `
             UPDATE staff 
@@ -887,20 +752,18 @@ router.put('/update/:staffId', async (req, res) => {
         console.log('Executing update query:', query);
         console.log('With values:', values);
         
-        // Create a formatted SQL query for debugging
-        let debugQuery = query;
-        values.forEach((val, index) => {
-            debugQuery = debugQuery.replace('?', typeof val === 'string' ? `'${val}'` : val);
-        });
-        console.log('Debug SQL query:', debugQuery);
-        
-        // Execute the update directly without transaction
+        // Use transaction to ensure data integrity
         let result;
         try {
-            // Execute the query directly
+            await db.execute('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+            await db.beginTransaction();
+            
             const [queryResult] = await db.execute(query, values);
             result = queryResult;
             console.log('Update result:', result);
+            
+            await db.commit();
+            console.log('Transaction committed successfully');
             
             // Log if any rows were actually updated
             if (result.affectedRows === 0) {
@@ -914,6 +777,12 @@ router.put('/update/:staffId', async (req, res) => {
             }
         } catch (dbError) {
             console.error('Database error during update:', dbError);
+            try {
+                await db.rollback();
+                console.log('Transaction rolled back due to error');
+            } catch (rollbackError) {
+                console.error('Error during rollback:', rollbackError);
+            }
             return res.status(500).json({
                 success: false,
                 message: 'Database error: ' + dbError.message

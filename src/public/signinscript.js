@@ -414,97 +414,6 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
       <div class="account-types-list">
         <div class="account-type">
-    });
-  }
-
-  // Real-time validation feedback for username
-  if (usernameField) {
-    usernameField.addEventListener('input', function() {
-      const value = this.value.trim();
-      if (value.length > 0 && value.length < 4) {
-        this.style.borderColor = '#ff4757';
-        this.style.boxShadow = '0 0 10px rgba(255, 71, 87, 0.3)';
-        this.title = 'Username must be at least 4 characters';
-      } else if (value.length >= 4) {
-        this.style.borderColor = '#2ed573';
-        this.style.boxShadow = '0 0 10px rgba(46, 213, 115, 0.3)';
-        this.title = 'Username looks good';
-      } else {
-        this.style.borderColor = '';
-        this.style.boxShadow = '';
-        this.title = '';
-      }
-    });
-
-    // Clear validation on focus
-    usernameField.addEventListener('focus', function() {
-      if (this.value.trim() === '') {
-        this.style.borderColor = '';
-        this.style.boxShadow = '';
-        this.title = '';
-      }
-    });
-  }
-
-  // Real-time validation feedback for password
-  if (passwordField) {
-    passwordField.addEventListener('input', function() {
-      const value = this.value;
-      if (value.length > 0 && value.length < 6) {
-        this.style.borderColor = '#ff4757';
-        this.style.boxShadow = '0 0 10px rgba(255, 71, 87, 0.3)';
-        this.title = 'Password must be at least 6 characters';
-      } else if (value.length >= 6) {
-        this.style.borderColor = '#2ed573';
-        this.style.boxShadow = '0 0 10px rgba(46, 213, 115, 0.3)';
-        this.title = 'Password looks good';
-      } else {
-        this.style.borderColor = '';
-        this.style.boxShadow = '';
-        this.title = '';
-      }
-    });
-
-    // Clear validation on focus
-    passwordField.addEventListener('focus', function() {
-      if (this.value === '') {
-        this.style.borderColor = '';
-        this.style.boxShadow = '';
-        this.title = '';
-      }
-    });
-  }
-
-  // Add visual feedback to signin button
-  const signinBtn = document.getElementById("signin");
-  if (signinBtn) {
-    signinBtn.addEventListener('mouseenter', function() {
-      if (!this.disabled) {
-        this.style.transform = 'translateY(-2px)';
-        this.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.2)';
-      }
-    });
-
-    signinBtn.addEventListener('mouseleave', function() {
-      if (!this.disabled) {
-        this.style.transform = 'translateY(0)';
-        this.style.boxShadow = '';
-      }
-    });
-  }
-
-  // Add account type indicator (only individual and donor)
-  const formContainer = document.querySelector('.signin-form') || document.querySelector('form');
-  if (formContainer && !document.querySelector('.account-types-info')) {
-    const accountTypesInfo = document.createElement('div');
-    accountTypesInfo.className = 'account-types-info';
-    accountTypesInfo.innerHTML = `
-      <div class="account-types-header">
-        <i class="fas fa-info-circle"></i>
-        <span>Supported Account Types</span>
-      </div>
-      <div class="account-types-list">
-        <div class="account-type">
           <i class="fas fa-user"></i>
           <span>Individual</span>
         </div>
@@ -512,10 +421,16 @@ document.addEventListener('DOMContentLoaded', function() {
           <i class="fas fa-heart"></i>
           <span>Donor</span>
         </div>
-      </div>
-    `;
-    
-    // Insert before the form or at the end of the container
+        <div class="account-type">
+          <i class="fas fa-briefcase"></i>
+          <span>Staff</span>
+        </div>
+        <div class="account-type">
+          <i class="fas fa-building"></i>
+          <span>Foundation</span>
+        </div>
+      </div>`;
+
     const insertTarget = formContainer.querySelector('form') || formContainer;
     if (insertTarget.nextSibling) {
       formContainer.insertBefore(accountTypesInfo, insertTarget.nextSibling);
@@ -523,6 +438,7 @@ document.addEventListener('DOMContentLoaded', function() {
       formContainer.appendChild(accountTypesInfo);
     }
   }
+
 });
 
 // Add CSS styles for custom alerts and enhanced UI
