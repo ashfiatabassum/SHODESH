@@ -87,6 +87,15 @@ async function main() {
     $("#desc").textContent = e.description || "";
     $("#catTag").textContent = `${e.category_name || ''}${e.event_type_name ? ' • ' + e.event_type_name : ''}`.trim();
     $("#divisionTag").textContent = e.division || "";
+    // Created date
+    try {
+      if (e.created_at) {
+        const dt = new Date(e.created_at);
+        const nice = dt.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        const rel = timeAgo(dt);
+        $("#createdAtTag").textContent = `Created ${nice}${rel ? ' • ' + rel : ''}`;
+      }
+    } catch {}
     const progress = pct(e.amount_needed, e.amount_received);
     $("#goal").textContent = asTaka(e.amount_needed);
     $("#raised").textContent = asTaka(e.amount_received);
@@ -146,6 +155,25 @@ function escapeHTML(str) {
   return String(str ?? "").replace(/[&<>"']/g, s => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   })[s]);
+}
+
+function timeAgo(date){
+  try{
+    const d = (date instanceof Date) ? date : new Date(date);
+    const diff = Date.now() - d.getTime();
+    const sec = Math.floor(diff/1000);
+    const min = Math.floor(sec/60);
+    const hr = Math.floor(min/60);
+    const day = Math.floor(hr/24);
+    if (day > 365) return `${Math.floor(day/365)}y ago`;
+    if (day > 30) return `${Math.floor(day/30)}mo ago`;
+    if (day > 7) return `${Math.floor(day/7)}w ago`;
+    if (day >= 1) return `${day}d ago`;
+    if (hr >= 1) return `${hr}h ago`;
+    if (min >= 1) return `${min}m ago`;
+    if (sec >= 10) return `${sec}s ago`;
+    return 'just now';
+  } catch { return '' }
 }
 
 document.addEventListener("DOMContentLoaded", main);
