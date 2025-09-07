@@ -253,6 +253,13 @@ function validateField(e) {
                 return false;
             }
             break;
+            
+        case 'area':
+            if (value && !validateArea(value)) {
+                showFieldError(field, 'Area must contain only letters and spaces (e.g., Banani, Dhanmondi)');
+                return false;
+            }
+            break;
     }
     
     return true;
@@ -285,6 +292,12 @@ function validateZipCode(zipCode) {
     // 4-digit zip code
     const regex = /^\d{4}$/;
     return regex.test(zipCode);
+}
+
+function validateArea(area) {
+    // Area validation (letters and spaces only)
+    const regex = /^[A-Za-z ]+$/;
+    return regex.test(area);
 }
 
 function validatePasswordMatch() {
