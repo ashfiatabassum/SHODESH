@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Event</title>
+  <link rel="stylesheet" href="eventcreation.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Create Event</h1>
+
+    <form id="eventForm" enctype="multipart/form-data">
+      <!-- Category Dropdown -->
+      <div class="form-group">
+        <label for="category">Category</label>
+        <select id="category" name="categoryId" required>
+          <option value="">Select Category</option>
+        </select>
+      </div>
+
+      <!-- Event Type Dropdown -->
+      <div class="form-group">
+        <label for="eventType">Event Type</label>
+        <select id="eventType" name="ebcId" required disabled>
+          <option value="">Select Event Type</option>
+        </select>
+      </div>
+
+      <!-- Title -->
+      <div class="form-group">
+        <label for="title">Title</label>
+        <input type="text" id="title" name="title" required>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label for="description">Description</label>
+        <textarea id="description" name="description" rows="4" required></textarea>
+      </div>
+
+      <!-- Amount Needed -->
+      <div class="form-group">
+        <label for="amountNeeded">Amount Needed</label>
+        <input type="number" id="amountNeeded" name="amountNeeded" min="1" required>
+      </div>
+
+      <!-- Division -->
+      <div class="form-group">
+        <label for="division">Division</label>
+        <input type="text" id="division" name="division" required>
+      </div>
+
+      
+     
+
+      <!-- File Uploads -->
+      <div class="form-group">
+        <label for="doc">Doc (Required)</label>
+        <input type="file" id="doc" name="doc" accept=".pdf,.doc,.docx,.jpg,.png" required>
+      </div>
+
+      <div class="form-group">
+        <label for="coverPhoto">Cover Photo (Optional)</label>
+        <input type="file" id="coverPhoto" name="coverPhoto" accept=".jpg,.png">
+      </div>
+
+      <button type="submit">Create Event</button>
+    </form>
+  </div>
+
+  <script src="eventcreation.js"></script>
+</body>
+</html>
