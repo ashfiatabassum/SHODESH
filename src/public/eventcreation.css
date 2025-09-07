@@ -1,0 +1,107 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: url('images/dbms3.jpg') no-repeat center center/cover;
+background-size: cover;
+  color: #d7dbe0;
+}
+
+
+.container {
+  max-width: 800px;
+  margin: 50px auto;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(20, 104, 39, 0.8) 39%, rgba(154, 225, 182, 0.8) 61%);
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+
+h1 {
+  text-align: center;
+  color: #f4eded;
+  margin-bottom: 40px;
+}
+
+
+/* Form Styles */
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+
+label {
+  font-weight: bold;
+  margin-bottom: 5px;
+  display: block;
+}
+
+
+input[type="text"],
+input[type="number"],
+input[type="file"],
+textarea,
+select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #116f48;
+  border-radius: 4px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+
+textarea {
+  resize: vertical;
+}
+
+
+button {
+  background-color: #1e924c;
+  color: #fff;
+  border: none;
+  padding: 10px 15px;
+  font-size: 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+
+button:hover {
+  background-color: #0e560f;
+}
+
+
+/* Dropdown Styles */
+select:disabled {
+  background-color: #65b795;
+  color: #9fd2ad;
+}
+
+
+/* File Input Styles */
+input[type="file"] {
+  padding: 5px;
+}
+
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  .container {
+    padding: 15px;
+  }
+
+
+  button {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+}
