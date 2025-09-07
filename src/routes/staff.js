@@ -162,7 +162,7 @@ router.post('/signup', (req, res, next) => {
             roadNo,
             area,
             district,
-            administrativeDiv,
+            division: administrativeDiv, // Map form field 'division' to 'administrativeDiv'
             zipCode
         } = req.body;
 
@@ -288,6 +288,16 @@ router.post('/signup', (req, res, next) => {
             });
         }
         console.log('🔍 Validating zip code: Valid');
+
+        // Validate area format (letters and spaces only)
+        if (area && !(/^[A-Za-z ]+$/).test(area)) {
+            console.log('❌ Invalid area format');
+            return res.status(400).json({
+                success: false,
+                message: 'Area must contain only letters and spaces'
+            });
+        }
+        console.log('🔍 Validating area format: Valid');
 
         // Validate district and administrative division
         const validDistricts = ['Dhaka', 'Chittagong', 'Sylhet', 'Rajshahi', 'Khulna', 'Barisal', 'Rangpur', 'Mymensingh', 'Other'];
@@ -426,6 +436,19 @@ router.post('/signup', (req, res, next) => {
         
         console.log('🔧 Inserting staff data into database with ID:', generatedStaffId);
         
+        // Read CV file content for BLOB storage
+        let cvData = null;
+        try {
+            cvData = fs.readFileSync(req.file.path);
+            console.log('📄 CV file read successfully, size:', cvData.length, 'bytes');
+        } catch (fileReadError) {
+            console.error('❌ Error reading CV file:', fileReadError);
+            return res.status(500).json({
+                success: false,
+                message: 'Error processing CV file'
+            });
+        }
+        
         // Insert data into database
         const insertQuery = `
             INSERT INTO staff (
@@ -444,7 +467,7 @@ router.post('/signup', (req, res, next) => {
                 district, 
                 administrative_div, 
                 zip, 
-                cv_filename, 
+                CV, 
                 status
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'unverified')
         `;
@@ -465,7 +488,7 @@ router.post('/signup', (req, res, next) => {
             district || null,
             administrativeDiv || null,
             zipCode || null,
-            req.file.originalname  // Use original filename instead of path
+            cvData  // Store CV file content as BLOB
         ];
         
         const [result] = await db.execute(insertQuery, values);
@@ -512,6 +535,25 @@ router.post('/signup', (req, res, next) => {
                 success: false,
                 message: `This ${field} is already registered. Please use a different ${field}.`,
                 field: field
+            });
+        }
+        
+        if (error.code === 'ER_CHECK_CONSTRAINT_VIOLATED') {
+            // Database constraint violation - provide helpful message
+            let message = 'Please check your input data and try again.';
+            
+            if (error.message.includes('staff_chk')) {
+                message = 'Invalid data format. Please ensure:\n' +
+                         '• First and last names contain only letters and spaces\n' +
+                         '• Area contains only letters and spaces (not numbers)\n' +
+                         '• Road number contains only digits\n' +
+                         '• Zip code is exactly 4 digits\n' +
+                         '• All required fields are filled correctly';
+            }
+            
+            return res.status(400).json({
+                success: false,
+                message: message
             });
         }
         
