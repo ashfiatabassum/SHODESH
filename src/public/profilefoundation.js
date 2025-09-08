@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (data.success) {
       loadFoundationProfile(data.foundationData);
       await loadProjects(foundationId);
+      await loadReceivedDonations(foundationId); // <-- fetch donations after projects
     } else {
       showNotification(data.message || "Failed to load profile.");
     }
@@ -42,7 +43,9 @@ async function loadProjects(foundationId) {
     if (!result.success) throw new Error(result.message);
     const projects = result.projects || [];
     document.getElementById('totalProjects').textContent = projects.length;
-    const totalReceived = projects.reduce((sum, p) => sum + (p.amount_received || 0), 0);
+
+    // Use backend totalReceived and ensure it's a number
+    const totalReceived = Number(result.totalReceived) || 0;
     document.getElementById('totalReceived').textContent = '৳' + totalReceived.toLocaleString();
 
     renderProjects(projects);
@@ -64,12 +67,65 @@ function renderProjects(projects) {
       </button>
       <div class="project-details" id="project-details-${idx}" style="display:none;">
         <p><strong>Description:</strong> ${project.description}</p>
-        <p><strong>Amount Needed:</strong> ৳${project.amount_needed.toLocaleString()}</p>
-        <p><strong>Amount Received:</strong> ৳${project.amount_received.toLocaleString()}</p>
+        <p><strong>Amount Needed:</strong> ৳${Number(project.amount_needed).toLocaleString()}</p>
+        <p><strong>Amount Received:</strong> ৳${Number(project.amount_received).toLocaleString()}</p>
       </div>
     `;
     projectsList.appendChild(projectDiv);
   });
+}
+
+async function loadReceivedDonations(foundationId) {
+  const card = document.getElementById('receivedDonationsCard');
+  if (!card) return;
+
+  try {
+    const response = await fetch(`/api/foundation/donations/${foundationId}`);
+    const result = await response.json();
+    const donations = result.success ? result.donations : [];
+
+    card.innerHTML = `
+      <div class="card-header">
+        <h2><i class="fas fa-hand-holding-heart"></i> Received Donations</h2>
+      </div>
+      <div class="card-content">
+        <div class="donations-list" style="margin-top:10px;">
+          ${donations.length === 0
+            ? '<p style="color:#888;">No donations received yet.</p>'
+            : `
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                ${donations.map(d => `
+                  <div style="
+                    background: #f8f9fa;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 8px rgba(74,124,89,0.07);
+                    padding: 14px 18px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                  ">
+                    <span style="font-weight:600; color:#2d5a3d;">
+                      ${d.first_name} ${d.last_name}
+                    </span>
+                    <span style="color:#4a7c59; font-weight:700;">৳${Number(d.amount).toLocaleString()}</span>
+                    <span style="color:#888; font-size:0.95em;">${new Date(d.paid_at).toLocaleDateString()}</span>
+                  </div>
+                `).join('')}
+              </div>
+            `
+          }
+        </div>
+      </div>
+    `;
+  } catch (err) {
+    card.innerHTML = `<div class="card-header">
+      <h2><i class="fas fa-hand-holding-heart"></i> Received Donations</h2>
+    </div>
+    <div class="card-content">
+      <p style="color:#888;">Error loading donations.</p>
+    </div>`;
+    console.error('Error loading donations:', err);
+  }
 }
 
 function toggleProjectDetails(id) {
