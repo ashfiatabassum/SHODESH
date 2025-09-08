@@ -10,9 +10,10 @@ class AdminDashboard {
             this.showLoginModal();
         }
         
-        this.sampleEvents = []; // Will be populated from API
-        this.sampleFoundations = []; // Will be populated from API
-        this.sampleVolunteers = []; // Will be populated from API
+    this.sampleEvents = []; // Will be populated from API
+    this.sampleFoundations = []; // Will be populated from API
+    this.sampleVolunteers = []; // Will be populated from API
+    this.volunteerFilter = 'all'; // current volunteers filter
         this.categories = []; // Will be populated from API
         
         this.init();
@@ -24,7 +25,8 @@ class AdminDashboard {
             this.loadDashboardData();
             this.renderEventsSection();
             this.renderFoundationsSection();
-            this.renderVolunteersSection();
+            // Load volunteers from backend then render
+            this.loadVolunteersData(this.volunteerFilter).finally(() => this.renderVolunteersSection());
             this.renderCategoriesSection();
             this.renderTrendingSection();
             this.renderDonationAnalytics();
@@ -138,12 +140,14 @@ class AdminDashboard {
     }
     
     setupEventListeners() {
-        // Navigation
+        // Navigation: bind only items that explicitly call showSection('...')
         document.querySelectorAll('.menu-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                const section = e.currentTarget.getAttribute('onclick').match(/'([^']+)'/)[1];
-                this.showSection(section);
-            });
+            const oc = item.getAttribute('onclick') || '';
+            const match = oc.match(/showSection\('([^']+)'\)/);
+            if (match) {
+                const section = match[1];
+                item.addEventListener('click', () => this.showSection(section));
+            }
         });
         
         // Form submissions
@@ -160,14 +164,19 @@ class AdminDashboard {
         });
         
         // Show selected section
-        document.getElementById(sectionName).classList.add('active');
+        const target = document.getElementById(sectionName);
+        if (!target) {
+            console.warn('Section not found:', sectionName);
+            return;
+        }
+        target.classList.add('active');
         
         // Update navigation
         document.querySelectorAll('.menu-item').forEach(item => {
             item.classList.remove('active');
         });
-        
-        document.querySelector(`[onclick="showSection('${sectionName}')"]`).classList.add('active');
+        const navItem = document.querySelector(`[onclick="showSection('${sectionName}')"]`);
+        if (navItem) navItem.classList.add('active');
         
         this.currentSection = sectionName;
     }
@@ -178,82 +187,41 @@ class AdminDashboard {
     }
     
     renderEventsSection() {
-        const eventsGrid = document.querySelector('.events-grid');
-        if (!eventsGrid) return;
-        
-        eventsGrid.innerHTML = this.sampleEvents.map(event => `
+        const grid = document.querySelector('.events-grid');
+        if (!grid) return;
+        const list = Array.isArray(this.sampleEvents) ? this.sampleEvents : [];
+        grid.innerHTML = list.map(event => `
             <div class="event-card">
                 <div class="event-header">
                     <div class="event-category">
-                        <span class="category-badge ${event.category}">${event.category}</span>
-                        <span class="status-badge ${event.status}">${event.status}</span>
+                        <span class="category-badge ${event.category || ''}">${event.category || ''}</span>
+                        <span class="status-badge ${event.status || ''}">${event.status || ''}</span>
                     </div>
                     <div class="event-actions">
-                        <button class="btn-icon" onclick="adminDashboard.viewEventDetails(${event.id})">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="btn-icon" onclick="adminDashboard.editEvent(${event.id})">
-                            <i class="fas fa-edit"></i>
-                        </button>
+                        <button class="btn-icon" onclick="adminDashboard.viewEventDetails(${event.id})" title="View details" aria-label="View details" type="button"><i class="fas fa-eye" aria-hidden="true"></i></button>
+                        <button class="btn-icon" onclick="adminDashboard.editEvent(${event.id})" title="Edit event" aria-label="Edit event" type="button"><i class="fas fa-edit" aria-hidden="true"></i></button>
                     </div>
                 </div>
-                <h3 class="event-title">${event.title}</h3>
-                <p class="event-organizer">by ${event.organizer}</p>
-                <p class="event-location">
-                    <i class="fas fa-map-marker-alt"></i>
-                    ${event.location}
-                </p>
+                <h3 class="event-title">${event.title || ''}</h3>
+                <p class="event-organizer">by ${event.organizer || ''}</p>
+                <p class="event-location"><i class="fas fa-map-marker-alt"></i> ${event.location || ''}</p>
                 <div class="event-progress">
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${(event.currentAmount / event.targetAmount) * 100}%"></div>
-                    </div>
-                    <div class="progress-info">
-                        <span>৳${event.currentAmount.toLocaleString()} raised</span>
-                        <span>৳${event.targetAmount.toLocaleString()} goal</span>
-                    </div>
-                </div>
-                <div class="event-meta">
-                    <span>Submitted: ${new Date(event.submittedDate).toLocaleDateString()}</span>
-                    ${event.volunteerVerificationNeeded ? 
-                        `<span class="volunteer-needed">
-                            <i class="fas fa-users"></i>
-                            Volunteer verification needed
-                        </span>` : ''}
-                </div>
-                <div class="event-verification-actions">
-                    ${event.status === 'pending' ? `
-                        <button class="btn-success" onclick="adminDashboard.verifyEvent(${event.id})">
-                            <i class="fas fa-check"></i>
-                            Approve
-                        </button>
-                        <button class="btn-warning" onclick="adminDashboard.requestVolunteerVerification(${event.id})">
-                            <i class="fas fa-user-check"></i>
-                            Request Volunteer Verification
-                        </button>
-                        <button class="btn-danger" onclick="adminDashboard.rejectEvent(${event.id})">
-                            <i class="fas fa-times"></i>
-                            Reject
-                        </button>
-                    ` : event.status === 'verified' ? `
-                        <button class="btn-trending" onclick="adminDashboard.addToTrending(${event.id})">
-                            <i class="fas fa-fire"></i>
-                            Add to Trending
-                        </button>
-                    ` : ''}
+                    <div class="progress-bar"><div class="progress-fill" style="width: ${((event.currentAmount||0) / (event.targetAmount||1)) * 100}%"></div></div>
+                    <div class="progress-info"><span>৳${(event.currentAmount||0).toLocaleString()}</span><span>৳${(event.targetAmount||0).toLocaleString()}</span></div>
                 </div>
             </div>
         `).join('');
     }
-    
+
     renderFoundationsSection() {
-        const foundationsSection = document.getElementById('foundations');
-        if (!foundationsSection) return;
-        
-        foundationsSection.innerHTML = `
+        const section = document.getElementById('foundations');
+        if (!section) return;
+        const list = Array.isArray(this.sampleFoundations) ? this.sampleFoundations : [];
+        section.innerHTML = `
             <div class="section-header">
                 <h2>Foundation Verification</h2>
                 <div class="header-actions">
-                    <select class="filter-select">
+                    <select class="filter-select" aria-label="Filter foundations by status">
                         <option value="pending">Pending</option>
                         <option value="approved">Approved</option>
                         <option value="rejected">Rejected</option>
@@ -261,150 +229,106 @@ class AdminDashboard {
                 </div>
             </div>
             <div class="foundations-grid">
-                ${this.sampleFoundations.map(foundation => `
+                ${list.map(f => `
                     <div class="foundation-card">
                         <div class="foundation-header">
-                            <h3>${foundation.name}</h3>
-                            <span class="status-badge ${foundation.status}">${foundation.status}</span>
+                            <h3>${f.name || ''}</h3>
+                            <span class="status-badge ${f.status || ''}">${f.status || ''}</span>
                         </div>
                         <div class="foundation-info">
-                            <p><strong>Registration:</strong> ${foundation.registrationNumber}</p>
-                            <p><strong>Contact:</strong> ${foundation.contactPerson}</p>
-                            <p><strong>Email:</strong> ${foundation.email}</p>
-                            <p><strong>Phone:</strong> ${foundation.phone}</p>
-                            <p><strong>Years Active:</strong> ${foundation.yearsOfOperation} years</p>
-                            <p><strong>Previous Projects:</strong> ${foundation.previousProjects}</p>
-                        </div>
-                        <div class="foundation-areas">
-                            <strong>Focus Areas:</strong>
-                            <div class="areas-tags">
-                                ${foundation.focusAreas.map(area => `<span class="area-tag">${area}</span>`).join('')}
-                            </div>
-                        </div>
-                        <div class="foundation-documents">
-                            <strong>Documents:</strong>
-                            <div class="documents-list">
-                                ${foundation.documents.map(doc => `
-                                    <a href="#" class="document-link">
-                                        <i class="fas fa-file-pdf"></i>
-                                        ${doc}
-                                    </a>
-                                `).join('')}
-                            </div>
-                        </div>
-                        <div class="foundation-actions">
-                            <button class="btn-success" onclick="adminDashboard.approveFoundation(${foundation.id})">
-                                <i class="fas fa-check"></i>
-                                Approve
-                            </button>
-                            <button class="btn-warning" onclick="adminDashboard.requestMoreInfo(${foundation.id})">
-                                <i class="fas fa-info-circle"></i>
-                                Request Info
-                            </button>
-                            <button class="btn-danger" onclick="adminDashboard.rejectFoundation(${foundation.id})">
-                                <i class="fas fa-times"></i>
-                                Reject
-                            </button>
+                            <p><strong>Email:</strong> ${f.email || ''}</p>
+                            <p><strong>Phone:</strong> ${f.phone || ''}</p>
                         </div>
                     </div>
                 `).join('')}
             </div>
         `;
     }
-    
+
     renderVolunteersSection() {
-        const volunteersSection = document.getElementById('volunteers');
-        if (!volunteersSection) return;
-        
-        volunteersSection.innerHTML = `
+        const section = document.getElementById('volunteers');
+        if (!section) return;
+        const list = Array.isArray(this.sampleVolunteers) ? this.sampleVolunteers : [];
+        section.innerHTML = `
             <div class="section-header">
                 <h2>Volunteer Verification</h2>
                 <div class="header-actions">
-                    <select class="filter-select">
-                        <option value="pending">Pending</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
+                    <label class="sr-only" for="volunteerStatusFilter">Filter volunteers by status</label>
+                    <select id="volunteerStatusFilter" class="filter-select" aria-label="Filter volunteers by status">
+                        <option value="all">All</option>
+                        <option value="unverified">Unverified</option>
+                        <option value="verified">Verified</option>
+                        <option value="suspended">Suspended</option>
                     </select>
                 </div>
             </div>
             <div class="volunteers-grid">
-                ${this.sampleVolunteers.map(volunteer => `
+                ${list.length === 0 ? '<div class="info-card"><div class="info-content"><p>No volunteers found.</p></div></div>' : list.map(v => `
                     <div class="volunteer-card">
                         <div class="volunteer-header">
-                            <div class="volunteer-avatar">
-                                <i class="fas fa-user"></i>
-                            </div>
+                            <div class="volunteer-avatar"><i class="fas fa-user"></i></div>
                             <div class="volunteer-basic">
-                                <h3>${volunteer.name}</h3>
-                                <p>${volunteer.location}</p>
-                                <span class="status-badge ${volunteer.status}">${volunteer.status}</span>
+                                <h3><a href="./staff-profile.html?staff_id=${encodeURIComponent(v.id)}" title="Open staff profile/actions" style="color:inherit; text-decoration:none;">${v.name || ''}</a></h3>
+                                <p>${v.location || ''}</p>
+                                <span class="status-badge ${v.status || ''}">${v.status || ''}</span>
                             </div>
                         </div>
                         <div class="volunteer-info">
-                            <p><strong>Email:</strong> ${volunteer.email}</p>
-                            <p><strong>Phone:</strong> ${volunteer.phone}</p>
-                            <p><strong>Availability:</strong> ${volunteer.availability}</p>
-                            <p><strong>Experience:</strong> ${volunteer.experience}</p>
-                        </div>
-                        <div class="volunteer-skills">
-                            <strong>Skills:</strong>
-                            <div class="skills-tags">
-                                ${volunteer.skills.map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
-                            </div>
-                        </div>
-                        <div class="volunteer-references">
-                            <strong>References:</strong>
-                            ${volunteer.references.map(ref => `
-                                <div class="reference-item">
-                                    <span>${ref.name} (${ref.relation})</span>
-                                    <span>${ref.phone}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                        <div class="volunteer-documents">
-                            <strong>Documents:</strong>
-                            <div class="documents-list">
-                                ${volunteer.documents.map(doc => `
-                                    <a href="#" class="document-link">
-                                        <i class="fas fa-file-pdf"></i>
-                                        ${doc}
-                                    </a>
-                                `).join('')}
-                            </div>
-                        </div>
-                        <div class="volunteer-actions">
-                            <button class="btn-success" onclick="adminDashboard.approveVolunteer(${volunteer.id})">
-                                <i class="fas fa-check"></i>
-                                Approve
-                            </button>
-                            <button class="btn-warning" onclick="adminDashboard.conductBackgroundCheck(${volunteer.id})">
-                                <i class="fas fa-search"></i>
-                                Background Check
-                            </button>
-                            <button class="btn-danger" onclick="adminDashboard.rejectVolunteer(${volunteer.id})">
-                                <i class="fas fa-times"></i>
-                                Reject
-                            </button>
+                            <p><strong>Email:</strong> ${v.email || ''}</p>
+                            <p><strong>Phone:</strong> ${v.phone || ''}</p>
                         </div>
                     </div>
                 `).join('')}
             </div>
         `;
+
+        const filter = section.querySelector('#volunteerStatusFilter');
+        if (filter) {
+            filter.value = this.volunteerFilter;
+            filter.onchange = async (e) => {
+                this.volunteerFilter = e.target.value;
+                await this.loadVolunteersData(this.volunteerFilter);
+                this.renderVolunteersSection();
+            };
+        }
+    }
+    // ===== Volunteers (STAFF) backend wiring =====
+    async loadVolunteersData(status = 'all') {
+        try {
+            this.volunteerFilter = status;
+            const res = await this.apiRequest(`/staff?status=${encodeURIComponent(status)}`);
+            if (!res || !res.success) return;
+            // Map API rows to existing card shape for rendering
+            this.sampleVolunteers = (res.data || []).map(r => ({
+                id: r.staff_id,
+                name: r.full_name || `${r.username}`,
+                email: r.email,
+                phone: r.mobile,
+                location: [r.district, r.administrative_div].filter(Boolean).join(', '),
+                skills: [],
+                availability: 'N/A',
+                experience: 'N/A',
+                status: r.status,
+                documents: r.has_cv ? [`CV (${r.cv_size} bytes)`] : []
+            }));
+        } catch (err) {
+            console.error('Failed to load volunteers:', err);
+        }
     }
     
     renderCategoriesSection() {
         const categoriesGrid = document.querySelector('.categories-grid');
         if (!categoriesGrid) return;
         
-        categoriesGrid.innerHTML = this.categories.map(category => `
+        categoriesGrid.innerHTML = (Array.isArray(this.categories) ? this.categories : []).map(category => `
             <div class="category-card">
                 <div class="category-header">
                     <div class="category-icon">
-                        <i class="${category.icon}"></i>
+                        <i class="${category.icon || 'fas fa-tag'}"></i>
                     </div>
                     <div class="category-info">
-                        <h3>${category.name}</h3>
-                        <p>${category.count} campaigns</p>
+                        <h3>${category.name || ''}</h3>
+                        <p>${category.count || 0} campaigns</p>
                     </div>
                     <div class="category-status">
                         <label class="toggle-switch">
@@ -414,96 +338,30 @@ class AdminDashboard {
                         </label>
                     </div>
                 </div>
-                <div class="category-actions">
-                    <button class="btn-secondary" onclick="adminDashboard.editCategory(${category.id})">
-                        <i class="fas fa-edit"></i>
-                        Edit
-                    </button>
-                    <button class="btn-danger" onclick="adminDashboard.deleteCategory(${category.id})">
-                        <i class="fas fa-trash"></i>
-                        Delete
-                    </button>
-                </div>
             </div>
         `).join('');
     }
     
+    // Placeholder to avoid runtime error until real UI is wired
     renderTrendingSection() {
-        const trendingSection = document.getElementById('trending');
-        if (!trendingSection) return;
-        
-        trendingSection.innerHTML = `
-            <div class="section-header">
-                <h2>Trending Management</h2>
-                <div class="header-actions">
-                    <button class="btn-primary" onclick="adminDashboard.showAddToTrendingModal()">
-                        <i class="fas fa-plus"></i>
-                        Add to Trending
-                    </button>
-                </div>
-            </div>
-            <div class="trending-content">
-                <div class="trending-campaigns">
-                    <h3>Current Trending Campaigns</h3>
-                    <div class="trending-list">
-                        <!-- Trending campaigns will be populated here -->
-                    </div>
-                </div>
-                <div class="trending-analytics">
-                    <h3>Trending Performance</h3>
-                    <div class="performance-metrics">
-                        <!-- Performance metrics will be shown here -->
-                    </div>
+        const el = document.getElementById('trending');
+        if (!el) return;
+        el.innerHTML = `
+            <div class="info-card">
+                <div class="info-content">
+                    <p>No trending data yet.</p>
                 </div>
             </div>
         `;
     }
     
+    // Placeholder to avoid runtime error and quiet console until charts are added
     renderDonationAnalytics() {
-        // This would typically use a charting library like Chart.js
-        const chartContainer = document.getElementById('donationChart');
-        if (!chartContainer) return;
-        
-        // Sample implementation - you would use Chart.js or similar
-        chartContainer.innerHTML = `
-            <div class="chart-placeholder">
-                <h3>Donation Analytics Chart</h3>
-                <p>Chart.js implementation would go here</p>
-                <div class="sample-chart">
-                    <div class="chart-bar" style="height: 60%"></div>
-                    <div class="chart-bar" style="height: 80%"></div>
-                    <div class="chart-bar" style="height: 45%"></div>
-                    <div class="chart-bar" style="height: 90%"></div>
-                    <div class="chart-bar" style="height: 70%"></div>
-                </div>
-            </div>
+        const el = document.getElementById('donation-analytics');
+        if (!el) return;
+        el.innerHTML = `
+            <div class="chart-placeholder">Analytics coming soon.</div>
         `;
-    }
-    
-    // Event Verification Methods
-    verifyEvent(eventId) {
-        const event = this.sampleEvents.find(e => e.id === eventId);
-        if (event) {
-            event.status = 'verified';
-            this.showNotification('Event verified successfully', 'success');
-            this.renderEventsSection();
-        }
-    }
-    
-    rejectEvent(eventId) {
-        const event = this.sampleEvents.find(e => e.id === eventId);
-        if (event) {
-            event.status = 'rejected';
-            this.showNotification('Event rejected', 'warning');
-            this.renderEventsSection();
-        }
-    }
-    
-    requestVolunteerVerification(eventId) {
-        const event = this.sampleEvents.find(e => e.id === eventId);
-        if (event && event.nearbyVolunteers) {
-            this.showVolunteerVerificationModal(event);
-        }
     }
     
     showVolunteerVerificationModal(event) {
@@ -513,7 +371,7 @@ class AdminDashboard {
             <div class="modal-content">
                 <div class="modal-header">
                     <h3>Request Volunteer Verification</h3>
-                    <button class="close-btn" onclick="this.closest('.modal').remove()">
+                    <button class="close-btn" title="Close" aria-label="Close dialog" onclick="this.closest('.modal').remove()">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -557,6 +415,14 @@ class AdminDashboard {
         }
     }
     
+    // Temporary stubs to avoid console errors from demo buttons
+    viewEventDetails(id) {
+        this.showNotification(`View event ${id} (not implemented)`, 'info');
+    }
+    editEvent(id) {
+        this.showNotification(`Edit event ${id} (not implemented)`, 'info');
+    }
+    
     // Foundation Methods
     approveFoundation(foundationId) {
         const foundation = this.sampleFoundations.find(f => f.id === foundationId);
@@ -576,22 +442,43 @@ class AdminDashboard {
         }
     }
     
-    // Volunteer Methods
-    approveVolunteer(volunteerId) {
-        const volunteer = this.sampleVolunteers.find(v => v.id === volunteerId);
-        if (volunteer) {
-            volunteer.status = 'approved';
-            this.showNotification('Volunteer approved successfully', 'success');
-            this.renderVolunteersSection();
+    // Volunteer Methods (mapped to STAFF verify API)
+    async approveVolunteer(volunteerId) {
+        try {
+            const res = await this.apiRequest(`/staff/${encodeURIComponent(volunteerId)}/verify`, {
+                method: 'PUT',
+                body: JSON.stringify({ action: 'verify', notes: 'Approved by admin' })
+            });
+            if (res && res.success) {
+                this.showNotification('Volunteer verified successfully', 'success');
+                await this.loadVolunteersData(this.volunteerFilter);
+                this.renderVolunteersSection();
+            } else {
+                this.showNotification(res?.message || 'Failed to verify volunteer', 'error');
+            }
+        } catch (e) {
+            console.error('Approve volunteer error:', e);
+            this.showNotification('Approve failed', 'error');
         }
     }
     
-    rejectVolunteer(volunteerId) {
-        const volunteer = this.sampleVolunteers.find(v => v.id === volunteerId);
-        if (volunteer) {
-            volunteer.status = 'rejected';
-            this.showNotification('Volunteer application rejected', 'warning');
-            this.renderVolunteersSection();
+    async rejectVolunteer(volunteerId) {
+        // Map UI "reject" to backend "suspend" state for STAFF
+        try {
+            const res = await this.apiRequest(`/staff/${encodeURIComponent(volunteerId)}/verify`, {
+                method: 'PUT',
+                body: JSON.stringify({ action: 'suspend', notes: 'Rejected by admin' })
+            });
+            if (res && res.success) {
+                this.showNotification('Volunteer rejected (suspended)', 'warning');
+                await this.loadVolunteersData(this.volunteerFilter);
+                this.renderVolunteersSection();
+            } else {
+                this.showNotification(res?.message || 'Failed to reject volunteer', 'error');
+            }
+        } catch (e) {
+            console.error('Reject volunteer error:', e);
+            this.showNotification('Reject failed', 'error');
         }
     }
     
@@ -653,7 +540,7 @@ class AdminDashboard {
         notification.innerHTML = `
             <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
             <span>${message}</span>
-            <button onclick="this.parentElement.remove()">
+            <button onclick="this.parentElement.remove()" title="Dismiss notification" aria-label="Dismiss notification">
                 <i class="fas fa-times"></i>
             </button>
         `;
@@ -665,16 +552,22 @@ class AdminDashboard {
         }, 5000);
     }
     
-    logout() {
-        if (confirm('Are you sure you want to logout?')) {
-            window.location.href = '../signin.html';
-        }
-    }
+    
 }
 
 // Global functions for onclick handlers
 function showSection(sectionName) {
-    adminDashboard.showSection(sectionName);
+    const inst = window.adminDashboard || adminDashboard;
+    if (inst && typeof inst.showSection === 'function') {
+        inst.showSection(sectionName);
+    } else {
+        window.addEventListener('DOMContentLoaded', () => {
+            const i2 = window.adminDashboard || adminDashboard;
+            if (i2 && typeof i2.showSection === 'function') {
+                i2.showSection(sectionName);
+            }
+        }, { once: true });
+    }
 }
 
 function showAddCategoryModal() {
@@ -693,6 +586,7 @@ function logout() {
 let adminDashboard;
 document.addEventListener('DOMContentLoaded', function() {
     adminDashboard = new AdminDashboard();
+    window.adminDashboard = adminDashboard;
 });
 
 // Add additional CSS for new components
@@ -1151,13 +1045,14 @@ input:checked + .toggle-slider:before {
     width: 40px;
     background: #4a7c59;
     border-radius: 4px 4px 0 0;
-    animation: growUp 1s ease;
+    transform-origin: bottom;
+    transform: scaleY(0);
+    animation: scaleUp 600ms ease forwards;
 }
 
-@keyframes growUp {
-    from {
-        height: 0;
-    }
+@keyframes scaleUp {
+    from { transform: scaleY(0); }
+    to { transform: scaleY(1); }
 }
 
 /* Volunteer Option Styles */
