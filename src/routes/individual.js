@@ -18,7 +18,7 @@ function validateBangladeshMobile(mobile) {
 // Validate email format
 function validateEmail(email) {
   const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}$/;
-  return emailRegex.test(email);
+  return emailRegex.test(email); 
 }
 
 // Validate name format (only letters and spaces)
@@ -672,6 +672,101 @@ router.put('/update/:individualId', async (req, res) => {
       }
     );
   });
+});
+
+
+router.get('/projects/:individualId', async (req, res) => {
+  const { individualId } = req.params;
+  try {
+    // Get all projects for the individual
+    const projectsQuery = `
+      SELECT creation_id, title, description, amount_needed, amount_received
+      FROM event_creation
+      WHERE individual_id = ?
+      ORDER BY created_at DESC
+    `;
+    const projects = await new Promise((resolve, reject) => {
+      db.query(projectsQuery, [individualId], (err, results) => {
+        if (err) {
+          console.error('❌ Error fetching projects:', err);
+          reject(err);
+        } else {
+          resolve(results);
+        }
+      });
+    });
+
+    // For each project, get donations with donor name
+    const donationsMap = {};
+    for (const project of projects) {
+      const donationsQuery = `
+        SELECT d.amount, d.paid_at, donor.first_name, donor.last_name
+        FROM donation d
+        JOIN donor ON d.donor_id = donor.donor_id
+        WHERE d.creation_id = ?
+        ORDER BY d.paid_at DESC
+      `;
+      const donations = await new Promise((resolve, reject) => {
+        db.query(donationsQuery, [project.creation_id], (err, results) => {
+          if (err) {
+            console.error('❌ Error fetching donations:', err);
+            reject(err);
+          } else {
+            resolve(results);
+          }
+        });
+      });
+      donationsMap[String(project.creation_id)] = donations; // <-- force string key
+    }
+
+    // Calculate total received for this individual
+    const totalReceivedQuery = `
+      SELECT SUM(amount_received) AS total_received
+      FROM event_creation
+      WHERE individual_id = ?
+    `;
+    const totalResult = await new Promise((resolve, reject) => {
+      db.query(totalReceivedQuery, [individualId], (err, results) => {
+        if (err) {
+          console.error('❌ Error calculating total received:', err);
+          reject(err);
+        } else {
+          resolve(results);
+        }
+      });
+    });
+    const totalReceived = Number(totalResult[0]?.total_received) || 0;
+
+    res.json({ success: true, projects, totalReceived, donationsMap });
+  } catch (err) {
+    console.error('❌ Error in projects route:', err);
+    res.status(500).json({ success: false, message: 'Database error' });
+  }
+});
+
+// GET /api/individual/donations/:individualId - All donations for this individual
+router.get('/donations/:individualId', async (req, res) => {
+  const { individualId } = req.params;
+  try {
+    const query = `
+      SELECT d.amount, d.paid_at, donor.first_name, donor.last_name
+      FROM donation d
+      JOIN donor ON d.donor_id = donor.donor_id
+      JOIN event_creation e ON d.creation_id = e.creation_id
+      WHERE e.individual_id = ?
+      ORDER BY d.paid_at DESC
+    `;
+    db.query(query, [individualId], (err, results) => {
+      if (err) {
+        console.error('❌ Error fetching donations:', err);
+        return res.status(500).json({ success: false, message: 'Database error' });
+      }
+      res.json({ success: true, donations: results });
+    });
+  } catch (err) {
+    console.error('❌ Error in donations route:', err);
+    res.status(500).json({ success: false, message: 'Database error' });
+  }
 });
 
 

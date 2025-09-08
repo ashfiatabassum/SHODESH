@@ -2,7 +2,7 @@
 let individualData = {};
 
 // Initialize the page when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
   initializeIndividualData();
 });
 
@@ -23,9 +23,9 @@ async function initializeIndividualData() {
       
       // Load the profile with actual data
       loadIndividualProfile();
-      loadHelpRequests();
-      loadReceivedDonations();
-      calculateStats();
+      await loadHelpRequests(storedIndividualId);
+      await loadReceivedDonations(storedIndividualId);
+    
       animateCards();
       
     } else if (storedIndividualId) {
@@ -41,9 +41,9 @@ async function initializeIndividualData() {
         
         // Load the profile with fetched data
         loadIndividualProfile();
-        loadHelpRequests();
-        loadReceivedDonations();
-        calculateStats();
+        await loadHelpRequests(storedIndividualId);
+        await loadReceivedDonations(storedIndividualId);
+       
         animateCards();
         
       } else {
@@ -95,7 +95,7 @@ function getDefaultIndividualData() {
       district: "Not provided",
       division: "Not provided",
       zipCode: "Not provided"
-    },
+    }, 
     financial: {
       bkashNumber: "+880 XXXX-XXXXXX",
       bankAccount: "Not provided"
@@ -196,104 +196,105 @@ function loadIndividualProfile() {
 }
 
 // Load help requests
-function loadHelpRequests() {
-  const helpRequestsList = document.getElementById('requestsList');
-  if (!helpRequestsList) {
-    console.warn('⚠️ requestsList element not found');
-    return;
+async function loadHelpRequests(individualId) {
+  const projectsList = document.getElementById('projectsList');
+  projectsList.innerHTML = '<p>Loading projects...</p>';
+  try {
+    const response = await fetch(`/api/individual/projects/${individualId}`);
+    const result = await response.json();
+    if (!result.success) throw new Error(result.message);
+    const projects = result.projects || [];
+    document.getElementById('totalProjects').textContent = projects.length;
+
+    // Use backend totalReceived and ensure it's a number
+    const totalReceived = Number(result.totalReceived) || 0;
+    document.getElementById('totalReceived').textContent = '৳' + totalReceived.toLocaleString();
+
+    renderProjects(projects);
+  } catch (err) {
+    projectsList.innerHTML = `<p>Error loading projects: ${err.message}</p>`;
   }
-  
-  helpRequestsList.innerHTML = '';
-  
-  if (!individualData.helpRequests || individualData.helpRequests.length === 0) {
-    helpRequestsList.innerHTML = `
-      <div class="no-requests">
-        <i class="fas fa-hand-holding-heart"></i>
-        <p>No help requests yet. Create your first request to start receiving donations!</p>
-        <button class="create-request-btn" onclick="requestHelp()">Create Help Request</button>
+
+}
+
+function renderProjects(projects) {
+  const projectsList = document.getElementById('projectsList');
+  projectsList.innerHTML = '';
+
+  projects.forEach((project, idx) => {
+    const projectDiv = document.createElement('div');
+    projectDiv.className = 'project-dropdown';
+    projectDiv.innerHTML = `
+      <button class="project-title-btn" onclick="toggleProjectDetails('project-details-${idx}')">
+        ${project.title}
+      </button>
+      <div class="project-details" id="project-details-${idx}" style="display:none;">
+        <p><strong>Description:</strong> ${project.description}</p>
+        <p><strong>Amount Needed:</strong> ৳${Number(project.amount_needed).toLocaleString()}</p>
+        <p><strong>Amount Received:</strong> ৳${Number(project.amount_received).toLocaleString()}</p>
       </div>
     `;
-    return;
-  }
-  
-  individualData.helpRequests.forEach(request => {
-    const requestItem = document.createElement('div');
-    requestItem.className = 'request-item';
-    requestItem.innerHTML = `
-      <div class="request-info">
-        <div class="request-title">${request.title}</div>
-        <div class="request-description">${request.description}</div>
-        <div class="request-amount">Target: ৳${request.targetAmount.toLocaleString()}</div>
-      </div>
-      <div class="request-status">
-        <div class="status-badge ${request.status}">${request.status}</div>
-        <div class="request-date">${formatDate(request.dateCreated)}</div>
-      </div>
-    `;
-    helpRequestsList.appendChild(requestItem);
+    projectsList.appendChild(projectDiv);
   });
 }
 
 // Load received donations
-function loadReceivedDonations() {
-  const donationsList = document.getElementById('donationsList');
-  if (!donationsList) {
-    console.warn('⚠️ donationsList element not found');
-    return;
-  }
-  
-  donationsList.innerHTML = '';
-  
-  if (!individualData.receivedDonations || individualData.receivedDonations.length === 0) {
-    donationsList.innerHTML = `
-      <div class="no-donations">
-        <i class="fas fa-heart"></i>
-        <p>No donations received yet. Share your help requests to start receiving support!</p>
+async function loadReceivedDonations(individualId) {
+  const card = document.getElementById('receivedDonationsCard');
+  if (!card) return;
+
+  try {
+    const response = await fetch(`/api/individual/donations/${individualId}`);
+    const result = await response.json();
+    const donations = result.success ? result.donations : [];
+
+    card.innerHTML = `
+      <div class="card-header">
+        <h2><i class="fas fa-hand-holding-heart"></i> Received Donations</h2>
+      </div>
+      <div class="card-content">
+        <div class="donations-list" style="margin-top:10px;">
+          ${donations.length === 0
+            ? '<p style="color:#888;">No donations received yet.</p>'
+            : `
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                ${donations.map(d => `
+                  <div style="
+                    background: #f8f9fa;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 8px rgba(74,124,89,0.07);
+                    padding: 14px 18px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                  ">
+                    <span style="font-weight:600; color:#2d5a3d;">
+                      ${d.first_name} ${d.last_name}
+                    </span>
+                    <span style="color:#4a7c59; font-weight:700;">৳${Number(d.amount).toLocaleString()}</span>
+                    <span style="color:#888; font-size:0.95em;">${new Date(d.paid_at).toLocaleDateString()}</span>
+                  </div>
+                `).join('')}
+              </div>
+            `
+          }
+        </div>
       </div>
     `;
-    return;
+  } catch (err) {
+    card.innerHTML = `<div class="card-header">
+      <h2><i class="fas fa-hand-holding-heart"></i> Received Donations</h2>
+    </div>
+    <div class="card-content">
+      <p style="color:#888;">Error loading donations.</p>
+    </div>`;
+    console.error('Error loading donations:', err);
   }
-  
-  individualData.receivedDonations.forEach(donation => {
-    const donationItem = document.createElement('div');
-    donationItem.className = 'donation-item';
-    donationItem.innerHTML = `
-      <div class="donation-info">
-        <div class="donation-title">From: ${donation.donorName}</div>
-        <div class="donation-details">${donation.message || 'No message'}</div>
-      </div>
-      <div class="donation-meta">
-        <div class="donation-amount">৳${donation.amount.toLocaleString()}</div>
-        <div class="donation-date">${formatDate(donation.date)}</div>
-      </div>
-    `;
-    donationsList.appendChild(donationItem);
-  });
 }
 
-// Calculate stats
-function calculateStats() {
-  const totalRequests = individualData.helpRequests ? individualData.helpRequests.length : 0;
-  const totalReceived = individualData.receivedDonations ? 
-    individualData.receivedDonations.reduce((sum, d) => sum + d.amount, 0) : 0;
-  const activeRequests = individualData.helpRequests ? 
-    individualData.helpRequests.filter(r => r.status === 'active').length : 0;
-  
-  // Safely update stats elements
-  const statsElements = {
-    'totalRequests': totalRequests,
-    'totalReceived': '৳' + totalReceived.toLocaleString(),
-    'activeRequests': activeRequests
-  };
-  
-  Object.entries(statsElements).forEach(([id, value]) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.textContent = value;
-    } else {
-      console.warn(`⚠️ Stats element with ID '${id}' not found`);
-    }
-  });
+function toggleProjectDetails(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
 // Function to show address on map
