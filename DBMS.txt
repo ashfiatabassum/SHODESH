@@ -2,14 +2,14 @@ SHODESH DBMS OBJECT REFERENCE
 ================================
 Format per object:
 Name: <identifier>
-Type: TABLE | VIEW | FUNCTION | PROCEDURE | TRIGGER
+Type: TABLE | VIEW | FUNCTION | PROCEDURE | TRIGGER (mark [PL/SQL] when applicable)
 Purpose: Short description of what it does / enforces.
 Used In: Application code files or SQL dependencies where referenced.
 Definition:
 <exact DDL / body>
 --------------------------------
 
-NOTE: This file consolidates database design & runtime usage so evaluators can trace advanced DBMS feature utilization (views, functions, procedures, triggers, constraints, CASE, GROUP BY, exception handling with SIGNAL, transactions).
+This file consolidates database design and runtime usage so evaluators can trace advanced DBMS features: views, functions, procedures, triggers, constraints, CASE, GROUP BY, exception handling with SIGNAL, and transactions.
 
 ================================
 TABLES
@@ -18,14 +18,14 @@ TABLES
 Name: INDIVIDUAL
 Type: TABLE
 Purpose: Stores individual user accounts (potential event creators) with validation constraints.
-Used In: Event creation (FK in EVENT_CREATION), route `event.js` (JOIN), triggers BD_INDIVIDUAL_BLOCK_IF_EVENTS, view v_event_catalog
+Used In: EVENT_CREATION FK, route `event.js` JOINs, delete-block trigger BD_INDIVIDUAL_BLOCK_IF_EVENTS, views v_event_catalog*.
 Definition:
 CREATE TABLE INDIVIDUAL (
   individual_id VARCHAR(7) NOT NULL,
   first_name VARCHAR(30) NOT NULL CHECK (first_name REGEXP '^[A-Za-z ]+$'),
   last_name VARCHAR(30) NOT NULL CHECK (last_name REGEXP '^[A-Za-z ]+$'),
   username VARCHAR(15) NOT NULL,
-  email VARCHAR(100) NOT NULL CHECK (email REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}$'),
+  email VARCHAR(100) NOT NULL CHECK (email REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}$'),
   password VARCHAR(255) NOT NULL CHECK (LENGTH(password) >= 6),
   mobile VARCHAR(11) NOT NULL CHECK (mobile REGEXP '^0[0-9]{10}$'),
   nid VARCHAR(17) NOT NULL CHECK (nid REGEXP '^[0-9]{10,17}$'),
@@ -48,8 +48,8 @@ CREATE TABLE INDIVIDUAL (
 
 Name: FOUNDATION
 Type: TABLE
-Purpose: Stores foundation organization accounts (can create events); includes status field.
-Used In: EVENT_CREATION FK, event.js joins, trigger BD_FOUNDATION_BLOCK_IF_EVENTS, view v_event_catalog
+Purpose: Stores foundation organization accounts (can create events); includes status field and optional certificate BLOB.
+Used In: EVENT_CREATION FK, route `event.js` JOINs, admin foundation routes, delete-block trigger BD_FOUNDATION_BLOCK_IF_EVENTS, views v_event_catalog*.
 Definition:
 CREATE TABLE FOUNDATION(
   foundation_id VARCHAR(7) NOT NULL,
@@ -57,7 +57,7 @@ CREATE TABLE FOUNDATION(
   certificate BLOB,
   foundation_license VARCHAR(12) NOT NULL,
   mobile VARCHAR(11) NOT NULL CHECK (mobile REGEXP '^0[0-9]{10}$'),
-  email VARCHAR(100) NOT NULL CHECK (email REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}$'),
+  email VARCHAR(100) NOT NULL CHECK (email REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}$'),
   password VARCHAR(255) NOT NULL CHECK (LENGTH(password) >= 6),
   house_no VARCHAR(7),
   road_no VARCHAR(4) CHECK (road_no REGEXP '^[0-9]{1,4}$'),
@@ -79,14 +79,14 @@ CREATE TABLE FOUNDATION(
 Name: DONOR
 Type: TABLE
 Purpose: Donor accounts; donors can contribute to verified+active events.
-Used In: Donations (sp_record_donation), DONATION FK, application session (index.js /donate)
+Used In: DONATION FK, procedure sp_record_donation, app auth/session (index.js /donate, donor routes).
 Definition:
 CREATE TABLE DONOR (
   donor_id VARCHAR(7) NOT NULL,
   first_name VARCHAR(50) NOT NULL CHECK (first_name REGEXP '^[A-Za-z ]+$'),
   last_name VARCHAR(50) NOT NULL CHECK (last_name REGEXP '^[A-Za-z ]+$'),
   username VARCHAR(20) NOT NULL,
-  email VARCHAR(100) NOT NULL CHECK (email REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}$'),
+  email VARCHAR(100) NOT NULL CHECK (email REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}$'),
   password VARCHAR(255) NOT NULL CHECK (LENGTH(password) >= 6),
   country VARCHAR(50) NOT NULL CHECK (country REGEXP '^[A-Za-z ]+$'),
   division VARCHAR(30) NULL CHECK (division IN ('Barisal', 'Chittagong', 'Dhaka', 'Khulna', 'Mymensingh', 'Rajshahi', 'Rangpur', 'Sylhet')),
@@ -101,23 +101,57 @@ CREATE TABLE DONOR (
 
 Name: STAFF
 Type: TABLE
-Purpose: Optional staff accounts for second-round verification.
-Used In: EVENT_VERIFICATION, view logic for potential auditing.
-Definition: (See shodeshsqlscript.sql for full columns; truncated here)
-CREATE TABLE STAFF( ... );
+Purpose: Staff accounts for second-round verification. No extra audit tables allowed.
+Used In: Admin staff verification (list/details/CV streaming), stored procedure sp_admin_verify_staff, triggers staff_bi_id and staff_bu_status_guard, views V_ADMIN_STAFF and V_STAFF_STATS.
+Definition:
+CREATE TABLE STAFF(
+  staff_id VARCHAR(7) NOT NULL,
+  first_name VARCHAR(30) NOT NULL CHECK (first_name REGEXP '^[A-Za-z ]+$'),
+  last_name VARCHAR(30) NOT NULL CHECK (last_name REGEXP '^[A-Za-z ]+$'),
+  username VARCHAR(15) NOT NULL,
+  password VARCHAR(255) NOT NULL CHECK (LENGTH(password) >= 6),
+  mobile VARCHAR(11) NOT NULL CHECK (mobile REGEXP '^0[0-9]{10}$'),
+  email VARCHAR(100) CHECK (email REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}$'),
+  nid VARCHAR(17) NOT NULL CHECK (nid REGEXP '^[0-9]{10,17}$'),
+  dob DATE,
+  house_no VARCHAR(7),
+  road_no VARCHAR(4) CHECK (road_no REGEXP '^[0-9]{1,4}$'),
+  area VARCHAR(30) CHECK (area REGEXP '^[A-Za-z ]+$'),
+  district VARCHAR(30) CHECK (district REGEXP '^[A-Za-z ]+$'),
+  administrative_div VARCHAR(30) CHECK (administrative_div REGEXP '^[A-Za-z ]+$'),
+  zip VARCHAR(4) CHECK (zip REGEXP '^[0-9]{4}$'),
+  CV BLOB NULL,
+  status ENUM('verified','suspended','unverified') DEFAULT 'unverified',
+  CONSTRAINT STAFF_STAFF_ID_PK PRIMARY KEY (staff_id),
+  CONSTRAINT STAFF_NID_U UNIQUE (nid)
+);
 --------------------------------
 
 Name: STAFF_ASSIST
 Type: TABLE
-Purpose: Logs assistance relationship snapshots with immutable creator info.
-Used In: Auditing; not yet directly referenced in current Node routes.
-Definition: CREATE TABLE STAFF_ASSIST ( ... );
+Purpose: Logs assistance relationships with immutable snapshots; FKs set NULL on delete to preserve audit trail.
+Used In: Potential auditing/analytics (not yet wired in Node routes).
+Definition:
+CREATE TABLE STAFF_ASSIST (
+  staff_assist_id                VARCHAR(7)  NOT NULL,
+  staff_id                       VARCHAR(7)  NULL,
+  individual_id                  VARCHAR(7)  NULL,
+  created_at                     DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  staff_name_at_creation         VARCHAR(61) NOT NULL,
+  staff_username_at_creation     VARCHAR(15) NOT NULL,
+  individual_name_at_creation    VARCHAR(61) NOT NULL,
+  CONSTRAINT STAFF_ASSIST_PK PRIMARY KEY (staff_assist_id),
+  CONSTRAINT STAFF_ASSIST_STAFF_ID_FK     FOREIGN KEY (staff_id)     REFERENCES STAFF(staff_id)         ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT STAFF_ASSIST_INDIVIDUAL_ID_FK FOREIGN KEY (individual_id) REFERENCES INDIVIDUAL(individual_id) ON DELETE SET NULL ON UPDATE CASCADE
+);
+CREATE INDEX STAFF_ASSIST_IND_ID_CREATED_AT_IDX ON STAFF_ASSIST (individual_id, created_at);
+CREATE INDEX STAFF_ASSIST_STAFF_ID_CREATED_AT_IDX ON STAFF_ASSIST (staff_id, created_at);
 --------------------------------
 
 Name: CATEGORY
 Type: TABLE
 Purpose: Event taxonomy (top-level categories).
-Used In: EVENT_BASED_ON_CATEGORY, views v_event_catalog*, procedures sp_get_categories, sp_search_events.
+Used In: EVENT_BASED_ON_CATEGORY, views v_event_catalog*, procedures sp_get_categories, sp_search_events, stats variants.
 Definition:
 CREATE TABLE CATEGORY (
   category_id    VARCHAR(7)  NOT NULL,
@@ -151,39 +185,100 @@ CREATE TABLE EVENT_BASED_ON_CATEGORY (
   event_type_id VARCHAR(7) NOT NULL,
   CONSTRAINT EBC_PK PRIMARY KEY (ebc_id),
   CONSTRAINT EBC_PAIR_U UNIQUE (category_id, event_type_id),
-  CONSTRAINT EBC_CATEGORY_FK   FOREIGN KEY (category_id)   REFERENCES CATEGORY(category_id)
-    ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT EBC_EVENT_TYPE_FK FOREIGN KEY (event_type_id) REFERENCES EVENT_TYPE(event_type_id)
-    ON DELETE RESTRICT ON UPDATE CASCADE
+  CONSTRAINT EBC_CATEGORY_FK   FOREIGN KEY (category_id)   REFERENCES CATEGORY(category_id)     ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT EBC_EVENT_TYPE_FK FOREIGN KEY (event_type_id) REFERENCES EVENT_TYPE(event_type_id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 --------------------------------
 
 Name: EVENT_CREATION
 Type: TABLE
-Purpose: Core campaign/event entity with lifecycle + financial fields.
-Used In: All views, functions, procedures, triggers, application routes.
-Definition: (Full definition present in script: includes amount_needed, amount_received, verification_status, lifecycle_status, second_verification_required, flag, timestamps, FKs)
+Purpose: Core campaign/event entity with lifecycle + financial fields; creator XOR integrity via triggers.
+Used In: All views, functions, procedures, triggers, routes (`event.js`, `search.js`, `index.js`).
+Definition:
+CREATE TABLE EVENT_CREATION (
+  creation_id   VARCHAR(7)  NOT NULL,
+  creator_type  ENUM('individual','foundation') NOT NULL,
+  individual_id VARCHAR(7) NULL,
+  foundation_id VARCHAR(7) NULL,
+  ebc_id        VARCHAR(7) NOT NULL,
+  title         VARCHAR(50)   NOT NULL,
+  description   VARCHAR(1000) NOT NULL,
+  flag          INT NOT NULL DEFAULT 0,
+  amount_needed   DECIMAL(12,2) NOT NULL CHECK (amount_needed >= 0),
+  amount_received DECIMAL(12,2) NOT NULL DEFAULT 0 CHECK (amount_received >= 0),
+  division      VARCHAR(30) NOT NULL CHECK (division REGEXP '^[A-Za-z ]+$'),
+  doc           LONGBLOB NULL,
+  cover_photo   LONGBLOB NULL,
+  verification_status ENUM('unverified','verified') NOT NULL DEFAULT 'unverified',
+  lifecycle_status    ENUM('inactive','active','closed') NOT NULL DEFAULT 'inactive',
+  second_verification_required TINYINT NOT NULL DEFAULT 0,
+  created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT EVENT_CREATION_PK PRIMARY KEY (creation_id),
+  CONSTRAINT EC_EBC_FK        FOREIGN KEY (ebc_id)        REFERENCES EVENT_BASED_ON_CATEGORY(ebc_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT EC_INDIVIDUAL_FK FOREIGN KEY (individual_id) REFERENCES INDIVIDUAL(individual_id)       ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT EC_FOUNDATION_FK FOREIGN KEY (foundation_id) REFERENCES FOUNDATION(foundation_id)       ON DELETE SET NULL ON UPDATE CASCADE,
+  INDEX IDX_EVENT_STATE (verification_status, lifecycle_status, second_verification_required),
+  INDEX IDX_EVENT_EBC   (ebc_id),
+  INDEX IDX_EVENT_DIV   (division)
+);
 --------------------------------
 
 Name: EVENT_PHOTO
 Type: TABLE
 Purpose: Stores additional photos (LONGBLOB) per event.
-Used In: (Not yet surfaced in current Node routes; potential future feature.)
-Definition: CREATE TABLE EVENT_PHOTO ( ... );
+Used In: Potential future feature for event galleries.
+Definition:
+CREATE TABLE EVENT_PHOTO (
+  photo_id     BIGINT AUTO_INCREMENT PRIMARY KEY,
+  creation_id  VARCHAR(7) NOT NULL,
+  photo        LONGBLOB   NOT NULL,
+  content_type VARCHAR(100) NULL,
+  caption      VARCHAR(140) NULL,
+  uploaded_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT EVENT_PHOTO_EVENT_FK FOREIGN KEY (creation_id) REFERENCES EVENT_CREATION(creation_id) ON DELETE CASCADE ON UPDATE CASCADE,
+  INDEX IDX_EVENT_PHOTO (creation_id, uploaded_at)
+);
 --------------------------------
 
 Name: EVENT_VERIFICATION
 Type: TABLE
-Purpose: Audit log of verification rounds (1 = initial, 2 = staff follow-up).
-Used In: Triggers to update EVENT_CREATION status.
-Definition: CREATE TABLE EVENT_VERIFICATION ( ... );
+Purpose: Audit log of verification rounds (1 = initial, 2 = staff follow-up); triggers apply outcome to EVENT_CREATION.
+Used In: Triggers BI_EVENT_VERIFICATION_ENFORCE and AI_EVENT_VERIFICATION_APPLY.
+Definition:
+CREATE TABLE EVENT_VERIFICATION (
+  log_id       VARCHAR(7)  NOT NULL,
+  creation_id  VARCHAR(7)  NOT NULL,
+  round_no     TINYINT NOT NULL,
+  staff_id     VARCHAR(7) NULL,
+  decision     ENUM('verified','unverified') NOT NULL DEFAULT 'unverified',
+  request_staff_verification TINYINT NOT NULL DEFAULT 0,
+  notes        VARCHAR(1000) NULL,
+  verified_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT EVENT_VERIFICATION_PK PRIMARY KEY (log_id),
+  CONSTRAINT EV_EVENT_FK FOREIGN KEY (creation_id) REFERENCES EVENT_CREATION(creation_id) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT EV_STAFF_FK FOREIGN KEY (staff_id) REFERENCES STAFF(staff_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  INDEX EV_EVENT_IDX (creation_id, round_no, verified_at),
+  INDEX EV_VERIFIER_IDX (staff_id, verified_at)
+);
 --------------------------------
 
 Name: DONATION
 Type: TABLE
-Purpose: Ledger of donations; triggers maintain aggregate and lifecycle closure.
-Used In: sp_record_donation, donation triggers, functions fn_event_remaining & fn_event_is_eligible indirectly via EVENT_CREATION totals.
-Definition: CREATE TABLE DONATION ( ... );
+Purpose: Ledger of donations; triggers maintain aggregates and lifecycle closure.
+Used In: Procedures sp_record_donation; triggers BI/AI/AU/AD_DONATION_*; stats views; routes (`search.js` fallback, `index.js` donate).
+Definition:
+CREATE TABLE DONATION (
+  donation_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  creation_id VARCHAR(7) NOT NULL,
+  donor_id    VARCHAR(7) NOT NULL,
+  amount      DECIMAL(12,2) NOT NULL CHECK (amount > 0),
+  paid_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT DON_EVENT_FK FOREIGN KEY (creation_id) REFERENCES EVENT_CREATION(creation_id) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT DON_DONOR_FK FOREIGN KEY (donor_id)    REFERENCES DONOR(donor_id)            ON DELETE RESTRICT ON UPDATE CASCADE,
+  INDEX IDX_DON_EVENT (creation_id, paid_at),
+  INDEX IDX_DON_DONOR (donor_id, paid_at)
+);
 --------------------------------
 
 ================================
@@ -192,41 +287,66 @@ VIEWS
 
 Name: v_event_catalog
 Type: VIEW
-Purpose: Denormalized event listing (joins taxonomy + creator) with computed remaining and progress fields.
-Used In: sp_search_events, sp_get_event_detail, v_event_catalog_open.
-Definition (first version):
-CREATE OR REPLACE VIEW v_event_catalog AS
-SELECT e.creation_id, e.title, e.description, e.division,
-       e.amount_needed, e.amount_received,
-       (e.amount_needed - e.amount_received) AS amount_remaining,
-       e.verification_status, e.lifecycle_status,
-       e.second_verification_required,
-       e.created_at,
-       ebc.ebc_id, c.category_id, c.category_name, et.event_type_id, et.event_type_name,
-       e.creator_type, e.individual_id, e.foundation_id, e.flag
-FROM EVENT_CREATION e
-JOIN EVENT_BASED_ON_CATEGORY ebc ON ebc.ebc_id = e.ebc_id
-JOIN CATEGORY c  ON c.category_id  = ebc.category_id
-JOIN EVENT_TYPE et ON et.event_type_id = ebc.event_type_id;
+Purpose: Denormalized event listing (joins taxonomy + creator) with short_description and progress_pct.
+Used In: Procedures sp_search_events, sp_get_event_detail; base for v_event_catalog_open and stats views; routes `event.js` mirror this logic via raw JOIN.
+Definition:
+CREATE VIEW v_event_catalog AS
+SELECT
+  ec.creation_id,
+  ec.title,
+  ec.description,
+  ec.division,
+  ec.verification_status,
+  ec.lifecycle_status,
+  ec.amount_needed,
+  ec.amount_received,
+  CAST(ROUND(IFNULL(ec.amount_received / NULLIF(ec.amount_needed,0) * 100, 0), 1) AS DECIMAL(5,1)) AS progress_pct,
+  ebc.ebc_id,
+  cat.category_id,  cat.category_name,
+  et.event_type_id, et.event_type_name,
+  ec.creator_type,
+  CASE WHEN ec.creator_type='individual' THEN CONCAT(i.first_name,' ',i.last_name) ELSE f.foundation_name END AS creator_name,
+  CASE WHEN ec.creator_type='individual' THEN i.individual_id ELSE f.foundation_id END AS creator_id,
+  CASE WHEN ec.creator_type='individual' THEN i.mobile ELSE f.mobile END AS contact_phone,
+  CASE WHEN ec.creator_type='individual' THEN i.email  ELSE f.email  END AS contact_email,
+  LEFT(ec.description, 180) AS short_description
+FROM EVENT_CREATION ec
+JOIN EVENT_BASED_ON_CATEGORY ebc ON ebc.ebc_id = ec.ebc_id
+LEFT JOIN CATEGORY   cat ON cat.category_id  = ebc.category_id
+LEFT JOIN EVENT_TYPE et  ON et.event_type_id = ebc.event_type_id
+LEFT JOIN INDIVIDUAL i   ON i.individual_id  = ec.individual_id
+LEFT JOIN FOUNDATION f   ON f.foundation_id  = ec.foundation_id;
+--------------------------------
 
-(Overwritten later with extended columns including creator_name, contact info, short_description, progress_pct.)
+Name: v_donation_eligible
+Type: VIEW
+Purpose: Filter of v_event_catalog for events still eligible to receive donations.
+Used In: General reference; superseded by v_event_catalog_open in app code.
+Definition:
+CREATE VIEW v_donation_eligible AS
+SELECT *
+FROM v_event_catalog
+WHERE verification_status = 'verified'
+  AND lifecycle_status    = 'active'
+  AND amount_received < amount_needed;
 --------------------------------
 
 Name: v_event_catalog_open
 Type: VIEW
 Purpose: Filters v_event_catalog to only active & verified events for public search.
-Used In: sp_search_events, filter views.
+Used In: Procedures sp_search_events, sp_get_categories/types/divisions, stats variants.
 Definition:
 CREATE VIEW v_event_catalog_open AS
-SELECT * FROM v_event_catalog
+SELECT *
+FROM v_event_catalog
 WHERE verification_status = 'verified'
   AND lifecycle_status    = 'active';
 --------------------------------
 
 Name: v_event_filters_categories
 Type: VIEW
-Purpose: Distinct categories present in currently open events.
-Used In: sp_get_categories
+Purpose: Distinct categories present in currently open events (for filters).
+Used In: Procedure sp_get_categories.
 Definition:
 CREATE VIEW v_event_filters_categories AS
 SELECT DISTINCT category_id, category_name
@@ -237,8 +357,8 @@ ORDER BY category_name;
 
 Name: v_event_filters_event_types
 Type: VIEW
-Purpose: Distinct event types present in currently open events.
-Used In: sp_get_event_types
+Purpose: Distinct event types present in currently open events (for filters).
+Used In: Procedure sp_get_event_types.
 Definition:
 CREATE VIEW v_event_filters_event_types AS
 SELECT DISTINCT event_type_id, event_type_name, category_id
@@ -249,8 +369,8 @@ ORDER BY event_type_name;
 
 Name: v_event_filters_divisions
 Type: VIEW
-Purpose: Distinct divisions available for filtering.
-Used In: sp_get_divisions
+Purpose: Distinct divisions in currently open events (for filters).
+Used In: Procedure sp_get_divisions (routes/search.js); when ebc_id provided, route uses a raw GROUP BY fallback.
 Definition:
 CREATE VIEW v_event_filters_divisions AS
 SELECT DISTINCT category_id, event_type_id, division
@@ -262,7 +382,7 @@ ORDER BY division;
 Name: v_event_donation_stats
 Type: VIEW
 Purpose: Aggregated donation metrics per event (counts, distinct donors, totals, current month figures, last donation time).
-Used In: v_event_catalog_with_stats, v_event_catalog_open_with_stats, stats procedures.
+Used In: v_event_catalog_with_stats, v_event_catalog_open_with_stats, stats procedures, routes/search.js mapping.
 Definition:
 CREATE VIEW v_event_donation_stats AS
 SELECT
@@ -270,12 +390,8 @@ SELECT
   COUNT(*)                           AS total_donations,
   COUNT(DISTINCT d.donor_id)         AS total_donors,
   SUM(d.amount)                      AS total_raised,
-  SUM(CASE WHEN YEAR(d.paid_at)=YEAR(CURRENT_DATE)
-            AND MONTH(d.paid_at)=MONTH(CURRENT_DATE)
-           THEN d.amount END)        AS raised_this_month,
-  COUNT(DISTINCT CASE WHEN YEAR(d.paid_at)=YEAR(CURRENT_DATE)
-                       AND MONTH(d.paid_at)=MONTH(CURRENT_DATE)
-                      THEN d.donor_id END) AS donors_this_month,
+  SUM(CASE WHEN YEAR(d.paid_at)=YEAR(CURRENT_DATE) AND MONTH(d.paid_at)=MONTH(CURRENT_DATE) THEN d.amount END) AS raised_this_month,
+  COUNT(DISTINCT CASE WHEN YEAR(d.paid_at)=YEAR(CURRENT_DATE) AND MONTH(d.paid_at)=MONTH(CURRENT_DATE) THEN d.donor_id END) AS donors_this_month,
   MAX(d.paid_at)                     AS last_donation_at
 FROM DONATION d
 GROUP BY d.creation_id;
@@ -283,8 +399,8 @@ GROUP BY d.creation_id;
 
 Name: v_event_catalog_with_stats
 Type: VIEW
-Purpose: Extends base catalog with donation statistics (non-breaking parallel).
-Used In: v_event_catalog_open_with_stats, sp_search_events_stats, sp_get_event_detail_stats.
+Purpose: Extends base catalog with donation statistics (non-breaking parallel to v_event_catalog).
+Used In: v_event_catalog_open_with_stats, procedures sp_search_events_stats, sp_get_event_detail_stats.
 Definition:
 CREATE VIEW v_event_catalog_with_stats AS
 SELECT c.*, s.total_donors, s.total_donations, s.total_raised,
@@ -296,11 +412,39 @@ LEFT JOIN v_event_donation_stats s ON s.creation_id = c.creation_id;
 Name: v_event_catalog_open_with_stats
 Type: VIEW
 Purpose: Open (verified+active) events including donation stats.
-Used In: sp_search_events_stats.
+Used In: Procedure sp_search_events_stats.
 Definition:
 CREATE VIEW v_event_catalog_open_with_stats AS
-SELECT * FROM v_event_catalog_with_stats
+SELECT *
+FROM v_event_catalog_with_stats
 WHERE verification_status='verified' AND lifecycle_status='active';
+--------------------------------
+
+Name: V_ADMIN_STAFF
+Type: VIEW
+Purpose: Admin-friendly staff listing without CV BLOB, including has_cv and cv_size flags.
+Used In: src/routes/admin.js GET /api/admin/staff; staff list UI.
+Definition:
+CREATE VIEW V_ADMIN_STAFF AS
+SELECT s.staff_id, s.username, CONCAT(s.first_name,' ',s.last_name) AS full_name,
+       s.email, s.mobile, s.district, s.administrative_div, s.status,
+       (s.CV IS NOT NULL) AS has_cv,
+       CASE WHEN s.CV IS NULL THEN 0 ELSE OCTET_LENGTH(s.CV) END AS cv_size
+FROM STAFF s;
+--------------------------------
+
+Name: V_STAFF_STATS
+Type: VIEW
+Purpose: Counts of staff by status for admin dashboard.
+Used In: Potential admin metrics.
+Definition:
+CREATE VIEW V_STAFF_STATS AS
+SELECT 
+  COUNT(*) AS total,
+  SUM(CASE WHEN status='unverified' THEN 1 ELSE 0 END) AS pending,
+  SUM(CASE WHEN status='verified' THEN 1 ELSE 0 END) AS verified,
+  SUM(CASE WHEN status='suspended' THEN 1 ELSE 0 END) AS suspended
+FROM STAFF;
 --------------------------------
 
 ================================
@@ -308,10 +452,12 @@ FUNCTIONS
 ================================
 
 Name: fn_event_remaining
-Type: FUNCTION
+Type: FUNCTION [PL/SQL]
 Purpose: Returns remaining amount needed for an event (amount_needed - amount_received).
-Used In: index.js /donate post-response, /api/events/:id/eligibility endpoint; can be used in reports.
+Used In: index.js /donate post-response, GET /api/events/:id/eligibility; can be used in reports.
 Definition:
+DELIMITER $$
+DROP FUNCTION IF EXISTS fn_event_remaining $$
 CREATE FUNCTION fn_event_remaining(p_creation_id VARCHAR(7))
 RETURNS DECIMAL(12,2)
 DETERMINISTIC
@@ -322,14 +468,17 @@ BEGIN
   SELECT amount_needed, amount_received INTO v_need, v_recv
   FROM EVENT_CREATION WHERE creation_id = p_creation_id;
   RETURN (v_need - v_recv);
-END;
+END $$
+DELIMITER ;
 --------------------------------
 
 Name: fn_event_is_eligible
-Type: FUNCTION
+Type: FUNCTION [PL/SQL]
 Purpose: Boolean (0/1) if event still open to donations (verified, active, not fully funded).
 Used In: index.js donation response & eligibility endpoint.
 Definition:
+DELIMITER $$
+DROP FUNCTION IF EXISTS fn_event_is_eligible $$
 CREATE FUNCTION fn_event_is_eligible(p_creation_id VARCHAR(7))
 RETURNS TINYINT
 DETERMINISTIC
@@ -344,14 +493,17 @@ BEGIN
   FROM EVENT_CREATION
   WHERE creation_id = p_creation_id;
   RETURN v_ok;
-END;
+END $$
+DELIMITER ;
 --------------------------------
 
 Name: fn_event_risk_label
-Type: FUNCTION
+Type: FUNCTION [PL/SQL]
 Purpose: Maps integer flag count to qualitative risk bucket (NONE/LOW/MEDIUM/HIGH) via CASE.
-Used In: (Not yet surfaced in Node layer; available for admin analytics.)
+Used In: (Available for admin analytics.)
 Definition:
+DELIMITER $$
+DROP FUNCTION IF EXISTS fn_event_risk_label $$
 CREATE FUNCTION fn_event_risk_label(p_flag INT)
 RETURNS VARCHAR(10)
 DETERMINISTIC
@@ -363,7 +515,27 @@ BEGIN
            WHEN p_flag >= 1  THEN 'LOW'
            ELSE 'NONE'
          END;
-END;
+END $$
+DELIMITER ;
+--------------------------------
+
+Name: fn_staff_fullname
+Type: FUNCTION [PL/SQL]
+Purpose: Utility to get full name from STAFF table by id.
+Used In: Admin UI/analytics (optional).
+Definition:
+DROP FUNCTION IF EXISTS fn_staff_fullname;
+DELIMITER $$
+CREATE FUNCTION fn_staff_fullname(p_id VARCHAR(7))
+RETURNS VARCHAR(70)
+DETERMINISTIC
+READS SQL DATA
+BEGIN
+  DECLARE v VARCHAR(70);
+  SELECT CONCAT(first_name,' ',last_name) INTO v FROM STAFF WHERE staff_id = p_id;
+  RETURN v;
+END$$
+DELIMITER ;
 --------------------------------
 
 ================================
@@ -371,16 +543,23 @@ PROCEDURES
 ================================
 
 Name: sp_raise_flag
-Type: PROCEDURE
-Purpose: Increment flag counter on an event and if threshold reached force re-verification (transaction + SIGNAL error handler pattern).
-Used In: (Not yet invoked in current JS routes; designed for moderation.)
+Type: PROCEDURE [PL/SQL]
+Purpose: Increment flag counter on an event and, if threshold reached, force re-verification (transaction + EXIT HANDLER + SIGNAL).
+Used In: Moderation flow (not yet invoked by Node).
 Definition:
-CREATE PROCEDURE sp_raise_flag(IN p_creation_id VARCHAR(7), IN p_delta INT, IN p_threshold INT)
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_raise_flag $$
+CREATE PROCEDURE sp_raise_flag(
+  IN p_creation_id VARCHAR(7),
+  IN p_delta INT,
+  IN p_threshold INT
+)
 BEGIN
   DECLARE v_new INT;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION
   BEGIN
-    ROLLBACK; SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Raising flag failed';
+    ROLLBACK;
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Raising flag failed';
   END;
   START TRANSACTION;
   SELECT 1 FROM EVENT_CREATION WHERE creation_id = p_creation_id FOR UPDATE;
@@ -392,116 +571,170 @@ BEGIN
     WHERE creation_id = p_creation_id;
   END IF;
   COMMIT;
-END;
+END $$
+DELIMITER ;
 --------------------------------
 
 Name: sp_record_donation
-Type: PROCEDURE
-Purpose: Validates and records a donation atomically (checks eligibility, prevents overfunding) then inserts into DONATION; triggers adjust aggregates.
-Used In: index.js POST /donate route.
+Type: PROCEDURE [PL/SQL]
+Purpose: Validates and records a donation atomically (checks eligibility, prevents overfunding), then inserts into DONATION; triggers adjust aggregates.
+Used In: index.js POST /donate.
 Definition:
-CREATE PROCEDURE sp_record_donation(IN p_creation_id VARCHAR(7), IN p_donor_id VARCHAR(7), IN p_amount DECIMAL(12,2))
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_record_donation $$
+CREATE PROCEDURE sp_record_donation(
+  IN p_creation_id VARCHAR(7),
+  IN p_donor_id    VARCHAR(7),
+  IN p_amount      DECIMAL(12,2)
+)
 BEGIN
   DECLARE v_ver  VARCHAR(10);
   DECLARE v_life VARCHAR(10);
   DECLARE v_need DECIMAL(12,2);
   DECLARE v_have DECIMAL(12,2);
   DECLARE EXIT HANDLER FOR SQLEXCEPTION
-  BEGIN ROLLBACK; SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Donation failed'; END;
-  IF p_amount IS NULL OR p_amount <= 0 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Invalid donation amount'; END IF;
+  BEGIN
+    ROLLBACK;
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Donation failed';
+  END;
+  IF p_amount IS NULL OR p_amount <= 0 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Invalid donation amount';
+  END IF;
   START TRANSACTION;
   SELECT verification_status, lifecycle_status, amount_needed, amount_received
     INTO v_ver, v_life, v_need, v_have
-  FROM EVENT_CREATION WHERE creation_id = p_creation_id FOR UPDATE;
-  IF v_ver <> 'verified' OR v_life <> 'active' THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Event not eligible for donations'; END IF;
-  IF v_have >= v_need THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Event already fully funded'; END IF;
-  IF v_have + p_amount > v_need THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Donation exceeds remaining target'; END IF;
-  INSERT INTO DONATION (creation_id, donor_id, amount) VALUES (p_creation_id, p_donor_id, p_amount);
+  FROM EVENT_CREATION
+  WHERE creation_id = p_creation_id
+  FOR UPDATE;
+  IF v_ver <> 'verified' OR v_life <> 'active' THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Event not eligible for donations';
+  END IF;
+  IF v_have >= v_need THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Event already fully funded';
+  END IF;
+  IF v_have + p_amount > v_need THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Donation exceeds remaining target';
+  END IF;
+  INSERT INTO DONATION (creation_id, donor_id, amount)
+  VALUES (p_creation_id, p_donor_id, p_amount);
   COMMIT;
-END;
+END $$
+DELIMITER ;
 --------------------------------
 
 Name: sp_get_categories
-Type: PROCEDURE
+Type: PROCEDURE [PL/SQL]
 Purpose: Returns distinct categories for open events (via view) for filter UI.
 Used In: routes/search.js GET /categories.
 Definition:
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_get_categories $$
 CREATE PROCEDURE sp_get_categories()
 BEGIN
   SELECT category_id, category_name FROM v_event_filters_categories;
-END;
+END $$
+DELIMITER ;
 --------------------------------
 
 Name: sp_get_event_types
-Type: PROCEDURE
+Type: PROCEDURE [PL/SQL]
 Purpose: Returns event types (optionally filtered by category) present in open events.
 Used In: routes/search.js GET /event-types.
 Definition:
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_get_event_types $$
 CREATE PROCEDURE sp_get_event_types(IN p_category_id VARCHAR(7))
 BEGIN
   SELECT event_type_id, event_type_name FROM v_event_filters_event_types
   WHERE (p_category_id IS NULL OR p_category_id = '' OR category_id = p_category_id);
-END;
+END $$
+DELIMITER ;
 --------------------------------
 
 Name: sp_get_divisions
-Type: PROCEDURE
+Type: PROCEDURE [PL/SQL]
 Purpose: Returns divisions filtered by optional category & event type.
-Used In: routes/search.js GET /divisions (when no ebc_id provided).
+Used In: routes/search.js GET /divisions (else raw GROUP BY fallback when ebc_id provided).
 Definition:
-CREATE PROCEDURE sp_get_divisions(IN p_category_id VARCHAR(7), IN p_event_type_id VARCHAR(7))
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_get_divisions $$
+CREATE PROCEDURE sp_get_divisions(
+  IN p_category_id   VARCHAR(7),
+  IN p_event_type_id VARCHAR(7)
+)
 BEGIN
   SELECT division FROM v_event_filters_divisions
-  WHERE (p_category_id IS NULL OR p_category_id = '' OR category_id = p_category_id)
+  WHERE (p_category_id   IS NULL OR p_category_id   = '' OR category_id   = p_category_id)
     AND (p_event_type_id IS NULL OR p_event_type_id = '' OR event_type_id = p_event_type_id)
   ORDER BY division;
-END;
+END $$
+DELIMITER ;
 --------------------------------
 
 Name: sp_search_events
-Type: PROCEDURE
+Type: PROCEDURE [PL/SQL]
 Purpose: Multi-criteria search (category, event type, division, keyword) ordering by funding progress & remaining need.
-Used In: routes/search.js GET /events (fallback raw SQL when ebc_id used).
+Used In: routes/search.js GET /events (when ebc_id not provided).
 Definition:
-CREATE PROCEDURE sp_search_events(IN p_category_id VARCHAR(7), IN p_event_type_id VARCHAR(7), IN p_division VARCHAR(30), IN p_q VARCHAR(200))
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_search_events $$
+CREATE PROCEDURE sp_search_events(
+  IN p_category_id   VARCHAR(7),
+  IN p_event_type_id VARCHAR(7),
+  IN p_division      VARCHAR(30),
+  IN p_q             VARCHAR(200)
+)
 BEGIN
-  SELECT creation_id, title, description, short_description, division,
-         amount_needed, amount_received, progress_pct,
-         category_id, category_name, event_type_id, event_type_name,
-         creator_type, creator_name, creator_id
+  SELECT
+    creation_id, title, description, short_description, division,
+    amount_needed, amount_received, progress_pct,
+    category_id, category_name, event_type_id, event_type_name,
+    creator_type, creator_name, creator_id
   FROM v_event_catalog_open
-  WHERE (p_category_id IS NULL OR p_category_id = '' OR category_id = p_category_id)
+  WHERE (p_category_id   IS NULL OR p_category_id   = '' OR category_id   = p_category_id)
     AND (p_event_type_id IS NULL OR p_event_type_id = '' OR event_type_id = p_event_type_id)
-    AND (p_division IS NULL OR p_division = '' OR division = p_division)
+    AND (p_division      IS NULL OR p_division      = '' OR division      = p_division)
     AND (p_q IS NULL OR p_q = '' OR title LIKE CONCAT('%', p_q, '%') OR description LIKE CONCAT('%', p_q, '%'))
   ORDER BY progress_pct DESC, (amount_needed - amount_received) DESC, title ASC;
-END;
+END $$
+DELIMITER ;
 --------------------------------
 
 Name: sp_get_event_detail
-Type: PROCEDURE
-Purpose: Returns full detail for single event (no active/verified filter; app layer filters after call).
-Used In: routes/search.js GET /event/:id (legacy mapping retained; new stats proc supersedes in code).
+Type: PROCEDURE [PL/SQL]
+Purpose: Returns full detail for single event (app layer filters active+verified as needed).
+Used In: routes/search.js GET /event/:id (legacy; stats proc used in code).
 Definition:
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_get_event_detail $$
 CREATE PROCEDURE sp_get_event_detail(IN p_creation_id VARCHAR(7))
 BEGIN
-  SELECT creation_id, title, description, short_description, division,
-         amount_needed, amount_received, progress_pct,
-         category_id, category_name, event_type_id, event_type_name,
-         creator_type, creator_name, creator_id,
-         contact_phone, contact_email
+  SELECT
+    creation_id, title, description, short_description, division,
+    amount_needed, amount_received, progress_pct,
+    category_id, category_name, event_type_id, event_type_name,
+    creator_type, creator_name, creator_id,
+    contact_phone, contact_email
   FROM v_event_catalog
   WHERE creation_id = p_creation_id
   LIMIT 1;
-END;
+END $$
+DELIMITER ;
 --------------------------------
 
 Name: sp_search_events_stats
-Type: PROCEDURE
+Type: PROCEDURE [PL/SQL]
 Purpose: Search events returning donation statistics (parallel to sp_search_events).
 Used In: routes/search.js GET /events.
 Definition:
-CREATE PROCEDURE sp_search_events_stats(IN p_category_id VARCHAR(7), IN p_event_type_id VARCHAR(7), IN p_division VARCHAR(30), IN p_q VARCHAR(200))
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_search_events_stats $$
+CREATE PROCEDURE sp_search_events_stats(
+  IN p_category_id   VARCHAR(7),
+  IN p_event_type_id VARCHAR(7),
+  IN p_division      VARCHAR(30),
+  IN p_q             VARCHAR(200)
+)
 BEGIN
   SELECT
     creation_id, title, description, short_description, division,
@@ -511,19 +744,22 @@ BEGIN
     total_donors, total_donations, total_raised,
     raised_this_month, donors_this_month, last_donation_at
   FROM v_event_catalog_open_with_stats
-  WHERE (p_category_id IS NULL OR p_category_id = '' OR category_id = p_category_id)
+  WHERE (p_category_id   IS NULL OR p_category_id   = '' OR category_id   = p_category_id)
     AND (p_event_type_id IS NULL OR p_event_type_id = '' OR event_type_id = p_event_type_id)
-    AND (p_division IS NULL OR p_division = '' OR division = p_division)
+    AND (p_division      IS NULL OR p_division      = '' OR division      = p_division)
     AND (p_q IS NULL OR p_q = '' OR title LIKE CONCAT('%', p_q, '%') OR description LIKE CONCAT('%', p_q, '%'))
   ORDER BY progress_pct DESC, (amount_needed - amount_received) DESC, title ASC;
-END;
+END $$
+DELIMITER ;
 --------------------------------
 
 Name: sp_get_event_detail_stats
-Type: PROCEDURE
-Purpose: Single event detail with donation statistics (parallel to sp_get_event_detail).
+Type: PROCEDURE [PL/SQL]
+Purpose: Single event detail with donation statistics.
 Used In: routes/search.js GET /event/:id.
 Definition:
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_get_event_detail_stats $$
 CREATE PROCEDURE sp_get_event_detail_stats(IN p_creation_id VARCHAR(7))
 BEGIN
   SELECT
@@ -537,7 +773,51 @@ BEGIN
   FROM v_event_catalog_with_stats
   WHERE creation_id = p_creation_id
   LIMIT 1;
-END;
+END $$
+DELIMITER ;
+--------------------------------
+
+Name: sp_admin_verify_staff
+Type: PROCEDURE [PL/SQL]
+Purpose: Admin action to verify/suspend/unsuspend staff; updates STAFF only (no audit table).
+Used In: src/routes/admin.js PUT /api/admin/staff/:id/verify.
+Definition:
+DROP PROCEDURE IF EXISTS sp_admin_verify_staff;
+DELIMITER $$
+CREATE PROCEDURE sp_admin_verify_staff(
+  IN p_staff_id VARCHAR(7),
+  IN p_action ENUM('verify','suspend','unsuspend'),
+  IN p_notes TEXT,
+  IN p_admin_user VARCHAR(100)
+)
+BEGIN
+  DECLARE v_exists INT DEFAULT 0;
+  DECLARE v_status ENUM('verified','suspended','unverified');
+  SELECT COUNT(*), MAX(status) INTO v_exists, v_status FROM STAFF WHERE staff_id = p_staff_id;
+  IF v_exists = 0 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Staff not found'; END IF;
+  IF p_action = 'verify' THEN
+    IF v_status IN ('unverified','suspended') THEN
+      UPDATE STAFF SET status='verified' WHERE staff_id = p_staff_id;
+    ELSE
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Already verified';
+    END IF;
+  ELSEIF p_action = 'suspend' THEN
+    IF v_status <> 'suspended' THEN
+      UPDATE STAFF SET status='suspended' WHERE staff_id = p_staff_id;
+    ELSE
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Already suspended';
+    END IF;
+  ELSEIF p_action = 'unsuspend' THEN
+    IF v_status = 'suspended' THEN
+      UPDATE STAFF SET status='verified' WHERE staff_id = p_staff_id;
+    ELSE
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Not suspended';
+    END IF;
+  ELSE
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid action';
+  END IF;
+END$$
+DELIMITER ;
 --------------------------------
 
 ================================
@@ -545,73 +825,299 @@ TRIGGERS
 ================================
 
 Name: BI_EVENT_CREATION_XOR
-Type: TRIGGER (BEFORE INSERT)
+Type: TRIGGER [PL/SQL] (BEFORE INSERT)
 Purpose: Enforces exactly one creator (individual XOR foundation) with matching creator_type.
 Used In: Fires on EVENT_CREATION insert (data integrity).
-Definition: CREATE TRIGGER BI_EVENT_CREATION_XOR BEFORE INSERT ON EVENT_CREATION ... (see script for full body)
+Definition:
+DELIMITER $$
+CREATE TRIGGER BI_EVENT_CREATION_XOR
+BEFORE INSERT ON EVENT_CREATION
+FOR EACH ROW
+BEGIN
+  IF NOT (
+      (NEW.creator_type='individual'  AND NEW.individual_id  IS NOT NULL AND NEW.foundation_id IS NULL) OR
+      (NEW.creator_type='foundation' AND NEW.foundation_id IS NOT NULL AND NEW.individual_id  IS NULL)
+  ) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT='Provide exactly one creator: individual OR foundation, matching creator_type';
+  END IF;
+END $$
+DELIMITER ;
 --------------------------------
 
 Name: BU_EVENT_CREATION_XOR
-Type: TRIGGER (BEFORE UPDATE)
+Type: TRIGGER [PL/SQL] (BEFORE UPDATE)
 Purpose: Maintains XOR rule during updates to prevent orphaned or dual ownership.
 Used In: EVENT_CREATION updates.
-Definition: CREATE TRIGGER BU_EVENT_CREATION_XOR BEFORE UPDATE ON EVENT_CREATION ...
+Definition:
+DELIMITER $$
+CREATE TRIGGER BU_EVENT_CREATION_XOR
+BEFORE UPDATE ON EVENT_CREATION
+FOR EACH ROW
+BEGIN
+  IF NOT (
+      (NEW.creator_type='individual'  AND NEW.individual_id  IS NOT NULL AND NEW.foundation_id IS NULL) OR
+      (NEW.creator_type='foundation' AND NEW.foundation_id IS NOT NULL AND NEW.individual_id  IS NULL)
+  ) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT='Provide exactly one creator: individual OR foundation, matching creator_type';
+  END IF;
+END $$
+DELIMITER ;
 --------------------------------
 
 Name: BI_EVENT_VERIFICATION_ENFORCE
-Type: TRIGGER (BEFORE INSERT)
+Type: TRIGGER [PL/SQL] (BEFORE INSERT)
 Purpose: Validates verification rounds and staff involvement logic; may SIGNAL errors.
 Used In: EVENT_VERIFICATION inserts.
-Definition: CREATE TRIGGER BI_EVENT_VERIFICATION_ENFORCE BEFORE INSERT ON EVENT_VERIFICATION ...
+Definition:
+DELIMITER $$
+CREATE TRIGGER BI_EVENT_VERIFICATION_ENFORCE
+BEFORE INSERT ON EVENT_VERIFICATION
+FOR EACH ROW
+BEGIN
+  DECLARE v_need_staff TINYINT DEFAULT 0;
+  IF NEW.round_no NOT IN (1,2) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='round_no must be 1 or 2';
+  END IF;
+  IF (NEW.round_no = 1 AND NEW.staff_id IS NOT NULL) OR
+     (NEW.round_no = 2 AND NEW.staff_id IS NULL) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT='Invalid verifier: round 1 -> no staff_id; round 2 -> staff_id required';
+  END IF;
+  IF NEW.round_no <> 1 THEN SET NEW.request_staff_verification = 0; END IF;
+  IF NEW.round_no = 2 THEN
+    SELECT second_verification_required INTO v_need_staff
+    FROM EVENT_CREATION WHERE creation_id = NEW.creation_id FOR UPDATE;
+    IF v_need_staff <> 1 THEN
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Staff follow-up was not requested for this event';
+    END IF;
+  END IF;
+END $$
+DELIMITER ;
 --------------------------------
 
 Name: AI_EVENT_VERIFICATION_APPLY
-Type: TRIGGER (AFTER INSERT)
+Type: TRIGGER [PL/SQL] (AFTER INSERT)
 Purpose: Applies verification decision to EVENT_CREATION lifecycle & status.
 Used In: EVENT_VERIFICATION inserts.
-Definition: CREATE TRIGGER AI_EVENT_VERIFICATION_APPLY AFTER INSERT ON EVENT_VERIFICATION ...
+Definition:
+DELIMITER $$
+CREATE TRIGGER AI_EVENT_VERIFICATION_APPLY
+AFTER INSERT ON EVENT_VERIFICATION
+FOR EACH ROW
+BEGIN
+  IF NEW.round_no = 1 THEN
+    IF NEW.decision = 'verified' THEN
+      IF NEW.request_staff_verification = 1 THEN
+        UPDATE EVENT_CREATION
+        SET second_verification_required = 1,
+            verification_status = 'unverified',
+            lifecycle_status    = 'inactive'
+        WHERE creation_id = NEW.creation_id;
+      ELSE
+        UPDATE EVENT_CREATION
+        SET second_verification_required = 0,
+            verification_status = 'verified',
+            lifecycle_status    = 'active'
+        WHERE creation_id = NEW.creation_id;
+      END IF;
+    ELSE
+      UPDATE EVENT_CREATION
+      SET second_verification_required = 0,
+          verification_status = 'unverified',
+          lifecycle_status    = 'inactive'
+      WHERE creation_id = NEW.creation_id;
+    END IF;
+  END IF;
+  IF NEW.round_no = 2 THEN
+    UPDATE EVENT_CREATION
+    SET second_verification_required = 0,
+        verification_status = CASE WHEN NEW.decision='verified' THEN 'verified' ELSE 'unverified' END,
+        lifecycle_status    = CASE WHEN NEW.decision='verified' THEN 'active'    ELSE 'inactive'    END
+    WHERE creation_id = NEW.creation_id;
+  END IF;
+END $$
+DELIMITER ;
 --------------------------------
 
 Name: BI_DONATION_ENFORCE
-Type: TRIGGER (BEFORE INSERT)
+Type: TRIGGER [PL/SQL] (BEFORE INSERT)
 Purpose: Validates donation eligibility, prevents overfund & invalid amounts (signals errors used by app layer).
 Used In: DONATION inserts (also inside sp_record_donation flow).
-Definition: CREATE TRIGGER BI_DONATION_ENFORCE BEFORE INSERT ON DONATION ...
+Definition:
+DELIMITER $$
+CREATE TRIGGER BI_DONATION_ENFORCE
+BEFORE INSERT ON DONATION
+FOR EACH ROW
+BEGIN
+  DECLARE v_ver  VARCHAR(10);
+  DECLARE v_life VARCHAR(10);
+  DECLARE v_need DECIMAL(12,2);
+  DECLARE v_have DECIMAL(12,2);
+  IF NEW.amount IS NULL OR NEW.amount <= 0 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Invalid donation amount';
+  END IF;
+  SELECT verification_status, lifecycle_status, amount_needed, amount_received
+    INTO v_ver, v_life, v_need, v_have
+  FROM EVENT_CREATION
+  WHERE creation_id = NEW.creation_id
+  FOR UPDATE;
+  IF v_ver <> 'verified' OR v_life <> 'active' THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Donations allowed only for verified & active events';
+  END IF;
+  IF v_have >= v_need THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Event is already fully funded';
+  END IF;
+  IF v_have + NEW.amount > v_need THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Donation exceeds remaining required amount';
+  END IF;
+END $$
+DELIMITER ;
 --------------------------------
 
 Name: AI_DONATION_SUM
-Type: TRIGGER (AFTER INSERT)
-Purpose: Increments amount_received and auto-closes fully funded events.
+Type: TRIGGER [PL/SQL] (AFTER INSERT)
+Purpose: Add to amount_received; close when target met.
 Used In: DONATION inserts.
-Definition: CREATE TRIGGER AI_DONATION_SUM AFTER INSERT ON DONATION ...
+Definition:
+DELIMITER $$
+CREATE TRIGGER AI_DONATION_SUM
+AFTER INSERT ON DONATION
+FOR EACH ROW
+BEGIN
+  UPDATE EVENT_CREATION
+  SET amount_received = amount_received + NEW.amount
+  WHERE creation_id = NEW.creation_id;
+  UPDATE EVENT_CREATION
+  SET lifecycle_status = 'closed'
+  WHERE creation_id = NEW.creation_id
+    AND verification_status = 'verified'
+    AND amount_received >= amount_needed
+    AND lifecycle_status <> 'closed';
+END $$
+DELIMITER ;
 --------------------------------
 
 Name: AU_DONATION_SUM
-Type: TRIGGER (AFTER UPDATE)
-Purpose: Adjusts aggregate if a donation is edited; reopens or closes accordingly.
+Type: TRIGGER [PL/SQL] (AFTER UPDATE)
+Purpose: Adjust totals on donation edit; keep status in sync.
 Used In: DONATION updates.
-Definition: CREATE TRIGGER AU_DONATION_SUM AFTER UPDATE ON DONATION ...
+Definition:
+DELIMITER $$
+CREATE TRIGGER AU_DONATION_SUM
+AFTER UPDATE ON DONATION
+FOR EACH ROW
+BEGIN
+  UPDATE EVENT_CREATION
+  SET amount_received = amount_received - OLD.amount + NEW.amount
+  WHERE creation_id = NEW.creation_id;
+  UPDATE EVENT_CREATION
+  SET lifecycle_status = CASE WHEN amount_received >= amount_needed THEN 'closed' ELSE 'active' END
+  WHERE creation_id = NEW.creation_id
+    AND verification_status = 'verified';
+END $$
+DELIMITER ;
 --------------------------------
 
 Name: AD_DONATION_SUM
-Type: TRIGGER (AFTER DELETE)
-Purpose: Subtracts removed donation amount and may reopen event if below goal.
+Type: TRIGGER [PL/SQL] (AFTER DELETE)
+Purpose: Subtract totals on delete; reopen if below target again.
 Used In: DONATION deletions.
-Definition: CREATE TRIGGER AD_DONATION_SUM AFTER DELETE ON DONATION ...
+Definition:
+DELIMITER $$
+CREATE TRIGGER AD_DONATION_SUM
+AFTER DELETE ON DONATION
+FOR EACH ROW
+BEGIN
+  UPDATE EVENT_CREATION
+  SET amount_received = amount_received - OLD.amount
+  WHERE creation_id = OLD.creation_id;
+  UPDATE EVENT_CREATION
+  SET lifecycle_status = 'active'
+  WHERE creation_id = OLD.creation_id
+    AND verification_status = 'verified'
+    AND amount_received < amount_needed
+    AND lifecycle_status = 'closed';
+END $$
+DELIMITER ;
 --------------------------------
 
 Name: BD_INDIVIDUAL_BLOCK_IF_EVENTS
-Type: TRIGGER (BEFORE DELETE)
+Type: TRIGGER [PL/SQL] (BEFORE DELETE)
 Purpose: Blocks deletion of an individual if events reference them (business rule enforcement).
 Used In: INDIVIDUAL deletions.
-Definition: CREATE TRIGGER BD_INDIVIDUAL_BLOCK_IF_EVENTS BEFORE DELETE ON INDIVIDUAL ...
+Definition:
+DELIMITER $$
+CREATE TRIGGER BD_INDIVIDUAL_BLOCK_IF_EVENTS
+BEFORE DELETE ON INDIVIDUAL
+FOR EACH ROW
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM EVENT_CREATION
+    WHERE creator_type='individual' AND individual_id = OLD.individual_id
+    LIMIT 1
+  ) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Cannot delete individual: events still reference this account (reassign or deactivate first)';
+  END IF;
+END $$
+DELIMITER ;
 --------------------------------
 
 Name: BD_FOUNDATION_BLOCK_IF_EVENTS
-Type: TRIGGER (BEFORE DELETE)
+Type: TRIGGER [PL/SQL] (BEFORE DELETE)
 Purpose: Blocks deletion of a foundation if events reference them.
 Used In: FOUNDATION deletions.
-Definition: CREATE TRIGGER BD_FOUNDATION_BLOCK_IF_EVENTS BEFORE DELETE ON FOUNDATION ...
+Definition:
+DELIMITER $$
+CREATE TRIGGER BD_FOUNDATION_BLOCK_IF_EVENTS
+BEFORE DELETE ON FOUNDATION
+FOR EACH ROW
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM EVENT_CREATION
+    WHERE creator_type='foundation' AND foundation_id = OLD.foundation_id
+    LIMIT 1
+  ) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Cannot delete foundation: events still reference this account (reassign or deactivate first)';
+  END IF;
+END $$
+DELIMITER ;
+--------------------------------
+
+Name: staff_bi_id
+Type: TRIGGER [PL/SQL] (BEFORE INSERT)
+Purpose: Generate staff_id automatically if not provided or invalid format.
+Used In: STAFF inserts.
+Definition:
+DELIMITER $$
+CREATE TRIGGER staff_bi_id BEFORE INSERT ON STAFF FOR EACH ROW
+BEGIN
+  IF NEW.staff_id IS NULL OR NEW.staff_id NOT REGEXP '^STF[0-9]{4}$' THEN
+    SET NEW.staff_id = CONCAT('STF', LPAD(FLOOR(RAND()*9000)+1000, 4, '0'));
+  END IF;
+END$$
+DELIMITER ;
+--------------------------------
+
+Name: staff_bu_status_guard
+Type: TRIGGER [PL/SQL] (BEFORE UPDATE)
+Purpose: Validate STAFF.status and block reverting verified/suspended back to unverified.
+Used In: STAFF updates.
+Definition:
+DELIMITER $$
+CREATE TRIGGER staff_bu_status_guard BEFORE UPDATE ON STAFF FOR EACH ROW
+BEGIN
+  IF NEW.status NOT IN ('unverified','verified','suspended') THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid STAFF.status';
+  END IF;
+  IF OLD.status IN ('verified','suspended') AND NEW.status = 'unverified' THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Cannot revert to unverified';
+  END IF;
+END$$
+DELIMITER ;
 --------------------------------
 
 ================================
@@ -619,36 +1125,53 @@ USAGE MAP (CODE -> DB OBJECTS)
 ================================
 
 File: src/index.js
-  - POST /donate: sp_record_donation, fn_event_remaining, fn_event_is_eligible (procedure + functions + trigger chain)
-  - GET /api/events/:id/eligibility: fn_event_remaining, fn_event_is_eligible
+  - POST /donate → sp_record_donation (procedure) + triggers BI/AI_DONATION_*; after success SELECT fn_event_remaining, fn_event_is_eligible
+  - GET /api/events/:id/eligibility → SELECT fn_event_remaining, fn_event_is_eligible
 
 File: src/routes/search.js
-  - GET /categories: sp_get_categories
-  - GET /event-types: sp_get_event_types
-  - GET /divisions: sp_get_divisions (else raw GROUP BY fallback when ebc_id)
-  - GET /events: sp_search_events_stats (else raw SELECT fallback with inline aggregates when ebc_id)
-  - GET /event/:id: sp_get_event_detail_stats (filtered in app for active+verified)
+  - GET /categories → CALL sp_get_categories
+  - GET /event-types → CALL sp_get_event_types
+  - GET /divisions → CALL sp_get_divisions (fallback raw GROUP BY when ebc_id provided)
+  - GET /events → CALL sp_search_events_stats (fallback raw SELECT with inline aggregates when ebc_id)
+  - GET /event/:id → CALL sp_get_event_detail_stats (app enforces active+verified)
 
 File: src/routes/event.js
-  - GET /api/events + /:id : Raw SELECT with JOINs (demonstrates manual SQL vs procedure-based approach)
+  - GET / (list) and /:id (detail) → Raw SELECT with JOINs against EVENT_CREATION + taxonomy + creators
 
-Advanced Patterns Showcased:
-  - Views for search abstraction (v_event_catalog*, v_event_filters_*)
-  - Stored procedures for parameterized filtering & business logic
-  - Scalar functions for derived state (remaining amount, eligibility, risk label)
-  - Triggers for data integrity and automatic lifecycle transitions
-  - CHECK constraints & REGEXP for input validation at schema level
-  - Transactions + EXIT HANDLER + SIGNAL for controlled error propagation (sp_record_donation, sp_raise_flag)
-  - CASE expressions inside functions & view calculations (progress_pct, fn_event_risk_label)
-  - GROUP BY usage in fallback division & event queries
+File: src/routes/admin.js
+  - GET /staff → SELECT from V_ADMIN_STAFF
+  - GET /staff/:id/details → SELECT from STAFF (no BLOB in JSON)
+  - GET /staff/:id/cv → SELECT CV BLOB from STAFF
+  - PUT /staff/:id/verify → CALL sp_admin_verify_staff (updates STAFF.status)
+  - DELETE /staff/:id → DELETE FROM STAFF WHERE staff_id = ?
+  - Foundations endpoints operate on table FOUNDATION directly (approve = UPDATE status, delete = DELETE)
+
+Advanced DBMS Patterns:
+  - Views for search abstraction (v_event_catalog*, v_event_filters_*, stats views)
+  - Stored procedures encapsulate business logic and filtering (with transactions & EXIT HANDLER)
+  - Scalar functions expose derived state (remaining amount, eligibility, risk labeling)
+  - Triggers enforce integrity and maintain aggregates/lifecycle automatically
+  - Constraints (CHECK, REGEXP), indexes, and FKs with ON DELETE/UPDATE actions
+  - Exception handling via SIGNAL and EXIT HANDLER (PL/SQL-style)
 
 ================================
-PENDING / EXTENSION IDEAS
+DML MAP — WHERE UPDATE/DELETE ARE USED
 ================================
-1. Add procedure sp_search_events_by_ebc_stats to eliminate ebc_id fallback and include stats metrics.
-2. Add sp_get_divisions_with_counts returning division + campaign_count (remove inline GROUP BY fallback).
-3. Surface fn_event_risk_label inside stats views for moderation & risk sorting.
-4. Add trending score (recent donation velocity) column via 7-day windowed sums.
-5. Materialize daily funding snapshot table for historical analytics & graphs.
+- UPDATE statements
+  • sp_admin_verify_staff → UPDATE STAFF.status (verify/suspend/unsuspend)
+  • sp_raise_flag → UPDATE EVENT_CREATION.flag (and possibly lifecycle/verification)
+  • AI_EVENT_VERIFICATION_APPLY → UPDATE EVENT_CREATION (verification_status, lifecycle_status, second_verification_required)
+  • AI_DONATION_SUM → UPDATE EVENT_CREATION.amount_received; possibly lifecycle_status='closed'
+  • AU_DONATION_SUM → UPDATE EVENT_CREATION.amount_received and lifecycle_status
+  • AD_DONATION_SUM → UPDATE EVENT_CREATION.amount_received and lifecycle_status
+  • BI_EVENT_VERIFICATION_ENFORCE → sets NEW.request_staff_verification (row mutation)
+
+- DELETE statements
+  • Admin API: DELETE FROM STAFF (src/routes/admin.js)
+  • Admin API: DELETE FROM FOUNDATION (src/routes/admin.js when action='delete')
+  • Table FKs: DONATION ON DELETE CASCADE (by event), EVENT_PHOTO ON DELETE CASCADE (by event)
+  • Triggers BD_INDIVIDUAL_BLOCK_IF_EVENTS / BD_FOUNDATION_BLOCK_IF_EVENTS prevent deletes that would orphan EVENT_CREATION
+
+
 
 End of DBMS reference.
