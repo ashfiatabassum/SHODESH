@@ -1412,5 +1412,140 @@ VALUES
 
 
 
+-- SAMPLE DATA INSERT FOR STAFF TABLE 
 
+INSERT INTO STAFF (
+  staff_id, first_name, last_name, username, password, mobile, email, nid, dob,
+  house_no, road_no, area, district, administrative_div, zip, CV, status
+) VALUES
+('STF0001','Arif','Rahman','arif.rahman','P@ssw0rd1','01712345678','arif.rahman@shodesh.org','199912345678','1995-04-12','12B','10','Dhanmondi','Dhaka','Dhaka Division','1209',NULL,'verified'),
+('STF0002','Nusrat','Jahan','nusrat.j','S3cure99','01823456789','nusrat.jahan@shodesh.org','200012345679','1996-09-30','221B','27','Gulshan','Dhaka','Dhaka Division','1212',NULL,'unverified'),
+('STF0003','Tanvir','Ahmed','tanvir.ahmed','Abc12345','01634567890','tanvir.ahmed@shodesh.org','200112345680','1993-02-08','5A','6','Agrabad','Chattogram','Chattogram Division','4000',NULL,'verified'),
+('STF0004','Rafiq','Hasan','rafiq.hasan','Strong007','01545678901','rafiq.hasan@shodesh.org','200212345681','1992-11-15','77','15','Zindabazar','Sylhet','Sylhet Division','3100',NULL,'suspended'),
+('STF0005','Farhana','Islam','farhana.islam','!Qaz2Wsx','01356789012','farhana.islam@shodesh.org','200312345682','1998-05-20','9','3','Boalia','Rajshahi','Rajshahi Division','6000',NULL,'verified'),
+('STF0006','Sajid','Karim','sajid.karim','Passw0rd!','01967890123','sajid.karim@shodesh.org','200412345683','1994-12-01','34','120','Khalishpur','Khulna','Khulna Division','9000',NULL,'unverified'),
+('STF0007','Sharmeen','Akter','sharmeen.akter','MyKey123','01778901234','sharmeen.akter@shodesh.org','200512345684','1999-07-07','3C','45','Bangla Bazar','Barishal','Barishal Division','8200',NULL,'verified'),
+('STF0008','Rumman','Hossain','rumman.hossain','LetMeIn9','01489012345','rumman.hossain@shodesh.org','200612345685','1997-03-28','101','5','Pairaband','Rangpur','Rangpur Division','5400',NULL,'suspended'),
+('STF0009','Mitu','Sultana','mitu.sultana','Key12345','01390123456','mitu.sultana@shodesh.org','200712345686','2000-01-14','56','9','Shambhuganj','Mymensingh','Mymensingh Division','2200',NULL,'unverified'),
+('STF0010','Atikur','Rahman','atik.rahman','ZxCv9876','01901234567','atik.rahman@shodesh.org','200812345687','1991-10-02','18','2','Fatullah','Narayanganj','Dhaka Division','1420',NULL,'verified');
+
+
+
+
+
+
+-- Helper function: full name
+DROP FUNCTION IF EXISTS fn_staff_fullname;
+DELIMITER $$
+CREATE FUNCTION fn_staff_fullname(p_id VARCHAR(7))
+RETURNS VARCHAR(70)
+DETERMINISTIC
+READS SQL DATA
+BEGIN
+  DECLARE v VARCHAR(70);
+  SELECT CONCAT(first_name,' ',last_name) INTO v FROM STAFF WHERE staff_id = p_id;
+  RETURN v;
+END$$
+DELIMITER ;
+
+-- List view (no BLOBs)
+DROP VIEW IF EXISTS V_ADMIN_STAFF;
+CREATE VIEW V_ADMIN_STAFF AS
+SELECT 
+  s.staff_id,
+  s.username,
+  CONCAT(s.first_name,' ',s.last_name) AS full_name,
+  s.email,
+  s.mobile,
+  s.district,
+  s.administrative_div,
+  s.status,
+  (s.CV IS NOT NULL) AS has_cv,
+  CASE WHEN s.CV IS NULL THEN 0 ELSE OCTET_LENGTH(s.CV) END AS cv_size
+FROM STAFF s;
+
+-- Optional stats view
+DROP VIEW IF EXISTS V_STAFF_STATS;
+CREATE VIEW V_STAFF_STATS AS
+SELECT 
+  COUNT(*) AS total,
+  SUM(CASE WHEN status='unverified' THEN 1 ELSE 0 END) AS pending,
+  SUM(CASE WHEN status='verified' THEN 1 ELSE 0 END) AS verified,
+  SUM(CASE WHEN status='suspended' THEN 1 ELSE 0 END) AS suspended
+FROM STAFF;
+
+-- NOTE: No audit table per requirement — status changes are applied directly on STAFF only.
+
+-- Triggers
+DROP TRIGGER IF EXISTS staff_bi_id;
+DELIMITER $$
+CREATE TRIGGER staff_bi_id BEFORE INSERT ON STAFF FOR EACH ROW
+BEGIN
+  IF NEW.staff_id IS NULL OR NEW.staff_id NOT REGEXP '^STF[0-9]{4}$' THEN
+    SET NEW.staff_id = CONCAT('STF', LPAD(FLOOR(RAND()*9000)+1000, 4, '0'));
+  END IF;
+END$$
+DELIMITER ;
+
+-- Note: No timestamp columns on STAFF; skip timestamp triggers
+
+DROP TRIGGER IF EXISTS staff_bu_status_guard;
+DELIMITER $$
+CREATE TRIGGER staff_bu_status_guard BEFORE UPDATE ON STAFF FOR EACH ROW
+BEGIN
+  IF NEW.status NOT IN ('unverified','verified','suspended') THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid STAFF.status';
+  END IF;
+  IF OLD.status IN ('verified','suspended') AND NEW.status = 'unverified' THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Cannot revert to unverified';
+  END IF;
+END$$
+DELIMITER ;
+
+-- Removed AFTER UPDATE audit trigger (no audit table allowed)
+
+-- Admin procedure for verify/suspend/unsuspend
+DROP PROCEDURE IF EXISTS sp_admin_verify_staff;
+DELIMITER $$
+CREATE PROCEDURE sp_admin_verify_staff(
+  IN p_staff_id VARCHAR(7),
+  IN p_action ENUM('verify','suspend','unsuspend'),
+  IN p_notes TEXT,
+  IN p_admin_user VARCHAR(100)
+)
+BEGIN
+  DECLARE v_exists INT DEFAULT 0;
+  DECLARE v_status ENUM('verified','suspended','unverified');
+
+  SELECT COUNT(*), MAX(status) INTO v_exists, v_status
+  FROM STAFF WHERE staff_id = p_staff_id;
+
+  IF v_exists = 0 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Staff not found';
+  END IF;
+
+  IF p_action = 'verify' THEN
+    IF v_status IN ('unverified','suspended') THEN
+      UPDATE STAFF SET status='verified' WHERE staff_id = p_staff_id;
+    ELSE
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Already verified';
+    END IF;
+  ELSEIF p_action = 'suspend' THEN
+    IF v_status <> 'suspended' THEN
+      UPDATE STAFF SET status='suspended' WHERE staff_id = p_staff_id;
+    ELSE
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Already suspended';
+    END IF;
+  ELSEIF p_action = 'unsuspend' THEN
+    IF v_status = 'suspended' THEN
+      UPDATE STAFF SET status='verified' WHERE staff_id = p_staff_id;
+    ELSE
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Not suspended';
+    END IF;
+  ELSE
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid action';
+  END IF;
+  -- No audit insert; direct update only per requirement
+END$$
+DELIMITER ;
 
