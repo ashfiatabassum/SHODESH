@@ -211,6 +211,103 @@ router.put('/events/:id/trending', authenticateAdmin, async (req, res) => {
     }
 });
 
+// =============================
+// STAFF VERIFICATION (Admin)
+// =============================
+
+// List staff (no BLOBs) via view V_ADMIN_STAFF
+router.get('/staff', authenticateAdmin, async (req, res) => {
+    try {
+        const { status } = req.query; // unverified | verified | suspended | all
+        const params = [];
+        let sql = 'SELECT * FROM V_ADMIN_STAFF';
+        if (status && status !== 'all') {
+            sql += ' WHERE status = ?';
+            params.push(status);
+        }
+        sql += ' ORDER BY staff_id DESC';
+        const [rows] = await adminDb.execute(sql, params);
+        res.json({ success: true, data: rows });
+    } catch (error) {
+        console.error('❌ Staff list error:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch staff' });
+    }
+});
+
+// Staff details (metadata, no raw BLOB in JSON)
+router.get('/staff/:id/details', authenticateAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const [rows] = await adminDb.execute(
+            `SELECT 
+               staff_id, username, first_name, last_name, email, mobile, nid, dob,
+               house_no, road_no, area, district, administrative_div, zip,
+               status,
+               (CV IS NOT NULL) AS has_cv,
+               CASE WHEN CV IS NULL THEN 0 ELSE OCTET_LENGTH(CV) END AS cv_size
+             FROM STAFF
+             WHERE staff_id = ?`,
+            [id]
+        );
+        if (!rows.length) return res.status(404).json({ success: false, message: 'Staff not found' });
+        res.json({ success: true, data: rows[0] });
+    } catch (error) {
+        console.error('❌ Staff details error:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch staff details' });
+    }
+});
+
+// Staff CV download/stream (BLOB)
+router.get('/staff/:id/cv', authenticateAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const [rows] = await adminDb.execute('SELECT CV FROM STAFF WHERE staff_id = ?', [id]);
+        if (!rows.length || !rows[0].CV) return res.status(404).json({ success: false, message: 'No CV uploaded' });
+        const buf = rows[0].CV;
+        res.setHeader('Content-Type', 'application/octet-stream');
+        res.setHeader('Content-Disposition', `attachment; filename="${id}_cv.bin"`);
+        res.send(buf);
+    } catch (error) {
+        console.error('❌ Staff CV error:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch CV' });
+    }
+});
+
+// Verify/Suspend/Unsuspend staff via stored procedure
+router.put('/staff/:id/verify', authenticateAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { action, notes } = req.body; // 'verify' | 'suspend' | 'unsuspend'
+        const adminUser = req.headers['x-admin-user'] || 'admin';
+        if (!['verify','suspend','unsuspend'].includes(action)) {
+            return res.status(400).json({ success: false, message: 'Invalid action' });
+        }
+        await adminDb.execute('CALL sp_admin_verify_staff(?,?,?,?)', [id, action, notes || null, adminUser]);
+        res.json({ success: true, message: `Staff ${action} successful` });
+    } catch (error) {
+        console.error('❌ Staff verify error:', error);
+        if (error && error.sqlState === '45000') {
+            return res.status(400).json({ success: false, message: error.message });
+        }
+        res.status(500).json({ success: false, message: 'Failed to update staff status' });
+    }
+});
+
+// Permanently delete a staff record (admin action)
+router.delete('/staff/:id', authenticateAdmin, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const [result] = await adminDb.execute('DELETE FROM STAFF WHERE staff_id = ?', [id]);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: 'Staff not found' });
+        }
+        return res.json({ success: true, message: 'Staff deleted' });
+    } catch (err) {
+        console.error('Error deleting staff:', err);
+        return res.status(500).json({ success: false, message: 'Failed to delete staff' });
+    }
+});
+
 // Foundation Management Routes
 router.get('/foundations', authenticateAdmin, async (req, res) => {
     try {
