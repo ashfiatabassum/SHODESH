@@ -1,241 +1,174 @@
-.desktop {
-  background-color: #ffffff;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  width: 100%;
-  height: 100vh;
-  overflow: hidden;
-}
-
-.desktop .div {
-  background-color: #ffffff;
-  height: 100vh;
-  position: relative;
-  width: 100vw;
-  max-width: 1440px;
-  display: flex;
-}
-
-.desktop .image {
-  height: 50vh;
-  left: 0;
-  object-fit: cover;
-  position: absolute;
-  top: 0;
-  width: 50vw;
-  max-width: 717px;
-}
-
-.desktop .img {
-  height: 50vh;
-  left: 0;
-  position: absolute;
-  top: 50vh;
-  width: 50vw;
-  max-width: 717px;
-}
-
-.desktop .overlap {
-  height: 38vh;
-  left: 55vw;
-  position: absolute;
-  top: 12vh;
-  width: 40vw;
-  max-width: 603px;
-}
-
-.desktop .text-wrapper {
-  color: #af3e3e;
-  font-family: "Roboto Condensed", Helvetica, sans-serif;
-  font-weight: 700;
-  font-size: 3.5vw;
-  left: 0;
-  letter-spacing: 0;
-  line-height: normal;
-  position: absolute;
-  top: 0;
-  width: 80%;
-}
-
-.desktop .rectangle {
-  background-color: #4a7c59;
-  border-radius: 20px;
-  height: 10.5vh;
-  left: 0;
-  position: absolute;
-  top: 22vh;
-  transform: rotate(-0.12deg);
-  width: 100%;
-}
-
-.desktop .text-wrapper-2 {
-  color: #ffffff;
-  font-family: "Roboto Condensed", Helvetica, sans-serif;
-  font-weight: 600;
-  font-size: 2.2vw;
-  left: 0;
-  letter-spacing: 0;
-  line-height: normal;
-  position: absolute;
-  top: 25vh;
-  white-space: nowrap;
-  width: 100%;
-  text-align: center;
-}
-
-.desktop .overlap-group {
-  height: 10.5vh;
-  left: 55vw;
-  position: absolute;
-  top: 35vh;
-  width: 40vw;
-  max-width: 575px;
-}
-
-.desktop .rectangle-2 {
-  background-color: #4a7c59;
-  border-radius: 20px;
-  height: 10.5vh;
-  left: 0;
-  position: absolute;
-  top: 0.1vh;
-  transform: rotate(-0.12deg);
-  width: 100%;
-}
-
-.desktop .text-wrapper-3 {
-  color: #ffffff;
-  font-family: "Roboto Condensed", Helvetica, sans-serif;
-  font-weight: 600;
-  font-size: 2.2vw;
-  left: 0;
-  letter-spacing: 0;
-  line-height: normal;
-  position: absolute;
-  top: 3vh;
-  white-space: nowrap;
-  width: 100%;
-  text-align: center;
-}
-
-.desktop .overlap-2 {
-  height: 10.5vh;
-  left: 55vw;
-  position: absolute;
-  top: 50vh;
-  width: 40vw;
-  max-width: 588px;
-}
-
-.desktop .text-wrapper-4 {
-  color: #ffffff;
-  font-family: "Roboto Condensed", Helvetica, sans-serif;
-  font-weight: 600;
-  font-size: 2.2vw;
-  left: 0;
-  letter-spacing: 0;
-  line-height: normal;
-  position: absolute;
-  top: 3vh;
-  white-space: nowrap;
-  width: 100%;
-  text-align: center;
-}
-
-.desktop .overlap-3 {
-  height: 10.5vh;
-  left: 55vw;
-  position: absolute;
-  top: 65vh;
-  width: 40vw;
-  max-width: 588px;
-}
-
-.desktop .text-wrapper-5 {
-  color: #ffffff;
-  font-family: "Roboto Condensed", Helvetica, sans-serif;
-  font-weight: 600;
-  font-size: 2.2vw;
-  left: 0;
-  letter-spacing: 0;
-  line-height: normal;
-  position: absolute;
-  top: 3vh;
-  white-space: nowrap;
-  width: 100%;
-  text-align: center;
-}
-
-/* Additional responsive styling */
-* {
-  box-sizing: border-box;
-}
-
 body {
   margin: 0;
   padding: 0;
-  overflow: hidden;
-  height: 100vh;
+  min-height: 100vh;
+  font-family: "Roboto", "Helvetica Neue", Arial, sans-serif;
+  background: #f7faf7;
+  position: relative;
+  overflow-x: hidden;
 }
 
-/* Hover and active effects for role selection boxes */
-.desktop .overlap,
-.desktop .overlap-group,
-.desktop .overlap-2,
-.desktop .overlap-3 {
-  transition: transform 0.3s ease;
+.role-bg {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  z-index: 0;
+  background: linear-gradient(120deg, #e8f5e9 0%, #c8e6c9 40%, #4a7c59 100%);
+  opacity: 0.45;
+  pointer-events: none;
 }
 
-.desktop .overlap:hover .rectangle,
-.desktop .overlap-group:hover .rectangle-2,
-.desktop .overlap-2:hover .rectangle-2,
-.desktop .overlap-3:hover .rectangle-2 {
-  background-color: rgba(54, 121, 100, 0.7);
+.role-container {
+  max-width: 700px;
+  margin: 60px auto 0 auto;
+  padding: 32px 24px;
+  background: rgba(255,255,255,0.97);
+  border-radius: 32px;
+  box-shadow: 0 8px 32px rgba(74,124,89,0.18), 0 0px 0px #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 1;
 }
 
-.desktop .overlap:active .rectangle,
-.desktop .overlap-group:active .rectangle-2,
-.desktop .overlap-2:active .rectangle-2,
-.desktop .overlap-3:active .rectangle-2 {
-  background-color: rgba(34, 101, 80, 0.8);
+.role-header h1 {
+  font-size: 2.7rem;
+  margin-bottom: 8px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-align: center;
 }
 
-/* Media queries for better responsiveness */
-@media screen and (max-width: 768px) {
-  .desktop .text-wrapper {
-    font-size: 4.5vw;
+.green-gradient-text {
+  background: linear-gradient(90deg, #4a7c59 0%, #6bbf59 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+  filter: brightness(1.1);
+}
+
+.role-header p {
+  color: #366d64;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.role-cards {
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.role-card {
+  background: linear-gradient(120deg, #e8f5e9 0%, #c8e6c9 60%, #6bbf59 100%);
+  border-radius: 24px;
+  box-shadow: 0 4px 24px rgba(74,124,89,0.15), 0 0px 0px #fff;
+  padding: 32px 24px 24px 24px;
+  min-width: 180px;
+  max-width: 220px;
+  flex: 1 1 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  position: relative;
+  transition: box-shadow 0.2s, transform 0.2s, background 0.2s;
+}
+
+.role-card:focus,
+.role-card:hover {
+  background: linear-gradient(120deg, #6bbf59 0%, #4a7c59 100%);
+  box-shadow: 0 12px 36px 0 rgba(74,124,89,0.28), 0 0px 0px #fff;
+  transform: translateY(-6px) scale(1.06);
+}
+
+.role-card:focus::after,
+.role-card:hover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  box-shadow: 0 0 0 6px rgba(107,191,89,0.18);
+  pointer-events: none;
+  transition: box-shadow 0.2s;
+}
+
+.role-card:active {
+  background: linear-gradient(120deg, #366d64 0%, #4a7c59 100%);
+  box-shadow: 0 2px 8px rgba(74,124,89,0.10);
+  transform: scale(0.98);
+}
+
+.role-icon {
+  font-size: 2.8rem;
+  margin-bottom: 16px;
+  color: #4a7c59;
+  transition: color 0.2s, text-shadow 0.2s;
+  text-shadow: 0 2px 12px rgba(107,191,89,0.10);
+}
+
+.role-card:focus .role-icon,
+.role-card:hover .role-icon {
+  color: #fff;
+  text-shadow: 0 0 18px #6bbf59;
+}
+
+.role-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #366d64;
+  margin-bottom: 8px;
+  text-align: center;
+  letter-spacing: 0.5px;
+  transition: color 0.2s;
+}
+
+.role-card:focus .role-title,
+.role-card:hover .role-title {
+  color: #fff;
+}
+
+.role-desc {
+  font-size: 1rem;
+  color: #4a7c59;
+  text-align: center;
+  margin-bottom: 0;
+  transition: color 0.2s;
+}
+
+.role-card:focus .role-desc,
+.role-card:hover .role-desc {
+  color: #e8f5e9;
+}
+
+@media (max-width: 900px) {
+  .role-cards {
+    gap: 18px;
   }
-  
-  .desktop .text-wrapper-2,
-  .desktop .text-wrapper-3,
-  .desktop .text-wrapper-4,
-  .desktop .text-wrapper-5 {
-    font-size: 3vw;
-  }
-  
-  .desktop .overlap {
-    left: 52vw;
-    width: 46vw;
-  }
-  
-  .desktop .overlap-group,
-  .desktop .overlap-2,
-  .desktop .overlap-3 {
-    left: 52vw;
-    width: 46vw;
+  .role-container {
+    padding: 18px 8px;
   }
 }
 
-@media screen and (max-width: 480px) {
-  .desktop .text-wrapper {
-    font-size: 6vw;
+@media (max-width: 600px) {
+  .role-cards {
+    flex-direction: column;
+    gap: 18px;
+    align-items: stretch;
   }
-  
-  .desktop .text-wrapper-2,
-  .desktop .text-wrapper-3,
-  .desktop .text-wrapper-4,
-  .desktop .text-wrapper-5 {
-    font-size: 3.5vw;
+  .role-card {
+    max-width: 100%;
+    min-width: 0;
+    padding: 24px 12px 18px 12px;
+  }
+  .role-header h1 {
+    font-size: 2rem;
   }
 }

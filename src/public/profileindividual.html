@@ -45,9 +45,16 @@
           <button class="btn-primary" onclick="editIndividual()">
             <i class="fas fa-edit"></i> Edit Profile
           </button>
-          <button class="btn-primary" onclick="requestHelp()">
-            <i class="fas fa-hand-holding-heart"></i> Request Help
-          </button>
+         <button class="btn-primary" onclick="navigateToEventCreation('individual')">
+  <i class="fas fa-hand-holding-heart"></i> Request Help
+</button>
+<script>
+  function navigateToEventCreation(type) {
+    // Navigate to the event creation page with the creator type
+    window.location.href = `eventcreation.html?creatorType=${type}`;
+  }
+</script>
+
         </div>
       </div>
     </header>

@@ -1,0 +1,121 @@
+// src/config/eventController.js 
+const db = require("./db"); // CommonJS require
+
+// Helper function to generate unique creation_id
+const generateCreationId = () => {
+  const prefix = "CRE";
+  const randomNum = Math.floor(Math.random() * 90000 + 10000); // 5-digit number
+  return `${prefix}${randomNum}`;
+};
+
+// Get all categories
+const getCategories = (req, res) => {
+  db.query('SELECT * FROM category', (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(results);
+  });
+};
+
+const getEventTypes = (req, res) => { 
+  const { categoryId } = req.query;
+  if (!categoryId) return res.status(400).json({ error: "categoryId is required" });
+
+  const sql = `
+    SELECT ebc.ebc_id, et.event_type_name
+    FROM EVENT_BASED_ON_CATEGORY ebc
+    JOIN EVENT_TYPE et ON ebc.event_type_id = et.event_type_id
+    WHERE ebc.category_id = ?
+    ORDER BY et.event_type_name
+  `;
+
+  db.query(sql, [categoryId], (err, rows) => {
+    if (err) {
+      console.error("DB error:", err);
+      return res.status(500).json({ error: "Failed to fetch event types" });
+    }
+    res.json(rows); 
+    // [{ebc_id: 1, event_type_name: 'Flood Relief'}, ...]
+  });
+};
+// inside src/config/eventController.js (replace the createEvent implementation)
+const createEvent = (req, res) => {
+  // debug: what multer delivered
+  console.log("REQ FILES:", req.files);
+  console.log("REQ BODY:", req.body);
+
+  // destructure expected fields from body
+  const {
+    creatorType,
+    individualId,
+    foundationId,
+    ebcId,
+    title,
+    description,
+    amountNeeded,
+    division
+  } = req.body;
+
+  // basic validation
+  if (!ebcId || !title || !description || !amountNeeded || !division) {
+    return res.status(400).json({ success: false, message: "Missing required fields" });
+  }
+
+  // convert/validate numeric field
+  const amountNum = Number(amountNeeded);
+  if (Number.isNaN(amountNum) || amountNum <= 0) {
+    return res.status(400).json({ success: false, message: "Invalid amountNeeded" });
+  }
+// Directly use buffers from multer's memoryStorage
+const docBuffer = req.files?.doc?.[0]?.buffer || null;
+const coverPhotoBuffer = req.files?.coverPhoto?.[0]?.buffer || null;
+
+  // Generate creation id
+  const creationId = generateCreationId();
+
+  // Columns to insert (exactly 11)
+  const columns = [
+    'creation_id', 'creator_type', 'individual_id', 'foundation_id',
+    'ebc_id', 'title', 'description', 'amount_needed',
+    'division', 'doc', 'cover_photo'
+  ];
+
+  // Values array must match columns length
+  const values = [
+    creationId,
+    creatorType || null,
+    individualId || null,
+    foundationId || null,
+    ebcId,
+    title,
+    description,
+    amountNum,    // ensure numeric
+    division,
+    docBuffer,
+    coverPhotoBuffer
+  ];
+
+  // Debug logs to ensure lengths match
+  console.log("INSERT columns count:", columns.length);
+  console.log("VALUES length:", values.length);
+
+  // Build parameter placeholders string (?, ?, ...)
+  const placeholders = values.map(() => '?').join(', ');
+
+  const sql = `INSERT INTO event_creation (${columns.join(', ')}) VALUES (${placeholders})`;
+
+  db.query(sql, values, (err, result) => {
+    if (err) {
+      console.error('❌ Error inserting event:', err); // full err
+      return res.status(500).json({ success: false, message: err.sqlMessage || err.message });
+    }
+
+    res.json({
+      success: true,
+      message: `Event created successfully! Creation ID: ${creationId}`,
+      creationId
+    });
+  });
+};
+
+
+module.exports = { getCategories, getEventTypes, createEvent };

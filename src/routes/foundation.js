@@ -88,6 +88,7 @@ router.post('/register', upload.single('certificate'), async (req, res) => {
 
     // Check if certificate file is uploaded
     if (!req.file) {
+      console.log('❌ Certificate file missing');
       return res.status(400).json({
         success: false,
         message: 'Foundation certificate PDF is required'
@@ -96,6 +97,7 @@ router.post('/register', upload.single('certificate'), async (req, res) => {
 
     // Validate foundation name format
     if (!validateName(foundationName)) {
+      console.log('❌ Invalid foundation name format');
       return res.status(400).json({
         success: false,
         message: 'Foundation name can only contain letters and spaces'
@@ -104,6 +106,7 @@ router.post('/register', upload.single('certificate'), async (req, res) => {
 
     // Validate foundation license length
     if (foundationLicense.length > 12) {
+      console.log('❌ Foundation license too long');
       return res.status(400).json({
         success: false,
         message: 'Foundation license cannot exceed 12 characters'
@@ -112,6 +115,7 @@ router.post('/register', upload.single('certificate'), async (req, res) => {
 
     // Validate password length
     if (password.length < 6) {
+      console.log('❌ Password too short');
       return res.status(400).json({
         success: false,
         message: 'Password must be at least 6 characters long'
@@ -127,6 +131,7 @@ router.post('/register', upload.single('certificate'), async (req, res) => {
     } else if (mobileNumber.length === 10) {
       mobileNumber = '0' + mobileNumber;
     } else {
+      console.log('❌ Invalid mobile number format');
       return res.status(400).json({
         success: false,
         message: 'Mobile number must be 11 digits in Bangladesh format'
@@ -135,6 +140,7 @@ router.post('/register', upload.single('certificate'), async (req, res) => {
 
     // Validate mobile number format
     if (!validateBangladeshMobile(mobileNumber)) {
+      console.log('❌ Mobile number not in Bangladesh format');
       return res.status(400).json({
         success: false,
         message: 'Mobile number must be in Bangladesh format (0XXXXXXXXXX)'
@@ -150,6 +156,7 @@ router.post('/register', upload.single('certificate'), async (req, res) => {
     } else if (bkashNumber.length === 10) {
       bkashNumber = '0' + bkashNumber;
     } else {
+      console.log('❌ Invalid bkash number format');
       return res.status(400).json({
         success: false,
         message: 'Bkash number must be 11 digits in Bangladesh format'
@@ -158,6 +165,7 @@ router.post('/register', upload.single('certificate'), async (req, res) => {
 
     // Validate bkash number format
     if (!validateBangladeshMobile(bkashNumber)) {
+      console.log('❌ Bkash number not in Bangladesh format');
       return res.status(400).json({
         success: false,
         message: 'Bkash number must be in Bangladesh format (0XXXXXXXXXX)'
@@ -166,6 +174,7 @@ router.post('/register', upload.single('certificate'), async (req, res) => {
 
     // Validate email
     if (!validateEmail(email)) {
+      console.log('❌ Invalid email format');
       return res.status(400).json({
         success: false,
         message: 'Please provide a valid email address'
@@ -174,6 +183,7 @@ router.post('/register', upload.single('certificate'), async (req, res) => {
 
     // Validate division
     if (!validDivisions.includes(division)) {
+      console.log('❌ Invalid division');
       return res.status(400).json({
         success: false,
         message: 'Please select a valid Bangladesh division'
@@ -182,6 +192,7 @@ router.post('/register', upload.single('certificate'), async (req, res) => {
 
     // Validate zip code (4 digits)
     if (!/^\d{4}$/.test(zipCode)) {
+      console.log('❌ Invalid zip code');
       return res.status(400).json({
         success: false,
         message: 'Zip code must be exactly 4 digits'
@@ -190,6 +201,7 @@ router.post('/register', upload.single('certificate'), async (req, res) => {
 
     // Validate road number
     if (!/^\d{1,4}$/.test(roadNo)) {
+      console.log('❌ Invalid road number');
       return res.status(400).json({
         success: false,
         message: 'Road number must be 1-4 digits'
@@ -198,6 +210,7 @@ router.post('/register', upload.single('certificate'), async (req, res) => {
 
     // Validate area format
     if (!validateName(area)) {
+      console.log('❌ Invalid area format');
       return res.status(400).json({
         success: false,
         message: 'Area can only contain letters and spaces'
@@ -206,6 +219,7 @@ router.post('/register', upload.single('certificate'), async (req, res) => {
 
     // Validate district format
     if (!validateName(district)) {
+      console.log('❌ Invalid district format');
       return res.status(400).json({
         success: false,
         message: 'District can only contain letters and spaces'
@@ -233,18 +247,21 @@ router.post('/register', upload.single('certificate'), async (req, res) => {
     if (existingResults.length > 0) {
       const existing = existingResults[0];
       if (existing.email === email) {
+        console.log('❌ Email already registered');
         return res.status(409).json({
           success: false,
           message: 'Email already registered'
         });
       }
       if (existing.mobile === mobileNumber) {
+        console.log('❌ Mobile number already registered');
         return res.status(409).json({
           success: false,
           message: 'Mobile number already registered'
         });
       }
       if (existing.foundation_license === foundationLicense) {
+        console.log('❌ Foundation license already registered');
         return res.status(409).json({
           success: false,
           message: 'Foundation license already registered'
@@ -309,16 +326,19 @@ router.post('/register', upload.single('certificate'), async (req, res) => {
     
     // Handle specific MySQL errors
     if (error.code === 'ER_NO_SUCH_TABLE') {
+      console.log('❌ Database table not found');
       return res.status(500).json({
         success: false,
         message: 'Database table not found. Please ensure the FOUNDATION table exists.'
       });
     } else if (error.code === 'ER_DUP_ENTRY') {
+      console.log('❌ Duplicate entry error');
       return res.status(409).json({
         success: false,
         message: 'Email, mobile number, or foundation license already exists.'
       });
     } else if (error.code === 'ER_CHECK_CONSTRAINT_VIOLATED') {
+      console.log('❌ Check constraint violated');
       return res.status(400).json({
         success: false,
         message: 'Data validation failed. Please check your input format.'
@@ -337,6 +357,7 @@ router.post('/check-availability', (req, res) => {
   const { field, value } = req.body;
 
   if (!field || !value) {
+    console.log('❌ Field or value missing for availability check');
     return res.status(400).json({
       success: false,
       message: 'Field and value are required'
@@ -344,6 +365,7 @@ router.post('/check-availability', (req, res) => {
   }
 
   if (!['email', 'mobile', 'foundation_license'].includes(field)) {
+    console.log('❌ Invalid field for availability check');
     return res.status(400).json({
       success: false,
       message: 'Invalid field. Must be email, mobile, or foundation_license'
@@ -368,13 +390,6 @@ router.post('/check-availability', (req, res) => {
   });
 });
 
-
-
-
-
-
-
-
 // POST /api/foundation/signin - Authenticate foundation
 router.post('/signin', async (req, res) => {
   console.log('🔐 Foundation sign in request received:', req.body);
@@ -384,6 +399,7 @@ router.post('/signin', async (req, res) => {
 
     // Input validation
     if (!username || !password) {
+      console.log('❌ Username or password missing');
       return res.status(400).json({
         success: false,
         message: 'Username and password are required'
@@ -403,6 +419,7 @@ router.post('/signin', async (req, res) => {
           console.error('❌ Error fetching foundation:', err);
           reject(err);
         } else {
+          console.log('🔍 Foundation query results:', results);
           resolve(results);
         }
       });
@@ -410,6 +427,7 @@ router.post('/signin', async (req, res) => {
 
     // Check if foundation exists
     if (results.length === 0) {
+      console.log('❌ Foundation not found for username:', username);
       return res.status(401).json({
         success: false,
         message: 'Invalid username or password'
@@ -420,6 +438,7 @@ router.post('/signin', async (req, res) => {
 
     // Verify password (plain text comparison)
     if (foundation.password !== password) {
+      console.log('❌ Password mismatch for foundation:', foundation.foundation_id);
       return res.status(401).json({
         success: false,
         message: 'Invalid username or password'
@@ -463,13 +482,10 @@ router.post('/signin', async (req, res) => {
     console.error('❌ Error during foundation sign in:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error: ' + error.message
     });
   }
 });
-
-
-
 
 // Get foundation profile
 router.get('/profile/:foundationId', async (req, res) => {
@@ -481,9 +497,11 @@ router.get('/profile/:foundationId', async (req, res) => {
   `;
   db.query(query, [foundationId], (err, results) => {
     if (err) {
+      console.error('❌ Error fetching foundation profile:', err);
       return res.status(500).json({ success: false, message: 'Database error' });
     }
     if (results.length === 0) {
+      console.log('❌ Foundation not found for profile:', foundationId);
       return res.status(404).json({ success: false, message: 'Foundation not found' });
     }
     const foundation = results[0];
@@ -497,7 +515,7 @@ router.get('/profile/:foundationId', async (req, res) => {
           foundationLicense: foundation.foundation_license,
           bkashNumber: foundation.bkash,
           bankAccount: foundation.bank_account,
-           visionGoals: foundation.description,
+          visionGoals: foundation.description,
           operatingSince: "2022",
           status: foundation.status
         },
@@ -514,46 +532,48 @@ router.get('/profile/:foundationId', async (req, res) => {
   });
 });
 
-
-
 router.post('/check-username', (req, res) => {
   const { username, foundationId } = req.body;
   db.query(
     'SELECT foundation_id FROM foundation WHERE foundation_name = ? AND foundation_id != ?',
     [username, foundationId],
     (err, results) => {
-      if (err) return res.status(500).json({ available: false });
+      if (err) {
+        console.error('❌ Error checking username:', err);
+        return res.status(500).json({ available: false });
+      }
       res.json({ available: results.length === 0 });
     }
   );
 });
-
-
 
 router.put('/update/:foundationId', async (req, res) => {
   const foundationId = req.params.foundationId;
   const { username, newPassword, currentPassword } = req.body;
 
   if (!currentPassword) {
+    console.log('❌ Current password missing for update');
     return res.status(400).json({ success: false, message: 'Current password required.' });
   }
 
   db.query('SELECT password FROM foundation WHERE foundation_id = ?', [foundationId], (err, results) => {
     if (err || results.length === 0) {
+      console.error('❌ Error fetching foundation for update:', err);
       return res.status(400).json({ success: false, message: 'Foundation not found.' });
     }
     const dbPassword = results[0].password;
     if (dbPassword !== currentPassword) {
+      console.log('❌ Current password incorrect for update');
       return res.status(401).json({ success: false, message: 'Current password is incorrect.' });
     }
     
-
     // Build update query
     let fields = [];
     let values = [];
     if (username) { fields.push('foundation_name = ?'); values.push(username); }
     if (newPassword) { fields.push('password = ?'); values.push(newPassword); }
     if (fields.length === 0) {
+      console.log('❌ No fields to update');
       return res.status(400).json({ success: false, message: 'No fields to update.' });
     }
     values.push(foundationId);
@@ -563,14 +583,110 @@ router.put('/update/:foundationId', async (req, res) => {
       values,
       (err2, result) => {
         if (err2) {
+          console.error('❌ Error updating foundation profile:', err2);
           return res.status(500).json({ success: false, message: 'Database error.' });
         }
+        console.log('✅ Foundation profile updated:', foundationId);
         return res.json({ success: true, message: 'Profile updated successfully.' });
       }
     );
   });
 });
 
+// ...existing code...
+router.get('/projects/:foundationId', async (req, res) => {
+  const { foundationId } = req.params;
+  try {
+    // Get all projects for the foundation
+    const projectsQuery = `
+      SELECT creation_id, title, description, amount_needed, amount_received
+      FROM event_creation
+      WHERE foundation_id = ?
+      ORDER BY created_at DESC
+    `;
+    const projects = await new Promise((resolve, reject) => {
+      db.query(projectsQuery, [foundationId], (err, results) => {
+        if (err) {
+          console.error('❌ Error fetching projects:', err);
+          reject(err);
+        } else {
+          resolve(results);
+        }
+      });
+    });
 
+    // For each project, get donations with donor name
+    const donationsMap = {};
+    for (const project of projects) {
+      const donationsQuery = `
+        SELECT d.amount, d.paid_at, donor.first_name, donor.last_name
+        FROM donation d
+        JOIN donor ON d.donor_id = donor.donor_id
+        WHERE d.creation_id = ?
+        ORDER BY d.paid_at DESC
+      `;
+      const donations = await new Promise((resolve, reject) => {
+        db.query(donationsQuery, [project.creation_id], (err, results) => {
+          if (err) {
+            console.error('❌ Error fetching donations:', err);
+            reject(err);
+          } else {
+            resolve(results);
+          }
+        });
+      });
+      donationsMap[String(project.creation_id)] = donations; // <-- force string key
+    }
 
+    // Calculate total received for this foundation
+    const totalReceivedQuery = `
+      SELECT SUM(amount_received) AS total_received
+      FROM event_creation
+      WHERE foundation_id = ?
+    `;
+    const totalResult = await new Promise((resolve, reject) => {
+      db.query(totalReceivedQuery, [foundationId], (err, results) => {
+        if (err) {
+          console.error('❌ Error calculating total received:', err);
+          reject(err);
+        } else {
+          resolve(results);
+        }
+      });
+    });
+    const totalReceived = Number(totalResult[0]?.total_received) || 0;
+
+    res.json({ success: true, projects, totalReceived, donationsMap });
+  } catch (err) {
+    console.error('❌ Error in projects route:', err);
+    res.status(500).json({ success: false, message: 'Database error' });
+  }
+});
+
+// GET /api/foundation/donations/:foundationId - All donations for this foundation
+router.get('/donations/:foundationId', async (req, res) => {
+  const { foundationId } = req.params;
+  try {
+    const query = `
+      SELECT d.amount, d.paid_at, donor.first_name, donor.last_name
+      FROM donation d
+      JOIN donor ON d.donor_id = donor.donor_id
+      JOIN event_creation e ON d.creation_id = e.creation_id
+      WHERE e.foundation_id = ?
+      ORDER BY d.paid_at DESC
+    `;
+    db.query(query, [foundationId], (err, results) => {
+      if (err) {
+        console.error('❌ Error fetching donations:', err);
+        return res.status(500).json({ success: false, message: 'Database error' });
+      }
+      res.json({ success: true, donations: results });
+    });
+  } catch (err) {
+    console.error('❌ Error in donations route:', err);
+    res.status(500).json({ success: false, message: 'Database error' });
+  }
+});
+
+// ...rest of your code...
 module.exports = router;

@@ -237,7 +237,7 @@ body {
     left: -100%;
     width: 100%;
     height: 4px;
-    background: linear-gradient(90deg, #4a7c59, #85aa9b);
+    background: linear-gradient(90deg,none, #85aa9b);
     transition: left 0.4s ease;
 }
 

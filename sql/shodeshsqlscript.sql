@@ -1285,6 +1285,131 @@ VALUES
   ('EVT1003', 'D000006', 1200.00);
   
 
+--sample data latest
+INSERT INTO FOUNDATION (
+  foundation_id, foundation_name, certificate, foundation_license,
+  mobile, email, password, house_no, road_no, area, district,
+  administrative_div, zip, bkash, bank_account, description, status
+) VALUES
+('F000010','Hope Bridge',NULL,'LIC000010','01710001010','hopebridge@example.com','passF000010','10','1','Banani','Dhaka','Dhaka','1213','01710001011','123456789012345010','Empowering communities through education and health.','verified'),
+('F000011','Bright Future',NULL,'LIC000011','01710001110','brightfuture@example.com','passF000011','11','2','Gulshan','Dhaka','Dhaka','1212','01710001111','123456789012345011','Supporting youth and women for a better tomorrow.','unverified'),
+('F000012','Green World',NULL,'LIC000012','01710001210','greenworld@example.com','passF000012','12','3','Dhanmondi','Dhaka','Dhaka','1209','01710001211','123456789012345012','Environmental sustainability projects.','verified'),
+('F000013','Food Chain',NULL,'LIC000013','01710001310','foodchain@example.com','passF000013','13','4','Mirpur','Dhaka','Dhaka','1216','01710001311','123456789012345013','Fighting hunger and malnutrition.','verified'),
+('F000014','Care Foundation',NULL,'LIC000014','01710001410','carefoundation@example.com','passF000014','14','5','Mohakhali','Dhaka','Dhaka','1212','01710001411','123456789012345014','Healthcare for all.','unverified'),
+('F000015','EduAid',NULL,'LIC000015','01710001510','eduaid@example.com','passF000015','15','6','Uttara','Dhaka','Dhaka','1230','01710001511','123456789012345015','Education grants and scholarships.','verified'),
+('F000016','Relief Now',NULL,'LIC000016','01710001610','reliefnow@example.com','passF000016','16','7','Tejgaon','Dhaka','Dhaka','1215','01710001611','123456789012345016','Disaster relief and emergency support.','verified');
+
+
+INSERT INTO EVENT_CREATION (
+  creation_id, creator_type, individual_id, foundation_id, ebc_id,
+  title, description, amount_needed, amount_received, division,
+  verification_status, lifecycle_status
+) VALUES
+('EVT2001','foundation',NULL,'F000010','EBC0013','Scholarship Drive','Scholarships for underprivileged students.',500000,0,'Dhaka','verified','active'),
+('EVT2002','foundation',NULL,'F000011','EBC0010','Health Camp','Free health checkups for slum dwellers.',300000,0,'Dhaka','verified','active'),
+('EVT2003','foundation',NULL,'F000012','EBC0001','Tree Plantation','Planting 5000 trees in city parks.',200000,0,'Dhaka','verified','active'),
+('EVT2004','foundation',NULL,'F000013','EBC0013','Food Distribution','Nutritious meals for children.',250000,0,'Dhaka','verified','active'),
+('EVT2005','foundation',NULL,'F000014','EBC0002','Medical Aid','Medical supplies for clinics.',400000,0,'Dhaka','verified','active'),
+('EVT2006','foundation',NULL,'F000015','EBC0010','School Supplies','Books and uniforms for students.',150000,0,'Dhaka','verified','active'),
+('EVT2007','foundation',NULL,'F000016','EBC0001','Flood Relief','Emergency kits for flood victims.',350000,0,'Dhaka','verified','active');
+INSERT INTO EVENT_CREATION (
+  creation_id, creator_type, individual_id, foundation_id, ebc_id,
+  title, description, amount_needed, amount_received, division,
+  verification_status, lifecycle_status
+) VALUES
+('EVT2015','foundation',NULL,'F000010','EBC0013',
+ 'Scholarship Drive','Scholarships for underprivileged students.',500000.00,10000.00,'Dhaka','verified','active'),
+
+('EVT2016','foundation',NULL,'F000010','EBC0010',
+ 'Health Camp','Free health checkups for slum dwellers.',300000.00,0.00,'Dhaka','verified','active'),
+
+('EVT2017','foundation',NULL,'F000011','EBC0001',
+ 'Tree Plantation','Planting 5000 trees in city parks.',200000.00,0.00,'Dhaka','verified','active'),
+
+('EVT2018','foundation',NULL,'F000012','EBC0013',
+ 'Food Distribution','Nutritious meals for children.',250000.00,0.00,'Dhaka','verified','active'),
+
+('EVT2019','foundation',NULL,'F000013','EBC0002',
+ 'Medical Aid','Medical supplies for clinics.',400000.00,0.00,'Dhaka','verified','active'),
+
+('EVT2020','foundation',NULL,'F000014','EBC0010',
+ 'School Supplies','Books and uniforms for students.',150000.00,0.00,'Dhaka','verified','active'),
+
+('EVT2021','foundation',NULL,'F000015','EBC0001',
+ 'Flood Relief','Emergency kits for flood victims.',350000.00,0.00,'Dhaka','verified','active');
+ INSERT INTO EVENT_CREATION (
+  creation_id, creator_type, individual_id, foundation_id, ebc_id,
+  title, description, amount_needed, amount_received, division,
+  verification_status, lifecycle_status
+) VALUES
+('EVT2008','foundation',NULL,'F000010','EBC0013',
+ 'Tech for Girls','Providing laptops and coding workshops for girls.',400000.00,0.00,'Dhaka','verified','active'),
+
+('EVT2009','foundation',NULL,'F000011','EBC0010',
+ 'Mobile Health Van','Deploying mobile health vans in rural areas.',350000.00,0.00,'Barisal','verified','active'),
+
+('EVT2010','foundation',NULL,'F000012','EBC0001',
+ 'Clean Water Project','Installing tube wells in flood-prone villages.',250000.00,0.00,'Sylhet','verified','active'),
+
+('EVT2011','foundation',NULL,'F000012','EBC0013',
+ 'School Renovation','Renovating primary schools in remote areas.',300000.00,0.00,'Rajshahi','verified','active'),
+
+('EVT2012','foundation',NULL,'F000013','EBC0002',
+ 'Medical Camp','Free medical checkups for elderly citizens.',200000.00,0.00,'Khulna','verified','active'),
+
+('EVT2013','foundation',NULL,'F000014','EBC0010',
+ 'Nutrition Drive','Distributing nutrition packs to children.',180000.00,0.00,'Dhaka','verified','active'),
+
+('EVT2014','foundation',NULL,'F000015','EBC0001',
+ 'Cyclone Shelter','Building cyclone shelters in coastal areas.',500000.00,0.00,'Barisal','verified','active');
+ 
+ 
+
+INSERT INTO DONOR (
+  donor_id, first_name, last_name, username, email, password, country, division, date_of_birth
+) VALUES
+('D100001','Ayesha','Rahman','ayeshar','ayesha@example.com','passAyesha','Bangladesh','Dhaka','1990-02-15'),
+('D100002','Imran','Khan','imrank','imra12n@example.com','passImran','Bangladesh','Chittagong','1985-07-20'),
+('D100003','Sara','Islam','sarai','sara12@example.com','passSara','Bangladesh','Sylhet','1993-11-05'),
+('D100004','Nabil','Hasan','nabilh','nabil@example.com','passNabil','Bangladesh','Khulna','1992-03-15'),
+('D100005','Farzana','Akter','farzana','farzana@example.com','passFarzana','Bangladesh','Rajshahi','1988-07-22'),
+('D100006','Tariq','Mahmud','tariqm','tariq@example.com','passTariq','Bangladesh','Barisal','1995-11-05'),
+('D100007','Rima','Sultana','rimas','rima@example.com','passRima','Bangladesh','Mymensingh','1991-06-30');
+
+INSERT INTO DONATION (creation_id, donor_id, amount)
+VALUES
+('EVT2001','D100001',10000.00),
+('EVT2002','D100002',15000.00),
+('EVT2003','D100003',20000.00),
+('EVT2004','D100004',12000.00),
+('EVT2005','D100005',18000.00),
+('EVT2006','D100006',22000.00),
+('EVT2007','D100007',25000.00);
+INSERT INTO DONATION (creation_id, donor_id, amount)
+VALUES
+('EVT2008','D100001',10000.00),
+('EVT2009','D100002',15000.00),
+('EVT2010','D100003',20000.00),
+('EVT2011','D100004',12000.00),
+('EVT2012','D100005',18000.00),
+('EVT2013','D100006',22000.00),
+('EVT2008','D100001',10000.00),
+('EVT2009','D100002',15000.00),
+('EVT2010','D100003',20000.00),
+('EVT2011','D100004',12000.00),
+('EVT2012','D100005',18000.00),
+('EVT2015','D100006',22000.00),
+('EVT2008','D100001',10000.00),
+('EVT2009','D100002',15000.00),
+('EVT2010','D100003',20000.00),
+('EVT2011','D100004',12000.00),
+('EVT2012','D100005',18000.00),
+('EVT2013','D100006',22000.00),
+('EVT2014','D100007',25000.00);
+
+
+
+
 
 
 
