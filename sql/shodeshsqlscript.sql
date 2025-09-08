@@ -1285,6 +1285,7 @@ VALUES
   ('EVT1003', 'D000006', 1200.00);
   
 
+
 --sample data latest
 INSERT INTO FOUNDATION (
   foundation_id, foundation_name, certificate, foundation_license,
