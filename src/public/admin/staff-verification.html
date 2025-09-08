@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Staff Verification</title>
+  <link rel="stylesheet" href="../admin/admin.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-xh6giX8YzN8k1V3Z2e7cCw0m4kG9VdR2h2G8WqjQ4V0bQy6wLq0P8r7L7b0r9m1k8pHgG2h6Qz2m9j2sJQhw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    .page { max-width: 1100px; margin: 90px auto 40px; padding: 0 16px; }
+    .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+    .page-header h1 { font-size: 22px; }
+    .filter-row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .filter-select { padding:8px 10px; border:1px solid #e2e8f0; border-radius:6px; }
+    .list { display:grid; grid-template-columns: repeat(auto-fill, minmax(380px,1fr)); gap:20px; }
+    .card { background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+    .card-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+    .name a { color:#1a202c; font-weight:600; text-decoration:none; }
+    .name a:hover { text-decoration:underline; }
+    .badge { padding:2px 8px; border-radius:999px; font-size:12px; text-transform:capitalize; }
+    .badge.unverified { background:#fef5e7; color:#d69e2e; }
+    .badge.verified { background:#c6f6d5; color:#22543d; }
+    .badge.suspended { background:#fed7d7; color:#c53030; }
+    .muted { color:#718096; font-size:14px; }
+    .actions { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+    .btn { padding:8px 12px; border:none; border-radius:6px; font-weight:600; cursor:pointer; }
+    .btn-approve { background:#c6f6d5; color:#22543d; }
+    .btn-reject { background:#fed7d7; color:#c53030; }
+    .btn-unsuspend { background:#e6f3ff; color:#2b6cb0; }
+    .empty { padding:24px; background:#fff; border:1px dashed #cbd5e0; border-radius:12px; text-align:center; color:#718096; }
+    .topbar { position:fixed; top:0; left:0; right:0; height:70px; display:flex; align-items:center; background:#fff; border-bottom:1px solid #e2e8f0; padding:0 16px; z-index:10; }
+    .topbar a { color:#4a7c59; text-decoration:none; font-weight:600; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="./index.html">← Back to Admin Dashboard</a>
+  </div>
+  <div class="page" aria-live="polite">
+    <div class="page-header">
+      <h1>Staff Verification</h1>
+      <div class="filter-row">
+        <label class="sr-only" for="statusFilter">Filter by status</label>
+        <select id="statusFilter" class="filter-select" aria-label="Filter staff by status">
+          <option value="all">All</option>
+          <option value="unverified">Unverified</option>
+          <option value="verified">Verified</option>
+          <option value="suspended">Suspended</option>
+        </select>
+      </div>
+    </div>
+    <div id="list" class="list" role="list"></div>
+    <div id="empty" class="empty" style="display:none">No staff found for the selected filter.</div>
+  </div>
+
+  <script>
+    const apiBase = '/api/admin';
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      alert('Please login as admin first.');
+      window.location.href = './index.html';
+    }
+
+    async function apiRequest(endpoint, options={}) {
+      const res = await fetch(apiBase + endpoint, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token,
+          ...(options.headers||{})
+        }
+      });
+      if (res.status === 401) { alert('Session expired. Login again.'); location.href='./index.html'; return null; }
+      return res.json();
+    }
+
+  function staffCard(s) {
+      return `
+        <div class="card" role="listitem">
+          <div class="card-header">
+      <div class="name"><a href="./staff-profile.html?staff_id=${encodeURIComponent(s.staff_id)}" title="Open profile/actions">${(s.full_name||s.username||'').toString()}</a></div>
+            <span class="badge ${s.status}">${s.status}</span>
+          </div>
+          <div class="muted">${s.email || ''} · ${s.mobile || ''}</div>
+          <div class="muted">${[s.district, s.administrative_div].filter(Boolean).join(', ')}</div>
+          <div class="muted">CV: ${s.has_cv ? (s.cv_size + ' bytes') : 'not uploaded'}</div>
+        </div>
+      `;
+    }
+
+    async function load(status='unverified') {
+      const data = await apiRequest(`/staff?status=${encodeURIComponent(status)}`);
+      const listEl = document.getElementById('list');
+      const emptyEl = document.getElementById('empty');
+      if (!data || !data.success) { listEl.innerHTML=''; emptyEl.style.display='block'; return; }
+      const rows = Array.isArray(data.data) ? data.data : [];
+      if (rows.length === 0) { listEl.innerHTML=''; emptyEl.style.display='block'; return; }
+      emptyEl.style.display='none';
+      listEl.innerHTML = rows.map(staffCard).join('');
+    }
+
+  // Inline actions removed; use staff-details page to change status
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const select = document.getElementById('statusFilter');
+  select.value = 'all';
+      select.addEventListener('change', e => load(e.target.value));
+  await load('all');
+    });
+  </script>
+</body>
+</html>
