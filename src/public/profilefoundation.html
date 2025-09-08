@@ -40,9 +40,18 @@
           <button class="btn-primary" onclick="editFoundation()">
             <i class="fas fa-edit"></i> Edit Profile
           </button>
-          <button class="btn-primary" onclick="addProject()">
-            <i class="fas fa-plus"></i> Add Project
-          </button>
+           <button class="btn-primary" onclick="navigateToEventCreation('foundation')">
+  <i class="fas fa-plus-circle"></i> Add Project
+</button>
+
+
+<script>
+  function navigateToEventCreation(type) {
+    // Navigate to the event creation page with the creator type
+    window.location.href = `eventcreation.html?creatorType=${type}`;
+  }
+</script>
+
         </div>
       </div>
     </header>

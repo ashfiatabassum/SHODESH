@@ -1,234 +1,235 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Browse Fundraisers - SHODESH</title>
-    <link rel="stylesheet" href="browse.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browse Fundraisers - SHODESH</title>
+  <link rel="stylesheet" href="browse.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* Popup styles */
+    .category {
+      position: relative;
+      display: inline-block;
+      overflow: visible;
+    }
+
+    .category-popup {
+      position: absolute;
+      bottom: 110%;
+      left: 50%;
+      transform: translateX(-50%) scale(0.9);
+      background: #fff;
+      color: #333;
+      padding: 12px 16px;
+      border-radius: 10px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+      font-size: 0.9rem;
+      font-weight: 400;
+      line-height: 1.4;
+      width: 250px; /* a bit wider for longer text */
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      z-index: 50;
+      border-top: 4px solid transparent; /* accent bar */
+    }
+
+    .category:hover .category-popup {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(-50%) translateY(-8px) scale(1);
+    }
+
+    /* Small arrow */
+    .category-popup::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 8px;
+      border-style: solid;
+      border-color: #fff transparent transparent transparent;
+    }
+
+    /* Accent colors */
+    .category.medical .category-popup { border-top-color: #e53935; }
+    .category.memorial .category-popup { border-top-color: #6d4c41; }
+    .category.emergency .category-popup { border-top-color: #d32f2f; }
+    .category.nonprofit .category-popup { border-top-color: #0288d1; }
+    .category.education .category-popup { border-top-color: #3949ab; }
+    .category.animal .category-popup { border-top-color: #8e24aa; }
+    .category.environment .category-popup { border-top-color: #2e7d32; }
+    .category.business .category-popup { border-top-color: #f57c00; }
+    .category.community .category-popup { border-top-color: #00796b; }
+    .category.competition .category-popup { border-top-color: #fbc02d; }
+    .category.creative .category-popup { border-top-color: #9c27b0; }
+    .category.event .category-popup { border-top-color: #5d4037; }
+    .category.faith .category-popup { border-top-color: #795548; }
+    .category.family .category-popup { border-top-color: #6a1b9a; }
+    .category.sports .category-popup { border-top-color: #1565c0; }
+    .category.travel .category-popup { border-top-color: #00897b; }
+    .category.volunteer .category-popup { border-top-color: #c2185b; }
+    .category.wishes .category-popup { border-top-color: #ff9800; }
+  </style>
 </head>
 <body>
-    <!-- Top Bar -->
-    <div class="top-bar">
-        <div>MAIL: contact@shodesh.org</div>
-        <div>PHONE: +880 1712 345 678</div>
-    </div>
-
-    <!-- Navbar -->
-   <div class="navbar">
-  <div class="logo"><strong>SHODESH</strong></div>
-  <div class="nav-links">
-    <a href="index.html">Home</a>
-    <a href="about.html" class="about-link">About</a>
-    <a href="#">Gallery</a>
- <a href="contact.html" class="contact-link">Contact</a>
-    <a href="resources.html">Resources</a>
-    <a href="search.html">Search</a>
-    <a href="browse.html" class="categories-link">Categories</a>
-    <a href="signin.html">Sign In</a>
-    <a href="volunteer.html">Join Our Team</a>
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div>MAIL: contact@shodesh.org</div>
+    <div>PHONE: +880 1712 345 678</div>
   </div>
-</div>
-<style>
-     .nav-links a.active {
-    color: #d32f2f !important; /* Red color for active */
-    text-decoration: underline;
-  }
-  .nav-links a, .nav-links button {
-    color: #176b3a;
-    text-decoration: none;
-    margin: 0 12px;
-    font-weight: 600;
-    font-size: 1.05rem;
-    background: none;
-    border: none;
-    cursor: pointer;
-    transition: color 0.2s;
-    border-radius: 0;
-    padding: 0;
-    box-shadow: none;
-    display: inline;
-  }
-  .nav-links a:hover, .nav-links button:hover {
-    color: #219150;
-    text-decoration: underline;
-    background: none;
-    box-shadow: none;
-  }
-</style>
-    <!-- Hero Section with Background Image -->
-    <header class="browse-hero">
-        <div class="browse-content">
-            <h1>Browse Fundraisers by Category</h1>
-            <p class="tagline">Empowering Hope, Changing Lives – From the Heart of Bangladesh</p>
-            <div class="hero-subtitle">
-                <p>Discover causes that matter to you and make a difference in someone's life today</p>
-            </div>
+
+  <!-- Navbar -->
+  <div class="navbar">
+    <div class="logo"><strong>SHODESH</strong></div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="about.html" class="about-link">About</a>
+      <a href="#">Gallery</a>
+      <a href="contact.html" class="contact-link">Contact</a>
+      <a href="resources.html">Resources</a>
+      <a href="search.html">Search</a>
+      <a href="browse.html" class="categories-link">Categories</a>
+      <a href="signin.html">Sign In</a>
+      <a href="volunteer.html">Join Our Team</a>
+    </div>
+  </div>
+
+  <!-- Hero Section -->
+  <header class="browse-hero">
+    <div class="browse-content">
+      <h1>Browse Fundraisers by Category</h1>
+      <p class="tagline">Empowering Hope, Changing Lives – From the Heart of Bangladesh</p>
+      <div class="hero-subtitle">
+        <p>Discover causes that matter to you and make a difference in someone's life today</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Categories Section -->
+  <main class="categories-section">
+    <div class="container">
+      <div class="section-header">
+        <h2>Choose Your Cause</h2>
+        <p>Select a category to explore fundraisers and make an impact</p>
+      </div>
+      
+      <!-- categories grid -->
+      <div class="category-grid">
+        <div class="category medical">
+          <div class="category-icon"><i class="fas fa-heartbeat"></i></div>
+          <h3>Medical</h3>
+          <p>Health & Medical Support</p>
+          <div class="category-popup">Helps patients cover hospital bills, medicines, surgeries, and long-term treatments, ensuring access to quality healthcare without financial burden.</div>
         </div>
-    </header>
-    <script>
- // Highlight Categories link only on browse page
-  if (
-    window.location.pathname.endsWith("browse.html")
-  ) {
-    document.querySelector('.categories-link').classList.add('active');
-  }
-</script>
-    <!-- Categories Section -->
-    <main class="categories-section">
-        <div class="container">
-            <div class="section-header">
-                <h2>Choose Your Cause</h2>
-                <p>Select a category to explore fundraisers and make an impact</p>
-            </div>
-            
-            <div class="category-grid">
-                <div class="category medical">
-                    <div class="category-icon">
-                        <i class="fas fa-heartbeat"></i>
-                    </div>
-                    <h3>Medical</h3>
-                    <p>Health & Medical Support</p>
-                </div>
-                
-                <div class="category memorial">
-                    <div class="category-icon">
-                        <i class="fas fa-dove"></i>
-                    </div>
-                    <h3>Memorial</h3>
-                    <p>Honor & Remember</p>
-                </div>
-                
-                <div class="category emergency">
-                    <div class="category-icon">
-                        <i class="fas fa-ambulance"></i>
-                    </div>
-                    <h3>Emergency</h3>
-                    <p>Urgent Crisis Support</p>
-                </div>
-                
-                <div class="category nonprofit">
-                    <div class="category-icon">
-                        <i class="fas fa-hands-helping"></i>
-                    </div>
-                    <h3>Nonprofit</h3>
-                    <p>Organization Support</p>
-                </div>
-                
-                <div class="category education">
-                    <div class="category-icon">
-                        <i class="fas fa-graduation-cap"></i>
-                    </div>
-                    <h3>Education</h3>
-                    <p>Learning & Development</p>
-                </div>
-                
-                <div class="category animal">
-                    <div class="category-icon">
-                        <i class="fas fa-paw"></i>
-                    </div>
-                    <h3>Animal</h3>
-                    <p>Animal Welfare</p>
-                </div>
-                
-                <div class="category environment">
-                    <div class="category-icon">
-                        <i class="fas fa-leaf"></i>
-                    </div>
-                    <h3>Environment</h3>
-                    <p>Green Initiatives</p>
-                </div>
-                
-                <div class="category business">
-                    <div class="category-icon">
-                        <i class="fas fa-briefcase"></i>
-                    </div>
-                    <h3>Business</h3>
-                    <p>Entrepreneurship</p>
-                </div>
-                
-                <div class="category community">
-                    <div class="category-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <h3>Community</h3>
-                    <p>Local Development</p>
-                </div>
-                
-                <div class="category competition">
-                    <div class="category-icon">
-                        <i class="fas fa-trophy"></i>
-                    </div>
-                    <h3>Competition</h3>
-                    <p>Sports & Events</p>
-                </div>
-                
-                <div class="category creative">
-                    <div class="category-icon">
-                        <i class="fas fa-palette"></i>
-                    </div>
-                    <h3>Creative</h3>
-                    <p>Arts & Culture</p>
-                </div>
-                
-                <div class="category event">
-                    <div class="category-icon">
-                        <i class="fas fa-calendar-alt"></i>
-                    </div>
-                    <h3>Event</h3>
-                    <p>Special Occasions</p>
-                </div>
-                
-                <div class="category faith">
-                    <div class="category-icon">
-                        <i class="fas fa-praying-hands"></i>
-                    </div>
-                    <h3>Faith</h3>
-                    <p>Religious Causes</p>
-                </div>
-                
-                <div class="category family">
-                    <div class="category-icon">
-                        <i class="fas fa-home"></i>
-                    </div>
-                    <h3>Family</h3>
-                    <p>Family Support</p>
-                </div>
-                
-                <div class="category sports">
-                    <div class="category-icon">
-                        <i class="fas fa-futbol"></i>
-                    </div>
-                    <h3>Sports</h3>
-                    <p>Athletic Programs</p>
-                </div>
-                
-                <div class="category travel">
-                    <div class="category-icon">
-                        <i class="fas fa-plane"></i>
-                    </div>
-                    <h3>Travel</h3>
-                    <p>Journey Support</p>
-                </div>
-                
-                <div class="category volunteer">
-                    <div class="category-icon">
-                        <i class="fas fa-hands"></i>
-                    </div>
-                    <h3>Volunteer</h3>
-                    <p>Community Service</p>
-                </div>
-                
-                <div class="category wishes">
-                    <div class="category-icon">
-                        <i class="fas fa-star"></i>
-                    </div>
-                    <h3>Wishes</h3>
-                    <p>Dreams & Goals</p>
-                </div>
-            </div>
+        <div class="category memorial">
+          <div class="category-icon"><i class="fas fa-dove"></i></div>
+          <h3>Memorial</h3>
+          <p>Honor & Remember</p>
+          <div class="category-popup">Supports grieving families by funding funeral arrangements, tributes, and memorial services to honor loved ones with dignity and care.</div>
         </div>
-    </main>
+        <div class="category emergency">
+          <div class="category-icon"><i class="fas fa-ambulance"></i></div>
+          <h3>Emergency</h3>
+          <p>Urgent Crisis Support</p>
+          <div class="category-popup">Provides immediate relief in emergencies such as accidents, natural disasters, and unforeseen crises, helping people rebuild their lives quickly.</div>
+        </div>
+        <div class="category nonprofit">
+          <div class="category-icon"><i class="fas fa-hands-helping"></i></div>
+          <h3>Nonprofit</h3>
+          <p>Organization Support</p>
+          <div class="category-popup">Empowers NGOs and charitable organizations to sustain operations, expand outreach, and deliver life-changing programs to underserved communities.</div>
+        </div>
+        <div class="category education">
+          <div class="category-icon"><i class="fas fa-graduation-cap"></i></div>
+          <h3>Education</h3>
+          <p>Learning & Development</p>
+          <div class="category-popup">Funds scholarships, schools, libraries, and skill development programs to build brighter futures through education and lifelong learning.</div>
+        </div>
+        <div class="category animal">
+          <div class="category-icon"><i class="fas fa-paw"></i></div>
+          <h3>Animal</h3>
+          <p>Animal Welfare</p>
+          <div class="category-popup">Supports rescues, shelters, veterinary care, and adoption programs, ensuring the safety and wellbeing of vulnerable and abandoned animals.</div>
+        </div>
+        <div class="category environment">
+          <div class="category-icon"><i class="fas fa-leaf"></i></div>
+          <h3>Environment</h3>
+          <p>Green Initiatives</p>
+          <div class="category-popup">Drives reforestation, clean energy, and sustainability projects, actively fighting against pollution and the impacts of climate change.</div>
+        </div>
+        <div class="category business">
+          <div class="category-icon"><i class="fas fa-briefcase"></i></div>
+          <h3>Business</h3>
+          <p>Entrepreneurship</p>
+          <div class="category-popup">Provides seed capital, mentorship, and financial backing for startups, small businesses, and innovative entrepreneurial ventures.</div>
+        </div>
+        <div class="category community">
+          <div class="category-icon"><i class="fas fa-users"></i></div>
+          <h3>Community</h3>
+          <p>Local Development</p>
+          <div class="category-popup">Strengthens neighborhoods by funding infrastructure, cultural activities, and programs that unite and uplift communities.</div>
+        </div>
+        <div class="category competition">
+          <div class="category-icon"><i class="fas fa-trophy"></i></div>
+          <h3>Competition</h3>
+          <p>Sports & Events</p>
+          <div class="category-popup">Funds tournaments, contests, and sporting events, empowering youth and talent to compete, showcase skills, and achieve recognition.</div>
+        </div>
+        <div class="category creative">
+          <div class="category-icon"><i class="fas fa-palette"></i></div>
+          <h3>Creative</h3>
+          <p>Arts & Culture</p>
+          <div class="category-popup">Supports artists, musicians, filmmakers, and cultural innovators, encouraging creativity that enriches society and preserves heritage.</div>
+        </div>
+        <div class="category event">
+          <div class="category-icon"><i class="fas fa-calendar-alt"></i></div>
+          <h3>Event</h3>
+          <p>Special Occasions</p>
+          <div class="category-popup">Helps families and communities organize weddings, birthdays, anniversaries, and milestone events with joy and shared memories.</div>
+        </div>
+        <div class="category faith">
+          <div class="category-icon"><i class="fas fa-praying-hands"></i></div>
+          <h3>Faith</h3>
+          <p>Religious Causes</p>
+          <div class="category-popup">Supports the construction, renovation, and activities of religious institutions, fostering spiritual growth and community service.</div>
+        </div>
+        <div class="category family">
+          <div class="category-icon"><i class="fas fa-home"></i></div>
+          <h3>Family</h3>
+          <p>Family Support</p>
+          <div class="category-popup">Provides aid to struggling families through childcare, food, housing, and other essential support for a stable family life.</div>
+        </div>
+        <div class="category sports">
+          <div class="category-icon"><i class="fas fa-futbol"></i></div>
+          <h3>Sports</h3>
+          <p>Athletic Programs</p>
+          <div class="category-popup">Funds athlete training, facilities, gear, and community sports programs to nurture fitness and healthy competition.</div>
+        </div>
+        <div class="category travel">
+          <div class="category-icon"><i class="fas fa-plane"></i></div>
+          <h3>Travel</h3>
+          <p>Journey Support</p>
+          <div class="category-popup">Covers travel costs for education, work, medical treatment, or family reunions, helping people reach opportunities worldwide.</div>
+        </div>
+        <div class="category volunteer">
+          <div class="category-icon"><i class="fas fa-hands"></i></div>
+          <h3>Volunteer</h3>
+          <p>Community Service</p>
+          <div class="category-popup">Funds volunteer projects, social campaigns, and humanitarian efforts that uplift marginalized and vulnerable groups.</div>
+        </div>
+        <div class="category wishes">
+          <div class="category-icon"><i class="fas fa-star"></i></div>
+          <h3>Wishes</h3>
+          <p>Dreams & Goals</p>
+          <div class="category-popup">Makes dreams come true by funding personal goals, life-changing experiences, and special wishes for those in need of hope.</div>
+        </div>
+      </div>
+    </div>
+  </main>
 </body>
 </html>
