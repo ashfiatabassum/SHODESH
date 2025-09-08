@@ -7,32 +7,32 @@
   <link rel="stylesheet" href="rolestyle.css" />
 </head>
 <body>
-  <div class="desktop">
-    <div class="div">
-      <img class="image" alt="Image" src="images/role1.jpg" />
-      <img class="img" alt="Image" src="images/role2.jpg" />
-
-      <div class="overlap">
-        <div class="text-wrapper">CHOOSE YOUR ROLE.</div>
+  <div class="role-bg"></div>
+  <div class="role-container">
+    <div class="role-header">
+      <h1>
+        <span class="green-gradient-text">Choose Your Role</span>
+      </h1>
+      <p>Select your role to continue</p>
+    </div>
+    <div class="role-cards">
+      <div class="role-card seeker" tabindex="0" onclick="window.location.href='individual.html'">
+        <div class="role-icon">&#128100;</div>
+        <div class="role-title">Seeker</div>
+        <div class="role-desc">Request help or support for yourself or your community.</div>
       </div>
-
-      <div class="overlap-group">
-        <div class="rectangle-2"></div>
-        <div class="text-wrapper-3">SEEKER</div>
+      <div class="role-card foundation" tabindex="0" onclick="window.location.href='foundation.html'">
+        <div class="role-icon">&#127970;</div>
+        <div class="role-title">Non Profit Organization</div>
+        <div class="role-desc">Manage your foundation and create impactful projects.</div>
       </div>
-
-      <div class="overlap-2">
-        <div class="rectangle-2"></div>
-        <div class="text-wrapper-4">NON PROFIT ORGANIZATION</div>
-      </div>
-
-      <div class="overlap-3">
-        <div class="rectangle-2"></div>
-        <div class="text-wrapper-5">DONOR</div>
+      <div class="role-card donor" tabindex="0" onclick="window.location.href='donor.html'">
+        <div class="role-icon">&#10084;&#65039;</div>
+        <div class="role-title">Donor</div>
+        <div class="role-desc">Support causes and make a difference with your donations.</div>
       </div>
     </div>
   </div>
-
   <script src="role.js"></script>
 </body>
 </html>
