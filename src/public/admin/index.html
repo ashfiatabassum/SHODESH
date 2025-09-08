@@ -30,7 +30,7 @@
                 <div class="admin-avatar">
                     <i class="fas fa-user-shield"></i>
                 </div>
-                <button class="logout-btn" onclick="logout()">
+                <button class="logout-btn" onclick="logout()" aria-label="Logout" title="Logout">
                     <i class="fas fa-sign-out-alt"></i>
                 </button>
             </div>
@@ -44,6 +44,10 @@
                 <i class="fas fa-tachometer-alt"></i>
                 <span>Dashboard</span>
             </div>
+                <div class="menu-item" onclick="location.href='./staff-verification.html'">
+                    <i class="fas fa-user-check"></i>
+                    Staff Verification
+                </div>
             <div class="menu-item" onclick="showSection('events')">
                 <i class="fas fa-calendar-check"></i>
                 <span>Event Verification</span>
@@ -89,7 +93,7 @@
             <div class="section-header">
                 <h2>Dashboard Overview</h2>
                 <div class="header-actions">
-                    <button class="btn-primary">
+                    <button class="btn-primary" title="Export report" aria-label="Export report">
                         <i class="fas fa-download"></i>
                         Export Report
                     </button>
@@ -202,19 +206,37 @@
             </div>
         </section>
 
-        <!-- Event Verification Section -->
-        <section id="events" class="admin-section">
+        <!-- Trending Management Section -->
+        <section id="trending" class="admin-section" aria-label="Trending Management">
+            <div class="section-header">
+                <h2>Trending Management</h2>
+                <div class="header-actions">
+                    <button class="btn-primary" title="Add to trending" aria-label="Add to trending">
+                        <i class="fas fa-plus"></i>
+                        Add to Trending
+                    </button>
+                </div>
+            </div>
+            <div class="trending-content">
+                <p>No trending items yet.</p>
+            </div>
+        </section>
+
+    <!-- Event Verification Section -->
+    <section id="events" class="admin-section" aria-label="Event Verification">
             <div class="section-header">
                 <h2>Event Verification</h2>
                 <div class="header-actions">
-                    <select class="filter-select">
+            <label class="sr-only" for="eventCategoryFilter">Filter by category</label>
+            <select id="eventCategoryFilter" class="filter-select" aria-label="Filter events by category">
                         <option value="all">All Categories</option>
                         <option value="medical">Medical</option>
                         <option value="education">Education</option>
                         <option value="emergency">Emergency</option>
                         <option value="food">Food Aid</option>
                     </select>
-                    <select class="filter-select">
+            <label class="sr-only" for="eventStatusFilter">Filter by status</label>
+            <select id="eventStatusFilter" class="filter-select" aria-label="Filter events by status">
                         <option value="pending">Pending</option>
                         <option value="verified">Verified</option>
                         <option value="rejected">Rejected</option>
@@ -228,17 +250,18 @@
         </section>
 
         <!-- Donation Analytics Section -->
-        <section id="donations" class="admin-section">
+    <section id="donations" class="admin-section" aria-label="Donation Analytics">
             <div class="section-header">
                 <h2>Donation Analytics</h2>
                 <div class="header-actions">
-                    <select class="filter-select" id="donationTimeFilter">
+            <label class="sr-only" for="donationTimeFilter">Time range</label>
+            <select class="filter-select" id="donationTimeFilter" aria-label="Filter donations by time range">
                         <option value="daily">Daily</option>
                         <option value="weekly">Weekly</option>
                         <option value="monthly">Monthly</option>
                         <option value="yearly">Yearly</option>
                     </select>
-                    <button class="btn-secondary">
+            <button class="btn-secondary" title="Export donation data" aria-label="Export donation data">
                         <i class="fas fa-download"></i>
                         Export Data
                     </button>
@@ -280,11 +303,11 @@
         </section>
 
         <!-- Categories Management Section -->
-        <section id="categories" class="admin-section">
+    <section id="categories" class="admin-section" aria-label="Manage Categories">
             <div class="section-header">
                 <h2>Manage Categories</h2>
                 <div class="header-actions">
-                    <button class="btn-primary" onclick="showAddCategoryModal()">
+            <button class="btn-primary" onclick="showAddCategoryModal()" title="Add a new category" aria-label="Add a new category">
                         <i class="fas fa-plus"></i>
                         Add Category
                     </button>
@@ -366,6 +389,34 @@
             </div>
         </section>
 
+        <!-- Volunteers Verification Section -->
+        <section id="volunteers" class="admin-section" aria-label="Volunteer Verification">
+            <div class="section-header">
+                <h2>Volunteer Verification</h2>
+                <div class="header-actions">
+                    <select id="volunteerStatusFilter" class="filter-select" aria-label="Filter volunteers by status">
+                        <option value="unverified">Unverified</option>
+                        <option value="verified">Verified</option>
+                        <option value="suspended">Suspended</option>
+                        <option value="all">All</option>
+                    </select>
+                </div>
+            </div>
+            <div class="volunteers-grid"><!-- Populated by admin.js --></div>
+        </section>
+
+        <!-- Reports Section -->
+        <section id="reports" class="admin-section" aria-label="Reports">
+            <div class="section-header"><h2>Reports</h2></div>
+            <div class="reports-content"><p>No reports yet.</p></div>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings" class="admin-section" aria-label="Settings">
+            <div class="section-header"><h2>Settings</h2></div>
+            <div class="settings-content"><p>Configure admin settings here.</p></div>
+        </section>
+
         <!-- Other sections will be added here -->
     </main>
 
@@ -374,7 +425,7 @@
         <div class="modal-content large-modal">
             <div class="modal-header">
                 <h3>Foundation Verification Details</h3>
-                <button class="close-btn" onclick="closeFoundationModal()">
+                <button class="close-btn" onclick="closeFoundationModal()" aria-label="Close foundation details" title="Close">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -401,19 +452,19 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Add New Category</h3>
-                <button class="close-btn" onclick="closeModal('addCategoryModal')">
+                <button class="close-btn" onclick="closeModal('addCategoryModal')" aria-label="Close add category" title="Close">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="modal-body">
                 <form id="addCategoryForm">
                     <div class="form-group">
-                        <label>Category Name</label>
-                        <input type="text" id="categoryName" required>
+                        <label for="categoryName">Category Name</label>
+                        <input type="text" id="categoryName" name="categoryName" required aria-required="true" placeholder="Enter category name">
                     </div>
                     <div class="form-group">
-                        <label>Category Icon</label>
-                        <select id="categoryIcon">
+                        <label for="categoryIcon">Category Icon</label>
+                        <select id="categoryIcon" name="categoryIcon" aria-label="Choose category icon">
                             <option value="fas fa-heartbeat">Medical</option>
                             <option value="fas fa-graduation-cap">Education</option>
                             <option value="fas fa-exclamation-triangle">Emergency</option>
@@ -422,8 +473,8 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Description</label>
-                        <textarea id="categoryDescription" rows="3"></textarea>
+                        <label for="categoryDescription">Description</label>
+                        <textarea id="categoryDescription" name="categoryDescription" rows="3" placeholder="Describe the category..." aria-label="Category description"></textarea>
                     </div>
                     <div class="form-actions">
                         <button type="button" class="btn-secondary" onclick="closeModal('addCategoryModal')">Cancel</button>
@@ -434,6 +485,6 @@
         </div>
     </div>
 
-    <script src="admin-frontend.js"></script>
+    <script src="admin.js"></script>
 </body>
 </html>
