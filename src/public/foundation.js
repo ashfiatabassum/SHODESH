@@ -26,7 +26,7 @@ function showAlert(message, type) {
     const container = document.getElementById('messageContainer');
     
     const alert = document.createElement('div');
-    alert.className = `message ${type}`;
+    alert.className = 'message ${type}';
     
     const icon = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
     
@@ -186,7 +186,7 @@ function validateForm(event) {
             'Please save your Foundation ID for future reference.');
       // Redirect to profile or success page
       setTimeout(() => {
-        window.location.href = 'profilefoundation.html';
+        window.location.href = 'signin.html';
       }, 3000);
     } else {
       showError('❌ Registration failed: ' + data.message);

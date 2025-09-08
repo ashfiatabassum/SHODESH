@@ -6,7 +6,7 @@ function showCustomAlert(message, type = 'info', duration = 5000) {
 
     // Create alert container
     const alertContainer = document.createElement('div');
-    alertContainer.className = `custom-alert ${type}`;
+    alertContainer.className = 'custom-alert ${type}';
     
     // Set icon based on type
     let icon;
@@ -59,7 +59,7 @@ function showCustomAlert(message, type = 'info', duration = 5000) {
 
         // Start progress bar animation
         const progressBar = alertContainer.querySelector('.alert-progress');
-        progressBar.style.animation = `progress ${duration}ms linear`;
+        progressBar.style.animation = 'progress ${duration}ms linear';
     }
 
     return alertContainer;
