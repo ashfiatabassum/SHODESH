@@ -2,10 +2,12 @@
 const db = require("./db"); // CommonJS require
 
 // Helper function to generate unique creation_id
+// NOTE: creation_id column is defined as VARCHAR(7) -> must be exactly 7 chars.
+// Format: 'CRE' + 4-digit random number (total length = 3 + 4 = 7)
 const generateCreationId = () => {
   const prefix = "CRE";
-  const randomNum = Math.floor(Math.random() * 90000 + 10000); // 5-digit number
-  return `${prefix}${randomNum}`;
+  const randomNum = Math.floor(Math.random() * 9000 + 1000); // 4-digit number
+  return `${prefix}${randomNum}`; // e.g., CRE1234
 };
 
 // Get all categories
