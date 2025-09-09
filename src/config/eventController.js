@@ -37,7 +37,8 @@ const getEventTypes = (req, res) => {
     // [{ebc_id: 1, event_type_name: 'Flood Relief'}, ...]
   });
 };
-// inside src/config/eventController.js (replace the createEvent implementation)
+
+// Create Event (updated to enforce XOR logic)
 const createEvent = (req, res) => {
   // debug: what multer delivered
   console.log("REQ FILES:", req.files);
@@ -56,7 +57,7 @@ const createEvent = (req, res) => {
   } = req.body;
 
   // basic validation
-  if (!ebcId || !title || !description || !amountNeeded || !division) {
+  if (!creatorType || !ebcId || !title || !description || !amountNeeded || !division) {
     return res.status(400).json({ success: false, message: "Missing required fields" });
   }
 
@@ -65,36 +66,54 @@ const createEvent = (req, res) => {
   if (Number.isNaN(amountNum) || amountNum <= 0) {
     return res.status(400).json({ success: false, message: "Invalid amountNeeded" });
   }
-// Directly use buffers from multer's memoryStorage
-const docBuffer = req.files?.doc?.[0]?.buffer || null;
-const coverPhotoBuffer = req.files?.coverPhoto?.[0]?.buffer || null;
+
+  // Directly use buffers from multer's memoryStorage
+  const docBuffer = req.files?.doc?.[0]?.buffer || null;
+  const coverPhotoBuffer = req.files?.coverPhoto?.[0]?.buffer || null;
 
   // Generate creation id
   const creationId = generateCreationId();
 
-  // Columns to insert (exactly 11)
+  // Enforce XOR logic for individual/foundation IDs
+  let finalIndividualId = null;
+  let finalFoundationId = null;
+
+  if (creatorType === 'individual') {
+    finalIndividualId = individualId || null;
+    finalFoundationId = null;
+  } else if (creatorType === 'foundation') {
+    finalFoundationId = foundationId || null;
+    finalIndividualId = null;
+  } else {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid creatorType. Must be 'individual' or 'foundation'."
+    });
+  }
+
+  // Columns to insert
   const columns = [
     'creation_id', 'creator_type', 'individual_id', 'foundation_id',
     'ebc_id', 'title', 'description', 'amount_needed',
     'division', 'doc', 'cover_photo'
   ];
 
-  // Values array must match columns length
+  // Values array
   const values = [
     creationId,
-    creatorType || null,
-    individualId || null,
-    foundationId || null,
+    creatorType,
+    finalIndividualId,
+    finalFoundationId,
     ebcId,
     title,
     description,
-    amountNum,    // ensure numeric
+    amountNum,
     division,
     docBuffer,
     coverPhotoBuffer
   ];
 
-  // Debug logs to ensure lengths match
+  // Debug logs
   console.log("INSERT columns count:", columns.length);
   console.log("VALUES length:", values.length);
 
@@ -105,7 +124,7 @@ const coverPhotoBuffer = req.files?.coverPhoto?.[0]?.buffer || null;
 
   db.query(sql, values, (err, result) => {
     if (err) {
-      console.error('❌ Error inserting event:', err); // full err
+      console.error('❌ Error inserting event:', err);
       return res.status(500).json({ success: false, message: err.sqlMessage || err.message });
     }
 
@@ -116,6 +135,5 @@ const coverPhotoBuffer = req.files?.coverPhoto?.[0]?.buffer || null;
     });
   });
 };
-
 
 module.exports = { getCategories, getEventTypes, createEvent };
