@@ -785,7 +785,7 @@ router.get('/volunteers/nearby/:eventId', authenticateAdmin, async (req, res) =>
 });
 
 // Category Management Routes
-router.get('/categories', authenticateAdmin, async (req, res) => {
+/*router.get('/categories', authenticateAdmin, async (req, res) => {
     try {
         const [categories] = await adminDb.execute(`
             SELECT c.*, COUNT(e.id) as event_count
@@ -891,7 +891,7 @@ router.delete('/categories/:id', authenticateAdmin, async (req, res) => {
             message: 'Failed to delete category' 
         });
     }
-});
+});*/
 
 // Donation Analytics Routes
 router.get('/analytics/donations', authenticateAdmin, async (req, res) => {
@@ -1050,5 +1050,123 @@ router.put('/settings', authenticateAdmin, async (req, res) => {
         });
     }
 });
+
+
+
+
+
+// Get categories with their event types
+router.get('/categories/events', authenticateAdmin, async (req, res) => {
+    try {
+        const [rows] = await adminDb.execute(`
+            SELECT 
+                c.category_id, c.category_name,
+                GROUP_CONCAT(et.event_type_name ORDER BY et.event_type_name) AS event_type_names,
+                GROUP_CONCAT(et.event_type_id ORDER BY et.event_type_name) AS event_type_ids
+            FROM CATEGORY c
+            LEFT JOIN EVENT_BASED_ON_CATEGORY ebc ON ebc.category_id = c.category_id
+            LEFT JOIN EVENT_TYPE et ON et.event_type_id = ebc.event_type_id
+            GROUP BY c.category_id, c.category_name
+            ORDER BY c.category_name
+        `);
+
+        const data = rows.map(row => ({
+            category_id: row.category_id,
+            category_name: row.category_name,
+            event_types: (row.event_type_names ? row.event_type_names.split(',') : []).map((name, idx) => ({
+                event_type_id: row.event_type_ids ? row.event_type_ids.split(',')[idx] : '',
+                event_type_name: name
+            }))
+        }));
+
+        res.json({ success: true, data });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Failed to fetch categories', error: err.message });
+    }
+});
+
+// Delete category (with check for usage)
+router.delete('/categories/:categoryId', authenticateAdmin, async (req, res) => {
+    const { categoryId } = req.params;
+    try {
+        // Check if category is used in any events
+        const [used] = await adminDb.execute(
+            `SELECT COUNT(*) AS cnt FROM EVENT_CREATION ec
+             JOIN EVENT_BASED_ON_CATEGORY ebc ON ec.ebc_id = ebc.ebc_id
+             WHERE ebc.category_id = ?`, [categoryId]
+        );
+        if (used[0].cnt > 0) {
+            return res.status(400).json({ success: false, message: 'Cannot delete category in use by events.' });
+        }
+        // Delete links first
+        await adminDb.execute('DELETE FROM EVENT_BASED_ON_CATEGORY WHERE category_id = ?', [categoryId]);
+        // Delete category
+        await adminDb.execute('DELETE FROM CATEGORY WHERE category_id = ?', [categoryId]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Delete failed', error: err.message });
+    }
+});
+
+
+
+
+router.post('/categories/full', authenticateAdmin, async (req, res) => {
+    const { name, icon, eventTypes } = req.body;
+    if (!name || !Array.isArray(eventTypes) || eventTypes.length === 0) {
+        return res.status(400).json({ success: false, message: 'Category name and at least one event type required.' });
+    }
+
+    const connection = await adminDb.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        // Insert category
+        // Use 7 characters max for category_id
+const category_id = 'CAT' + Math.floor(1000 + Math.random() * 9000); // 'CAT1234'
+        await connection.execute(
+            'INSERT INTO CATEGORY (category_id, category_name) VALUES (?, ?)',
+            [category_id, name]
+        );
+
+        // Insert event types and link them
+        for (const eventTypeName of eventTypes) {
+            const event_type_id = 'EVT' + Math.floor(1000 + Math.random() * 9000); // 7 chars
+            await connection.execute(
+                'INSERT IGNORE INTO EVENT_TYPE (event_type_id, event_type_name) VALUES (?, ?)',
+                [event_type_id, eventTypeName]
+            );
+
+            const [etRow] = await connection.execute(
+                'SELECT event_type_id FROM EVENT_TYPE WHERE event_type_name = ?',
+                [eventTypeName]
+            );
+            const final_event_type_id = etRow[0].event_type_id;
+
+            await connection.execute(
+                'INSERT IGNORE INTO EVENT_BASED_ON_CATEGORY (ebc_id, category_id, event_type_id) VALUES (?, ?, ?)',
+                [
+                    'EBC' + Math.floor(1000 + Math.random() * 9000),
+                    category_id,
+                    final_event_type_id
+                ]
+            );
+        }
+
+        await connection.commit();
+        res.json({ success: true, message: 'Category and event types added.' });
+    } catch (err) {
+        await connection.rollback();
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Failed to add category and event types.' });
+    } finally {
+        connection.release();
+    }
+});
+
+
+
+
+
 
 module.exports = router;

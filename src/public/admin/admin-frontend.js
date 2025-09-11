@@ -607,7 +607,7 @@ class AdminDashboard {
     }
     
     // Category Methods
-    addCategory() {
+    /*addCategory() {
         const name = document.getElementById('categoryName')?.value;
         const icon = document.getElementById('categoryIcon')?.value;
         
@@ -625,9 +625,9 @@ class AdminDashboard {
             this.closeModal('addCategoryModal');
             this.showNotification('Category added successfully', 'success');
         }
-    }
+    }*/
     
-    toggleCategory(categoryId) {
+    /*toggleCategory(categoryId) {
         const category = this.categories.find(c => c.id === categoryId);
         if (category) {
             category.active = !category.active;
@@ -653,7 +653,7 @@ class AdminDashboard {
         if (modal) {
             modal.classList.add('active');
         }
-    }
+    }*/
     
     closeModal(modalId) {
         const modal = document.getElementById(modalId);

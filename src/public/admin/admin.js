@@ -150,11 +150,7 @@ class AdminDashboard {
             }
         });
         
-        // Form submissions
-        document.getElementById('addCategoryForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.addCategory();
-        });
+        
     }
     
     showSection(sectionName) {
@@ -316,32 +312,53 @@ class AdminDashboard {
         }
     }
     
-    renderCategoriesSection() {
-        const categoriesGrid = document.querySelector('.categories-grid');
-        if (!categoriesGrid) return;
-        
-        categoriesGrid.innerHTML = (Array.isArray(this.categories) ? this.categories : []).map(category => `
+   
+    
+
+    // Fetch categories and events from backend and render
+async renderCategoriesSection() {
+    const categoriesGrid = document.querySelector('.categories-grid');
+    if (!categoriesGrid) return;
+
+    try {
+        const res = await fetch('/api/admin/categories/events', {
+            headers: { 'Authorization': this.authToken }
+        });
+        const result = await res.json();
+        if (!result.success) throw new Error(result.message || 'Failed to fetch categories');
+        const categories = result.data;
+
+        categoriesGrid.innerHTML = categories.map(cat => `
             <div class="category-card">
                 <div class="category-header">
                     <div class="category-icon">
-                        <i class="${category.icon || 'fas fa-tag'}"></i>
+                        <i class="fas fa-tags"></i>
                     </div>
                     <div class="category-info">
-                        <h3>${category.name || ''}</h3>
-                        <p>${category.count || 0} campaigns</p>
+                        <h3>${cat.category_name}</h3>
                     </div>
-                    <div class="category-status">
-                        <label class="toggle-switch">
-                            <input type="checkbox" ${category.active ? 'checked' : ''} 
-                                   onchange="adminDashboard.toggleCategory(${category.id})">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
+                </div>
+                <div class="category-events">
+                    <label for="event-dropdown-${cat.category_id}">Event Types:</label>
+                    <select id="event-dropdown-${cat.category_id}" class="filter-select">
+                        ${cat.event_types.map(ev => `<option>${ev.event_type_name}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="category-actions">
+                    <button class="btn-danger" onclick="adminDashboard.deleteCategory('${cat.category_id}')">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
                 </div>
             </div>
         `).join('');
+    } catch (err) {
+        categoriesGrid.innerHTML = '<div class="info-card"><div class="info-content"><p>Failed to load categories.</p></div></div>';
     }
-    
+}
+
+
+
+
     // Placeholder to avoid runtime error until real UI is wired
     renderTrendingSection() {
         const el = document.getElementById('trending');
@@ -487,26 +504,7 @@ class AdminDashboard {
     }
     
     // Category Methods
-    addCategory() {
-        const name = document.getElementById('categoryName').value;
-        const icon = document.getElementById('categoryIcon').value;
-        const description = document.getElementById('categoryDescription').value;
-        
-        if (name && icon) {
-            const newCategory = {
-                id: this.categories.length + 1,
-                name: name,
-                icon: icon,
-                count: 0,
-                active: true
-            };
-            
-            this.categories.push(newCategory);
-            this.renderCategoriesSection();
-            this.closeModal('addCategoryModal');
-            this.showNotification('Category added successfully', 'success');
-        }
-    }
+ 
     
     toggleCategory(categoryId) {
         const category = this.categories.find(c => c.id === categoryId);
@@ -516,13 +514,24 @@ class AdminDashboard {
         }
     }
     
-    deleteCategory(categoryId) {
-        if (confirm('Are you sure you want to delete this category?')) {
-            this.categories = this.categories.filter(c => c.id !== categoryId);
+ async deleteCategory(categoryId) {
+    if (!confirm('Are you sure you want to delete this category?')) return;
+    try {
+        const res = await fetch(`/api/admin/categories/${categoryId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': this.authToken }
+        });
+        const result = await res.json();
+        if (result.success) {
+            this.showNotification('Category deleted', 'success');
             this.renderCategoriesSection();
-            this.showNotification('Category deleted', 'warning');
+        } else {
+            this.showNotification(result.message || 'Delete failed', 'error');
         }
+    } catch (err) {
+        this.showNotification('Server error', 'error');
     }
+}
     
     // Modal Methods
     showAddCategoryModal() {
@@ -587,6 +596,69 @@ let adminDashboard;
 document.addEventListener('DOMContentLoaded', function() {
     adminDashboard = new AdminDashboard();
     window.adminDashboard = adminDashboard;
+});
+
+
+
+// --- Add these outside the class ---
+
+let eventTypes = [];
+
+function addEventType() {
+    const input = document.getElementById('newEventType');
+    const value = input.value.trim();
+    if (value && !eventTypes.includes(value)) {
+        eventTypes.push(value);
+        input.value = '';
+        renderEventTypes();
+    }
+}
+
+function removeEventType(idx) {
+    eventTypes.splice(idx, 1);
+    renderEventTypes();
+}
+
+function renderEventTypes() {
+    const list = document.getElementById('eventTypesList');
+    list.innerHTML = eventTypes.map((name, idx) => `
+        <span class="event-type-tag">
+            ${name}
+            <button class="remove-btn" type="button" title="Remove" onclick="removeEventType(${idx})">&times;</button>
+        </span>
+    `).join('');
+}
+
+document.getElementById('addCategoryForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const name = document.getElementById('categoryName').value.trim();
+    const icon = document.getElementById('categoryIcon').value;
+
+    if (!name || eventTypes.length === 0) {
+        adminDashboard.showNotification('Please enter a category name and at least one event type.', 'error');
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/admin/categories/full', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': adminDashboard.authToken
+            },
+            body: JSON.stringify({ name, icon, eventTypes })
+        });
+        const result = await res.json();
+        if (result.success) {
+            adminDashboard.showNotification('Category and event types added successfully!', 'success');
+            closeModal('addCategoryModal');
+            adminDashboard.renderCategoriesSection();
+        } else {
+            adminDashboard.showNotification(result.message || 'Failed to add category.', 'error');
+        }
+    } catch (err) {
+        adminDashboard.showNotification('Server error. Please try again.', 'error');
+    }
 });
 
 // Add additional CSS for new components
