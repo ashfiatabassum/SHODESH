@@ -1116,3 +1116,29 @@ body {
         align-self: center;
     }
 }
+.add-event-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+.event-type-tag {
+    display: inline-flex;
+    align-items: center;
+    background: #e6fffa;
+    color: #4a7c59;
+    border-radius: 16px;
+    padding: 6px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-right: 8px;
+    margin-bottom: 8px;
+    gap: 6px;
+}
+.event-type-tag .remove-btn {
+    background: none;
+    border: none;
+    color: #c53030;
+    font-size: 16px;
+    cursor: pointer;
+    margin-left: 6px;
+}

@@ -448,43 +448,48 @@
     </div>
 
     <!-- Add Category Modal -->
-    <div id="addCategoryModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Add New Category</h3>
-                <button class="close-btn" onclick="closeModal('addCategoryModal')" aria-label="Close add category" title="Close">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="addCategoryForm">
-                    <div class="form-group">
-                        <label for="categoryName">Category Name</label>
-                        <input type="text" id="categoryName" name="categoryName" required aria-required="true" placeholder="Enter category name">
+   <div id="addCategoryModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Add New Category</h3>
+            <button class="close-btn" onclick="closeModal('addCategoryModal')" aria-label="Close add category" title="Close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="addCategoryForm">
+                <div class="form-group">
+                    <label for="categoryName">Category Name</label>
+                    <input type="text" id="categoryName" name="categoryName" required aria-required="true" placeholder="Enter category name">
+                </div>
+                <div class="form-group">
+                    <label for="categoryIcon">Category Icon</label>
+                    <select id="categoryIcon" name="categoryIcon" aria-label="Choose category icon">
+                        <option value="fas fa-heartbeat">Medical</option>
+                        <option value="fas fa-graduation-cap">Education</option>
+                        <option value="fas fa-exclamation-triangle">Emergency</option>
+                        <option value="fas fa-utensils">Food</option>
+                        <option value="fas fa-leaf">Environment</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Event Types Under This Category</label>
+                    <div id="eventTypesList"></div>
+                    <div class="add-event-row">
+                        <input type="text" id="newEventType" placeholder="Add event type name">
+                        <button type="button" class="btn-primary" onclick="addEventType()">
+                            <i class="fas fa-plus"></i> Add Event Type
+                        </button>
                     </div>
-                    <div class="form-group">
-                        <label for="categoryIcon">Category Icon</label>
-                        <select id="categoryIcon" name="categoryIcon" aria-label="Choose category icon">
-                            <option value="fas fa-heartbeat">Medical</option>
-                            <option value="fas fa-graduation-cap">Education</option>
-                            <option value="fas fa-exclamation-triangle">Emergency</option>
-                            <option value="fas fa-utensils">Food</option>
-                            <option value="fas fa-leaf">Environment</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="categoryDescription">Description</label>
-                        <textarea id="categoryDescription" name="categoryDescription" rows="3" placeholder="Describe the category..." aria-label="Category description"></textarea>
-                    </div>
-                    <div class="form-actions">
-                        <button type="button" class="btn-secondary" onclick="closeModal('addCategoryModal')">Cancel</button>
-                        <button type="submit" class="btn-primary">Add Category</button>
-                    </div>
-                </form>
-            </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('addCategoryModal')">Cancel</button>
+                    <button type="submit" class="btn-primary">Add Category</button>
+                </div>
+            </form>
         </div>
     </div>
-
+</div>
     <script src="admin.js"></script>
 </body>
 </html>
