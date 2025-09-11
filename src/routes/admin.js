@@ -1166,6 +1166,51 @@ const category_id = 'CAT' + Math.floor(1000 + Math.random() * 9000); // 'CAT1234
 
 
 
+router.post('/categories/:categoryId/add-event-type', authenticateAdmin, async (req, res) => {
+    const { categoryId } = req.params;
+    const { eventTypeName } = req.body;
+    if (!eventTypeName) {
+        return res.status(400).json({ success: false, message: 'Event type name required.' });
+    }
+    const connection = await adminDb.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        // Insert event type if not exists
+        const event_type_id = 'EVT' + Math.floor(1000 + Math.random() * 9000); // 7 chars
+        await connection.execute(
+            'INSERT IGNORE INTO EVENT_TYPE (event_type_id, event_type_name) VALUES (?, ?)',
+            [event_type_id, eventTypeName]
+        );
+        // Get event_type_id (if already exists)
+        const [etRow] = await connection.execute(
+            'SELECT event_type_id FROM EVENT_TYPE WHERE event_type_name = ?',
+            [eventTypeName]
+        );
+        const final_event_type_id = etRow[0].event_type_id;
+
+        // Insert into EVENT_BASED_ON_CATEGORY if not exists
+        await connection.execute(
+            'INSERT IGNORE INTO EVENT_BASED_ON_CATEGORY (ebc_id, category_id, event_type_id) VALUES (?, ?, ?)',
+            [
+                'EBC' + Math.floor(1000 + Math.random() * 9000),
+                categoryId,
+                final_event_type_id
+            ]
+        );
+
+        await connection.commit();
+        res.json({ success: true, message: 'Event type added to category.' });
+    } catch (err) {
+        await connection.rollback();
+        res.status(500).json({ success: false, message: 'Failed to add event type to category.' });
+    } finally {
+        connection.release();
+    }
+});
+
+
+
 
 
 

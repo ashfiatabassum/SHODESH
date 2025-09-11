@@ -1142,3 +1142,8 @@ body {
     cursor: pointer;
     margin-left: 6px;
 }
+.add-event-type-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}

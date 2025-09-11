@@ -329,28 +329,34 @@ async renderCategoriesSection() {
         const categories = result.data;
 
         categoriesGrid.innerHTML = categories.map(cat => `
-            <div class="category-card">
-                <div class="category-header">
-                    <div class="category-icon">
-                        <i class="fas fa-tags"></i>
-                    </div>
-                    <div class="category-info">
-                        <h3>${cat.category_name}</h3>
-                    </div>
-                </div>
-                <div class="category-events">
-                    <label for="event-dropdown-${cat.category_id}">Event Types:</label>
-                    <select id="event-dropdown-${cat.category_id}" class="filter-select">
-                        ${cat.event_types.map(ev => `<option>${ev.event_type_name}</option>`).join('')}
-                    </select>
-                </div>
-                <div class="category-actions">
-                    <button class="btn-danger" onclick="adminDashboard.deleteCategory('${cat.category_id}')">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                </div>
+           <div class="category-card">
+        <div class="category-header">
+            <div class="category-icon">
+                <i class="fas fa-tags"></i>
             </div>
-        `).join('');
+            <div class="category-info">
+                <h3>${cat.category_name}</h3>
+            </div>
+        </div>
+        <div class="category-events">
+            <label for="event-dropdown-${cat.category_id}">Event Types:</label>
+            <select id="event-dropdown-${cat.category_id}" class="filter-select">
+                ${cat.event_types.map(ev => `<option>${ev.event_type_name}</option>`).join('')}
+            </select>
+            <div class="add-event-type-row">
+                <input type="text" id="addEventTypeInput-${cat.category_id}" placeholder="Add event type">
+                <button class="btn-primary" onclick="addEventTypeToCategory('${cat.category_id}')">
+                    <i class="fas fa-plus"></i> Add Event Type
+                </button>
+            </div>
+        </div>
+        <div class="category-actions">
+            <button class="btn-danger" onclick="adminDashboard.deleteCategory('${cat.category_id}')">
+                <i class="fas fa-trash"></i> Delete
+            </button>
+        </div>
+    </div>
+`).join('');
     } catch (err) {
         categoriesGrid.innerHTML = '<div class="info-card"><div class="info-content"><p>Failed to load categories.</p></div></div>';
     }
@@ -514,6 +520,7 @@ async renderCategoriesSection() {
         }
     }
     
+    
  async deleteCategory(categoryId) {
     if (!confirm('Are you sure you want to delete this category?')) return;
     try {
@@ -590,6 +597,38 @@ function closeModal(modalId) {
 function logout() {
     adminDashboard.logout();
 }
+
+
+// add eventtype to existing category
+async function addEventTypeToCategory(categoryId) {
+    const input = document.getElementById(`addEventTypeInput-${categoryId}`);
+    const eventTypeName = input.value.trim();
+    if (!eventTypeName) {
+        adminDashboard.showNotification('Please enter an event type name.', 'error');
+        return;
+    }
+    try {
+        const res = await fetch(`/api/admin/categories/${categoryId}/add-event-type`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': adminDashboard.authToken
+            },
+            body: JSON.stringify({ eventTypeName })
+        });
+        const result = await res.json();
+        if (result.success) {
+            adminDashboard.showNotification('Event type added successfully!', 'success');
+            input.value = '';
+            adminDashboard.renderCategoriesSection();
+        } else {
+            adminDashboard.showNotification(result.message || 'Failed to add event type.', 'error');
+        }
+    } catch (err) {
+        adminDashboard.showNotification('Server error. Please try again.', 'error');
+    }
+}
+
 
 // Initialize admin dashboard when page loads
 let adminDashboard;
