@@ -1,29 +1,47 @@
+/* Base Styles */
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
   padding: 0;
-  background: url('images/dbms3.jpg') no-repeat center center/cover;
-background-size: cover;
+  background: #126e48; /* solid color to match existing scheme */
   color: #d7dbe0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
-
+/* Container */
 .container {
-  max-width: 800px;
-  margin: 50px auto;
-  padding: 20px;
-  background: linear-gradient(135deg, rgba(20, 104, 39, 0.8) 39%, rgba(154, 225, 182, 0.8) 61%);
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 700px;
+  background: linear-gradient(135deg, rgba(88, 178, 111, 0.902) 40%, rgba(134, 190, 156, 0.9) 60%);
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
+  animation: fadeInUp 1s ease forwards;
 }
 
-
+/* Heading */
 h1 {
   text-align: center;
   color: #f4eded;
-  margin-bottom: 40px;
+  margin-bottom: 30px;
+  font-size: 2.2rem;
+  letter-spacing: 1px;
+  position: relative;
 }
 
+h1::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 3px;
+  background: #1e924c;
+  margin: 8px auto 0;
+  border-radius: 2px;
+}
 
 /* Form Styles */
 form {
@@ -31,77 +49,121 @@ form {
   flex-direction: column;
 }
 
-
+/* Form Group with animation */
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
+  position: relative;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.6s forwards;
 }
 
+.form-group:nth-child(1) { animation-delay: 0.1s; }
+.form-group:nth-child(2) { animation-delay: 0.2s; }
+.form-group:nth-child(3) { animation-delay: 0.3s; }
+.form-group:nth-child(4) { animation-delay: 0.4s; }
+.form-group:nth-child(5) { animation-delay: 0.5s; }
+.form-group:nth-child(6) { animation-delay: 0.6s; }
+.form-group:nth-child(7) { animation-delay: 0.7s; }
+.form-group:nth-child(8) { animation-delay: 0.8s; }
 
+/* Labels */
 label {
-  font-weight: bold;
-  margin-bottom: 5px;
+  font-weight: 600;
+  margin-bottom: 8px;
   display: block;
+  font-size: 1rem;
 }
 
-
+/* Inputs, Textareas, Selects */
 input[type="text"],
 input[type="number"],
 input[type="file"],
 textarea,
 select {
   width: 100%;
-  padding: 10px;
-  border: 1px solid #116f48;
-  border-radius: 4px;
-  font-size: 16px;
-  box-sizing: border-box;
+  padding: 12px 15px;
+  border: 2px solid #1e924c;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: rgba(255,255,255,0.05);
+  color: #084329;
 }
 
-
-textarea {
-  resize: vertical;
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="file"]:focus,
+textarea:focus,
+select:focus {
+  border-color: #f4eded;
+  box-shadow: 0 0 10px rgba(30, 146, 76, 0.5);
+  outline: none;
 }
 
+/* Placeholder text */
+::placeholder {
+  color: rgba(215, 219, 224, 0.7);
+  font-weight: 400;
+}
 
+/* Button */
 button {
   background-color: #1e924c;
   color: #fff;
   border: none;
-  padding: 10px 15px;
-  font-size: 16px;
-  border-radius: 4px;
+  padding: 14px 20px;
+  font-size: 1.1rem;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.4s ease;
+  margin-top: 10px;
 }
-
 
 button:hover {
   background-color: #0e560f;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
-
-/* Dropdown Styles */
+/* Disabled select style */
 select:disabled {
   background-color: #65b795;
   color: #9fd2ad;
 }
 
-
-/* File Input Styles */
+/* File input styling */
 input[type="file"] {
-  padding: 5px;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
+input[type="file"]:hover {
+  background: rgba(30, 146, 76, 0.2);
+}
 
-/* Responsive Design */
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
 @media (max-width: 600px) {
   .container {
-    padding: 15px;
+    padding: 25px;
   }
 
-
   button {
-    font-size: 14px;
-    padding: 8px 12px;
+    font-size: 1rem;
+    padding: 12px 16px;
   }
 }
