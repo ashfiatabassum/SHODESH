@@ -21,6 +21,11 @@ console.log('   • index.js path:', __filename);
 console.log('   • NODE_ENV:', process.env.NODE_ENV);
 console.log('   • CWD:', process.cwd());
 
+
+
+// ✅ Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 // ✅ Request logging middleware
 app.use((req, res, next) => {
   console.log(`📥 ${req.method} ${req.path} - ${new Date().toISOString()}`);
@@ -30,9 +35,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// ✅ Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
   secret: 'shodesh-admin-secret-key',

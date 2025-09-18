@@ -44,6 +44,10 @@ router.get('/', (req, res) => {
   res.json({ message: 'Individual API is working' });
 });
 
+router.get('/ping', (req, res) => {
+  res.json({ ok: true, where: 'individual', ts: new Date().toISOString() });
+});
+
 // POST /register - Register a new individual
 router.post('/register', async (req, res) => {
   console.log('👤 New individual registration request received');
@@ -181,6 +185,77 @@ router.post('/register', async (req, res) => {
     });
   }
 });
+// POST /signin - Sign in an individual
+// POST /signin - Sign in an individual
+router.post('/signin', async (req, res) => {
+  console.log('🟢 [Individual] /signin hit'); // debug
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ success: false, message: 'Username and password are required' });
+    }
+
+    const [rows] = await db.query(
+      `SELECT individual_id, first_name, last_name, username, email, password,
+              mobile, nid, dob, house_no, road_no, area, district,
+              administrative_div, zip, bkash, bank_account
+         FROM INDIVIDUAL
+        WHERE username = ?`,
+      [username]
+    );
+
+    if (!rows || rows.length === 0) {
+      return res.status(401).json({ success: false, message: 'Invalid username or password' });
+    }
+
+    const user = rows[0];
+
+    // NOTE: plain-text compare for now; switch to bcrypt later
+    if (String(password) !== String(user.password)) {
+      return res.status(401).json({ success: false, message: 'Invalid username or password' });
+    }
+
+    const individualData = {
+      personalInfo: {
+        individualId: user.individual_id,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        username: user.username,
+        email: user.email,
+        mobile: user.mobile,
+        nid: user.nid,
+        dob: user.dob
+      },
+      address: {
+        houseNo: user.house_no,
+        roadNo: user.road_no,
+        area: user.area,
+        district: user.district,
+        division: user.administrative_div,
+        zipCode: user.zip
+      },
+      finance: {
+        bkashNumber: user.bkash,
+        bankAccount: user.bank_account
+      }
+    };
+
+    return res.json({
+      success: true,
+      message: 'Signed in successfully',
+      individualId: user.individual_id,
+      individualData
+    });
+  } catch (err) {
+    console.error('❌ Individual signin error:', err);
+    return res.status(500).json({ success: false, message: 'Internal server error: ' + err.message });
+  }
+});
+
+
+
+
 
 // POST /check-availability - Check if username/email/mobile/nid is available
 router.post('/check-availability', (req, res) => {

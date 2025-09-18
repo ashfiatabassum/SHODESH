@@ -1,0 +1,94 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+    int n;
+    cout << "Enter number of processes: ";
+    cin >> n;
+
+    vector<int> pid(n), at(n), bt(n), rt(n), ct(n), tat(n), wt(n), done(n, 0), starttime(n, -1), responsetime(n);
+
+    int completed = 0;
+    for (int i = 0; i < n; i++) {
+        pid[i] = i + 1;
+        cout << "Enter arrival time and burst time for P" << pid[i] << ": ";
+        cin >> at[i] >> bt[i];
+        rt[i] = bt[i];   // remaining time initially burst time
+
+        // Handle zero burst time immediately
+        if (bt[i] == 0) {
+            ct[i] = at[i];
+            tat[i] = 0;
+            wt[i] = 0;
+            responsetime[i] = 0;
+            done[i] = 1;
+            completed++;
+        }
+    }
+
+    int currentTime = 0;
+    while (completed < n) {
+        int idx = -1;
+        // choose smallest remaining time, then earliest AT, then smallest PID
+        for (int i = 0; i < n; i++) {
+            if (!done[i] && at[i] <= currentTime && rt[i] > 0) {
+                if (idx == -1 ||
+                    rt[i] < rt[idx] ||
+                    (rt[i] == rt[idx] && (at[i] < at[idx] ||
+                     (at[i] == at[idx] && pid[i] < pid[idx])))) {
+                    idx = i;
+                }
+            }
+        }
+
+        if (idx != -1) {
+            if (starttime[idx] == -1) {
+                starttime[idx] = currentTime;
+            }
+
+            // Run process for 1 unit
+            rt[idx]--;
+            currentTime++;
+
+            // If process finished
+            if (rt[idx] == 0) {
+                ct[idx] = currentTime;
+                tat[idx] = ct[idx] - at[idx];
+                wt[idx]  = tat[idx] - bt[idx];
+                responsetime[idx] = starttime[idx] - at[idx];
+                done[idx] = 1;
+                completed++;
+            }
+        } else {
+            // No process is ready, idle CPU
+            currentTime++;
+        }
+    }
+
+    cout << "\nPID\tAT\tBT\tCT\tTAT\tWT\tRT\n";
+    double totalTAT = 0, totalWT = 0, totalRT = 0;
+    for (int i = 0; i < n; i++) {
+        cout << "P" << pid[i] << "\t" << at[i] << "\t" << bt[i] << "\t"
+             << ct[i] << "\t" << tat[i] << "\t" << wt[i] << "\t" << responsetime[i] << "\n";
+        totalTAT += tat[i];
+        totalWT  += wt[i];
+        totalRT  += responsetime[i];
+    }
+
+    cout << fixed << setprecision(2);
+    cout << "\nAverage Turnaround Time = " << (totalTAT / n) << endl;
+    cout << "Average Waiting Time = " << (totalWT / n) << endl;
+    cout << "Average Response Time = " << (totalRT / n) << endl;
+
+    // Scheduling Length & Throughput
+    int minAT = *min_element(at.begin(), at.end());
+    int maxCT = *max_element(ct.begin(), ct.end());
+    int schedulingLength = maxCT - minAT;
+    cout << "Scheduling Length = " << schedulingLength << endl;
+    if (schedulingLength > 0)
+        cout << "Throughput = " << (double)n / schedulingLength << " processes/unit time\n";
+    else
+        cout << "Throughput = undefined (zero scheduling length)\n";
+
+    return 0;
+}

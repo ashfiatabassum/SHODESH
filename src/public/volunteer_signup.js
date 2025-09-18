@@ -15,47 +15,33 @@ function setupEventListeners() {
     const form = document.getElementById('volunteerSignupForm');
     const inputs = document.querySelectorAll('input, select');
     
+    console.log('🔧 Setting up event listeners...');
+    console.log('📝 Form found:', form);
+    console.log('📝 Inputs found:', inputs.length);
+    
     // Form submission - using direct event listener
     if (form) {
-        console.log('Form found, adding submit listener');
+        console.log('✅ Form found, adding submit listener');
         form.addEventListener('submit', handleFormSubmission);
         
         // Also add click handler to the submit button as a backup
         const submitBtn = document.querySelector('.signup-submit-btn');
+        console.log('🔘 Submit button found:', submitBtn);
         if (submitBtn) {
             submitBtn.addEventListener('click', function(e) {
+                console.log('🔘 Submit button clicked!', e);
                 // This is a backup in case the form submit event doesn't fire
                 if (e.target.type === 'submit') {
-                    console.log('Submit button clicked');
+                    console.log('✅ Submit button type confirmed');
                     // The form's submit event should handle this
                 }
             });
+        } else {
+            console.error('❌ Submit button not found!');
         }
     } else {
-        console.error('Form not found!');
+        console.error('❌ Form not found!');
     }
-    
-    // Setup password toggle functionality for all password fields
-    const togglePasswordButtons = document.querySelectorAll('.toggle-password');
-    
-    togglePasswordButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            // Find the password input that is a sibling to this button
-            const passwordInput = this.parentElement.querySelector('input[type="password"], input[type="text"]');
-            
-            if (passwordInput) {
-                // Toggle the type attribute
-                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                passwordInput.setAttribute('type', type);
-                
-                // Toggle the eye / eye-slash icon
-                const icon = this.querySelector('i');
-                if (icon) {
-                    icon.className = type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
-                }
-            }
-        });
-    });
     
     // Input validation
     inputs.forEach(input => {
@@ -118,10 +104,10 @@ function setupFileUpload() {
         const file = e.target.files[0];
         
         if (file) {
-            // Check file size (10MB limit)
-            const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+            // Check file size (5MB limit)
+            const maxSize = 5 * 1024 * 1024; // 5MB in bytes
             if (file.size > maxSize) {
-                showFieldError(fileInput, 'File size must be less than 10MB');
+                showFieldError(fileInput, 'File size must be less than 5MB');
                 fileInput.value = '';
                 return;
             }
@@ -158,28 +144,34 @@ function setupFileUpload() {
 
 // Simple form submission function
 function handleFormSubmission(e) {
+    console.log('🚀 Form submission triggered!', e);
     e.preventDefault();
-    console.log('Form submission started');
+    console.log('🛑 Default prevented');
+    console.log('🔍 Starting form validation...');
     
     if (!validateForm()) {
-        console.log('Form validation failed');
+        console.log('❌ Form validation failed');
         return;
     }
+    
+    console.log('✅ Form validation passed');
     
     // Create FormData from the form
     const form = document.getElementById('volunteerSignupForm');
     const formData = new FormData(form);
     
     // Debug: Log all form data
-    console.log('Form data:');
+    console.log('📋 Form data:');
     for (let [key, value] of formData.entries()) {
-        console.log(`${key}: ${value instanceof File ? value.name : value}`);
+        console.log(`  ${key}: ${value instanceof File ? value.name : value}`);
     }
     
     // Show loading indicator
+    console.log('⏳ Showing loading indicator...');
     showLoading(true);
     
     // ALWAYS use the real API (no more development mode simulation)
+    console.log('📤 Creating volunteer account...');
     createVolunteerAccount(formData);
 }
 
@@ -311,7 +303,7 @@ function validateAge() {
     if (day && month && year) {
         const birthDate = new Date(year, month - 1, day);
         const today = new Date();
-        const age = today.getFullYear() - birthDate.getFullYear();
+        let age = today.getFullYear() - birthDate.getFullYear();
         const monthDiff = today.getMonth() - birthDate.getMonth();
         
         if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
@@ -403,16 +395,8 @@ function createVolunteerAccount(formData) {
         
         requiredFields.forEach(field => {
             if (field === 'cv') {
-                const fileInput = document.getElementById('cv');
-                if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+                if (!document.getElementById('cv').files[0]) {
                     missingFields.push('CV file');
-                    console.error('CV file is missing or not properly selected');
-                } else {
-                    console.log('CV file found:', fileInput.files[0].name);
-                    // Ensure the CV file is included in the form data
-                    if (!formData.has('cv')) {
-                        formData.set('cv', fileInput.files[0]);
-                    }
                 }
             } else if (!formData.get(field)) {
                 missingFields.push(field);
@@ -438,123 +422,27 @@ function createVolunteerAccount(formData) {
         })
         .then(response => {
             console.log('Server response status:', response.status);
-            
-            // Clone the response before reading its body
-            const responseClone = response.clone();
-            
-            // Always try to parse JSON regardless of status
-            return response.json().then(data => {
-                // Add response status to data for reference
-                data._responseStatus = response.status;
-                return data;
-            }).catch(() => {
-                // If parsing fails, try to get the text content instead
-                return responseClone.text().then(textContent => {
-                    console.log('Raw server response:', textContent);
-                    return {
-                        success: false,
-                        _responseStatus: response.status,
-                        message: `Server error (${response.status}): ${textContent.substring(0, 100)}...`
-                    };
-                }).catch(err => {
-                    // If even text parsing fails, return a basic object
-                    return {
-                        success: false,
-                        _responseStatus: response.status,
-                        message: `Server error (${response.status})`
-                    };
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.message || 'Server error occurred');
                 });
-            });
-        })
-        .then(data => {
-            console.log('Server response data:', data);
-            
-            // If success is false or response was not ok (status >= 400)
-            if (!data.success || data._responseStatus >= 400) {
-                // Create an error object with the message
-                const error = new Error(data.message || 'Server error occurred');
-                
-                // Add additional properties
-                error.status = data._responseStatus;
-                error.field = data.field;
-                
-                // If it's a 409 conflict error, add special handling
-                if (data._responseStatus === 409) {
-                    console.log('Conflict detected:', data.message);
-                }
-                
-                throw error;
             }
-            
-            return data;
+            return response.json();
         })
         .then(data => {
             console.log('Registration successful:', data);
             
-            // Show success message about verification
-            showSuccess('Account created successfully! Redirecting to verification waiting page...');
+            // Show success message with verification notice
+            showSuccess('Account created successfully! Redirecting to admin for verification...');
             
-            // Store username in sessionStorage for easier sign-in later
-            sessionStorage.setItem('newStaffUsername', data.staffId || '');
-            
-            // Redirect after a delay to the verification waiting page with staff ID
+            // Redirect after a delay to our verification waiting page with parameters
             setTimeout(() => {
-                window.location.href = `staff_verification_waiting.html?from=signup&staffId=${data.staffId || ''}`;
+                window.location.href = `staff_verification_waiting.html?from=signup&staffId=${data.staffId}`;
             }, 3000);
         })
         .catch(error => {
-            // Show error message in the UI
             showError(error.message || 'An error occurred while creating your account. Please try again.');
             console.error('Account creation error:', error);
-            
-            // Handle 409 Conflict errors specifically
-            if (error.status === 409) {
-                // If we know which field caused the error from the server response
-                if (error.field) {
-                    const fieldId = error.field === 'email' ? 'gmail' : error.field;
-                    const fieldInput = document.getElementById(fieldId);
-                    if (fieldInput) {
-                        showFieldError(fieldInput, error.message);
-                        // Scroll to the field with the error
-                        fieldInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-                } 
-                // If field wasn't specified, try to guess from the error message
-                else if (error.message) {
-                    if (error.message.includes('username')) {
-                        showFieldError(document.getElementById('username'), error.message);
-                        document.getElementById('username').scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    } 
-                    else if (error.message.includes('email')) {
-                        showFieldError(document.getElementById('gmail'), error.message);
-                        document.getElementById('gmail').scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        
-                        // Add a sign-in link below the email field
-                        const signInSuggestion = document.createElement('div');
-                        signInSuggestion.className = 'signin-suggestion';
-                        signInSuggestion.innerHTML = `
-                            <p style="margin-top: 10px; color: #007bff;">
-                                <a href="volunteer_signin.html" style="text-decoration: underline; color: #007bff;">
-                                    Sign in with this email instead
-                                </a>
-                            </p>
-                        `;
-                        const emailGroup = document.getElementById('gmail').parentNode;
-                        if (emailGroup && !emailGroup.querySelector('.signin-suggestion')) {
-                            emailGroup.appendChild(signInSuggestion);
-                        }
-                    } 
-                    else if (error.message.includes('mobile')) {
-                        showFieldError(document.getElementById('mobileNumber'), error.message);
-                        document.getElementById('mobileNumber').scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    } 
-                    else if (error.message.includes('NID')) {
-                        showFieldError(document.getElementById('nid'), error.message);
-                        document.getElementById('nid').scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-                }
-            }
-            
             showLoading(false);
         });
     } catch (error) {

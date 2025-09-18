@@ -301,7 +301,6 @@ function setFieldState(group, state) {
 
 // Main validation and submission function
 async function validateAndSubmit() {
-    console.log('🔥 Form submission started');
     
     // Get all form values
     const formData = {
@@ -344,6 +343,14 @@ async function validateAndSubmit() {
         return;
     }
 
+    // Username length validation (DB schema: INDIVIDUAL.username VARCHAR(15))
+    const USERNAME_MAX = 15;
+    if (formData.username && formData.username.length > USERNAME_MAX) {
+        showCustomAlert(`Username must be at most ${USERNAME_MAX} characters`, 'error');
+        console.log(`❌ Username too long: ${formData.username.length} chars`);
+        return;
+    }
+
     console.log('✅ Basic validation passed, submitting to backend...');
     
     // Submit to backend
@@ -370,32 +377,42 @@ async function submitRegistration(formData) {
 
         console.log('📤 Sending request to /api/individual/register...');
         
-        // Use XMLHttpRequest instead of fetch
+        // Use XMLHttpRequest instead of fetch and await the parsed JSON response
         const xhr = new XMLHttpRequest();
         xhr.open('POST', '/api/individual/register', true);
         xhr.setRequestHeader('Content-Type', 'application/json');
-        
-        return new Promise((resolve, reject) => {
+
+        const xhrPromise = new Promise((resolve, reject) => {
             xhr.onload = function() {
                 if (xhr.status >= 200 && xhr.status < 300) {
-                    resolve(JSON.parse(xhr.responseText));
+                    try {
+                        resolve(JSON.parse(xhr.responseText));
+                    } catch (e) {
+                        reject(new Error('Invalid JSON response from server'));
+                    }
                 } else {
-                    reject(new Error(`Server responded with status ${xhr.status}: ${xhr.statusText}`));
+                    // Try to parse error body if available
+                    try {
+                        const err = JSON.parse(xhr.responseText);
+                        reject(new Error(err.message || `Server responded with status ${xhr.status}`));
+                    } catch (e) {
+                        reject(new Error(`Server responded with status ${xhr.status}: ${xhr.statusText}`));
+                    }
                 }
             };
-            
+
             xhr.onerror = function() {
                 reject(new Error('Network error occurred'));
             };
-            
+
             xhr.send(JSON.stringify({
                 firstName: formData.firstName,
                 lastName: formData.lastName,
                 username: formData.username,
                 email: formData.email,
-                phoneNumber: formData.phoneNumber,
+                mobile: formData.phoneNumber,    // server expects `mobile`
                 nid: formData.nid,
-                dateOfBirth: formData.dateOfBirth,
+                dob: formData.dateOfBirth,       // server expects `dob`
                 houseNo: formData.houseNo,
                 roadNo: formData.roadNo,
                 area: formData.area,
@@ -407,22 +424,15 @@ async function submitRegistration(formData) {
                 password: formData.password
             }));
         });
-        
-        const data = await response;
+
+        // Await the parsed response JSON
+        const data = await xhrPromise;
         console.log('📥 Response received:', data);
 
         // Remove loading alert
         removeLoadingAlert();
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        console.log('📋 Response data:', data);
-
-        if (data.success) {
+        if (data && data.success) {
             console.log('✅ Registration successful!');
             showCustomAlert(
                 `🎉 <strong>Registration Successful!</strong><br><br>
