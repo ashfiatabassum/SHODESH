@@ -7,7 +7,7 @@ const crypto = require("crypto");
 
 // Create uploads directory if it doesn't exist
 const fs = require("fs");
-const uploadDir = "uploads/cv/";
+const uploadDir = "src/uploads/cv/";
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
