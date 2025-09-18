@@ -1549,3 +1549,48 @@ BEGIN
 END$$
 DELIMITER ;
 
+CREATE OR REPLACE VIEW donor_donation_history AS
+SELECT
+  d.donor_id,
+  d.amount,
+  d.paid_at AS date,
+  ec.title AS projectTitle,
+  IF(ec.creator_type='foundation', f.foundation_name, CONCAT(i.first_name, ' ', i.last_name)) AS foundationName
+FROM DONATION d
+LEFT JOIN EVENT_CREATION ec ON d.creation_id = ec.creation_id
+LEFT JOIN FOUNDATION f ON ec.foundation_id = f.foundation_id
+LEFT JOIN INDIVIDUAL i ON ec.individual_id = i.individual_id;
+
+
+CREATE OR REPLACE VIEW foundation_donations_view AS
+SELECT
+  e.foundation_id,
+  d.creation_id,
+  d.amount,
+  d.paid_at,
+  donor.first_name,
+  donor.last_name,
+  e.title,
+  e.description,
+  e.amount_needed,
+  e.amount_received
+FROM donation d
+JOIN event_creation e ON d.creation_id = e.creation_id
+JOIN donor ON d.donor_id = donor.donor_id;
+
+
+CREATE OR REPLACE VIEW project_donations_view AS
+SELECT
+  e.foundation_id,
+  e.creation_id,
+  e.title,
+  e.description,
+  e.amount_needed,
+  e.amount_received,
+  d.amount AS donation_amount,
+  d.paid_at AS donation_date,
+  donor.first_name AS donor_first_name,
+  donor.last_name AS donor_last_name
+FROM event_creation e
+LEFT JOIN donation d ON e.creation_id = d.creation_id
+LEFT JOIN donor ON d.donor_id = donor.donor_id;
