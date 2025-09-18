@@ -121,25 +121,18 @@ CREATE TABLE STAFF(
 );
 CREATE TABLE STAFF_ASSIST (
   staff_assist_id                VARCHAR(7)  NOT NULL,
-  -- FK fields kept NULLable so rows survive deletes
   staff_id                       VARCHAR(7)  NULL,
   individual_id                  VARCHAR(7)  NULL,
-
-  -- when the assist happened
   created_at                     DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-  -- immutable snapshots to preserve attribution
   staff_name_at_creation         VARCHAR(61) NOT NULL,
   staff_username_at_creation     VARCHAR(15) NOT NULL,
   individual_name_at_creation    VARCHAR(61) NOT NULL,
 
   CONSTRAINT STAFF_ASSIST_PK PRIMARY KEY (staff_assist_id),
-
   CONSTRAINT STAFF_ASSIST_STAFF_ID_FK
     FOREIGN KEY (staff_id) REFERENCES STAFF(staff_id)
     ON DELETE SET NULL
     ON UPDATE CASCADE,
-
   CONSTRAINT STAFF_ASSIST_INDIVIDUAL_ID_FK
     FOREIGN KEY (individual_id) REFERENCES INDIVIDUAL(individual_id)
     ON DELETE SET NULL
@@ -149,6 +142,241 @@ CREATE TABLE STAFF_ASSIST (
 -- Helpful indexes for lookups
 CREATE INDEX STAFF_ASSIST_IND_ID_CREATED_AT_IDX ON STAFF_ASSIST (individual_id, created_at);
 CREATE INDEX STAFF_ASSIST_STAFF_ID_CREATED_AT_IDX ON STAFF_ASSIST (staff_id, created_at);
+
+-- ========================
+-- Views for Staff Analytics
+-- ========================
+
+-- View: Staff Performance Analytics
+CREATE VIEW v_staff_performance AS
+SELECT 
+    s.staff_id,
+    s.username,
+    s.first_name,
+    s.last_name,
+    s.email,
+    s.mobile,
+    s.status,
+    COUNT(DISTINCT sa.individual_id) as individuals_helped,
+    COUNT(sa.staff_assist_id) as total_assists,
+    -- Monthly assists
+    SUM(CASE 
+        WHEN sa.created_at >= DATE_FORMAT(NOW(), '%Y-%m-01') 
+        THEN 1 ELSE 0 
+    END) as assists_this_month,
+    -- Performance rating
+    CASE
+        WHEN COUNT(sa.staff_assist_id) > 50 THEN 'Outstanding'
+        WHEN COUNT(sa.staff_assist_id) > 30 THEN 'Excellent'
+        WHEN COUNT(sa.staff_assist_id) > 10 THEN 'Good'
+        ELSE 'New Staff'
+    END as performance_level
+FROM STAFF s
+LEFT JOIN STAFF_ASSIST sa ON s.staff_id = sa.staff_id
+GROUP BY s.staff_id, s.username, s.first_name, s.last_name, s.email, s.mobile, s.status;
+
+-- View: Staff Authentication Status
+CREATE VIEW v_staff_auth AS
+SELECT 
+    staff_id,
+    username,
+    password,
+    status,
+    CASE 
+        WHEN status = 'verified' THEN 'full_access'
+        WHEN status = 'unverified' THEN 'limited_access'
+        ELSE 'no_access'
+    END as access_level
+FROM STAFF;
+
+-- ========================
+-- Triggers for Staff
+-- ========================
+
+DELIMITER //
+
+-- Trigger: Auto-generate staff_id
+CREATE TRIGGER before_staff_insert 
+BEFORE INSERT ON STAFF
+FOR EACH ROW
+BEGIN
+    DECLARE next_id INT;
+    SELECT IFNULL(MAX(CAST(SUBSTRING(staff_id, 2) AS UNSIGNED)), 0) + 1 INTO next_id 
+    FROM STAFF;
+    SET NEW.staff_id = CONCAT('S', LPAD(next_id, 6, '0'));
+END//
+
+-- Trigger: Log staff status changes
+CREATE TRIGGER after_staff_status_change
+AFTER UPDATE ON STAFF
+FOR EACH ROW
+BEGIN
+    IF OLD.status != NEW.status THEN
+        INSERT INTO STAFF_STATUS_LOG(
+            staff_id, old_status, new_status, change_date
+        ) VALUES (
+            NEW.staff_id, OLD.status, NEW.status, NOW()
+        );
+    END IF;
+END//
+
+DELIMITER ;
+
+-- ========================
+-- Sequences & Triggers
+-- ========================
+
+-- Auto-generate staff_id
+DELIMITER //
+CREATE TRIGGER before_staff_insert 
+BEFORE INSERT ON STAFF
+FOR EACH ROW
+BEGIN
+    DECLARE next_id INT;
+    SELECT IFNULL(MAX(CAST(SUBSTRING(staff_id, 2) AS UNSIGNED)), 0) + 1 INTO next_id FROM STAFF;
+    SET NEW.staff_id = CONCAT('S', LPAD(next_id, 6, '0'));
+END;//
+DELIMITER ;
+
+-- ========================
+-- Views
+-- ========================
+
+-- Staff Profile View with Analytics
+CREATE VIEW v_staff_profile AS
+SELECT 
+    s.staff_id,
+    s.first_name,
+    s.last_name,
+    s.email,
+    s.mobile,
+    s.status,
+    COUNT(DISTINCT sa.individual_id) as total_individuals_helped,
+    COUNT(DISTINCT sa.staff_assist_id) as total_assists,
+    -- Monthly assists
+    SUM(CASE 
+        WHEN sa.created_at >= DATE_FORMAT(NOW(), '%Y-%m-01') 
+        THEN 1 ELSE 0 
+    END) as assists_this_month,
+    -- Performance rating
+    CASE
+        WHEN COUNT(sa.staff_assist_id) > 50 THEN 'Outstanding'
+        WHEN COUNT(sa.staff_assist_id) > 30 THEN 'Excellent'
+        WHEN COUNT(sa.staff_assist_id) > 10 THEN 'Good'
+        ELSE 'New Staff'
+    END as performance_rating
+FROM STAFF s
+LEFT JOIN STAFF_ASSIST sa ON s.staff_id = sa.staff_id
+GROUP BY 
+    s.staff_id, s.first_name, s.last_name,
+    s.email, s.mobile, s.status;
+
+-- Staff Authentication View
+CREATE VIEW v_staff_auth AS
+SELECT 
+    s.staff_id,
+    s.username,
+    s.password,
+    s.status,
+    CASE 
+        WHEN s.status = 'verified' THEN 'full_access'
+        WHEN s.status = 'unverified' THEN 'limited_access'
+        ELSE 'no_access'
+    END as access_level
+FROM STAFF s;
+
+-- ========================
+-- Stored Procedures
+-- ========================
+
+DELIMITER //
+
+-- Staff Registration with Validation
+CREATE PROCEDURE sp_register_staff(
+    IN p_first_name VARCHAR(30),
+    IN p_last_name VARCHAR(30),
+    IN p_username VARCHAR(15),
+    IN p_email VARCHAR(100),
+    IN p_password VARCHAR(255),
+    IN p_mobile VARCHAR(11),
+    IN p_nid VARCHAR(17),
+    OUT p_success BOOLEAN,
+    OUT p_message VARCHAR(100)
+)
+BEGIN
+    DECLARE v_existing INT;
+    
+    -- Start transaction
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_success = FALSE;
+        SET p_message = 'Registration failed due to database error';
+    END;
+    
+    START TRANSACTION;
+    
+    -- Check existing credentials
+    SELECT COUNT(*) INTO v_existing
+    FROM STAFF
+    WHERE username = p_username
+       OR email = p_email
+       OR mobile = p_mobile
+       OR nid = p_nid;
+       
+    IF v_existing > 0 THEN
+        SET p_success = FALSE;
+        SET p_message = 'Username, email, mobile or NID already exists';
+        ROLLBACK;
+    ELSE
+        INSERT INTO STAFF(
+            first_name, last_name, username, email,
+            password, mobile, nid, status
+        ) VALUES (
+            p_first_name, p_last_name, p_username, p_email,
+            p_password, p_mobile, p_nid, 'unverified'
+        );
+        
+        SET p_success = TRUE;
+        SET p_message = 'Registration successful';
+        COMMIT;
+    END IF;
+END//
+
+-- Update Staff Profile
+CREATE PROCEDURE sp_update_staff_profile(
+    IN p_staff_id VARCHAR(7),
+    IN p_first_name VARCHAR(30),
+    IN p_last_name VARCHAR(30),
+    IN p_email VARCHAR(100),
+    IN p_mobile VARCHAR(11),
+    OUT p_success BOOLEAN,
+    OUT p_message VARCHAR(100)
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_success = FALSE;
+        SET p_message = 'Update failed due to database error';
+    END;
+    
+    START TRANSACTION;
+    
+    UPDATE STAFF
+    SET 
+        first_name = COALESCE(p_first_name, first_name),
+        last_name = COALESCE(p_last_name, last_name),
+        email = COALESCE(p_email, email),
+        mobile = COALESCE(p_mobile, mobile)
+    WHERE staff_id = p_staff_id;
+    
+    SET p_success = TRUE;
+    SET p_message = 'Profile updated successfully';
+    COMMIT;
+END//
+
+DELIMITER ;
 
 
 

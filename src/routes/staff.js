@@ -5,6 +5,56 @@ const multer = require("multer");
 const path = require("path");
 const crypto = require("crypto");
 
+// Query helper functions to use with promises
+const executeQuery = (query, params = []) => {
+  return db.promise().execute(query, params)
+    .then(([results]) => results)
+    .catch(error => {
+      console.error('Database error:', error);
+      throw error;
+    });
+};
+
+// Function to get staff performance metrics using view
+const getStaffPerformance = async (staffId) => {
+  return executeQuery(
+    'SELECT * FROM v_staff_performance WHERE staff_id = ?',
+    [staffId]
+  );
+};
+
+// Function to validate staff auth using view
+const validateStaffAuth = async (username, password) => {
+  return executeQuery(
+    'SELECT * FROM v_staff_auth WHERE username = ? AND password = ?',
+    [username, password]
+  );
+};
+
+// Function to get staff workload using SQL function
+const getStaffWorkload = async (staffId) => {
+  return executeQuery(
+    'SELECT fn_calculate_staff_workload(?) as workload',
+    [staffId]
+  );
+};
+
+// Function to track staff status changes using stored procedure
+const trackStatusChange = async (staffId, newStatus, reason) => {
+  return executeQuery(
+    'CALL sp_track_status_change(?, ?, ?)',
+    [staffId, newStatus, reason]
+  );
+};
+
+// Function to get staff workload using SQL function
+const getStaffWorkload = async (staffId) => {
+  return executeQuery(
+    'SELECT fn_calculate_staff_workload(?) as workload',
+    [staffId]
+  );
+};
+
 // Create uploads directory if it doesn't exist
 const fs = require("fs");
 const uploadDir = "uploads/cv/";
@@ -561,33 +611,51 @@ router.post("/signin", async (req, res) => {
 
   try {
     const { username, password } = req.body;
-    console.log(`🔍 Attempting to find staff with username: ${username}`);
+    console.log(`🔍 Attempting to authenticate staff with username: ${username}`);
 
-    // First check if the username exists
-    const [userCheck] = await db.execute(
-      "SELECT username FROM staff WHERE username = ?",
-      [username]
-    );
+    // Use our view to validate credentials and get staff info
+    const staffAuth = await validateStaffAuth(username, password);
+    console.log(`🔐 Authentication result: ${staffAuth.length > 0 ? "Success" : "Failed"}`);
 
-    console.log(
-      `🔎 Username check result: ${
-        userCheck.length > 0 ? "Found" : "Not found"
-      }`
-    );
+    if (staffAuth.length === 0) {
+      // Check if username exists but password is wrong
+      const userCheck = await executeQuery(
+        "SELECT username FROM v_staff_auth WHERE username = ?",
+        [username]
+      );
 
-    const [rows] = await db.execute(
-      "SELECT staff_id, username, first_name, last_name, email, mobile, nid, house_no, road_no, area, district, administrative_div, zip, status FROM staff WHERE username = ? AND password = ?",
-      [username, password] // In production, implement proper password hashing
-    );
+      return res.status(401).json({
+        success: false,
+        message: userCheck.length > 0
+          ? "Invalid password"
+          : "Invalid username or account not found",
+      });
+    }
 
-    console.log(
-      `🔐 Authentication result: ${rows.length > 0 ? "Success" : "Failed"}`
-    );
+    // Get staff performance metrics
+    const performanceData = await getStaffPerformance(staffAuth[0].staff_id);
+    
+    // Get current workload using SQL function
+    const workloadData = await getStaffWorkload(staffAuth[0].staff_id);
 
-    if (rows.length === 0) {
-      // Check if the username exists but the password is wrong
-      const [userExists] = await db.execute(
-        "SELECT username FROM staff WHERE username = ?",
+    // Track login activity using stored procedure
+    await trackStatusChange(staffAuth[0].staff_id, 'LOGGED_IN', 'User login');
+
+    // Return enhanced response with performance metrics
+    res.json({
+      success: true,
+      message: "Login successful",
+      staff: {
+        id: staffAuth[0].staff_id,
+        username: staffAuth[0].username,
+        firstName: staffAuth[0].first_name,
+        lastName: staffAuth[0].last_name,
+        email: staffAuth[0].email,
+        status: staffAuth[0].status,
+        performance: performanceData[0] || {},
+        currentWorkload: workloadData[0]?.workload || 0
+      }
+    });
         [username]
       );
 
