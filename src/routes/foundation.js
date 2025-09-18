@@ -668,12 +668,10 @@ router.get('/donations/:foundationId', async (req, res) => {
   const { foundationId } = req.params;
   try {
     const query = `
-      SELECT d.amount, d.paid_at, donor.first_name, donor.last_name
-      FROM donation d
-      JOIN donor ON d.donor_id = donor.donor_id
-      JOIN event_creation e ON d.creation_id = e.creation_id
-      WHERE e.foundation_id = ?
-      ORDER BY d.paid_at DESC
+  SELECT amount, paid_at, first_name, last_name, title, description
+  FROM foundation_donations_view
+  WHERE foundation_id = ?
+  ORDER BY paid_at DESC
     `;
     db.query(query, [foundationId], (err, results) => {
       if (err) {

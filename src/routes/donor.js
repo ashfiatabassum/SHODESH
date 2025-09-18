@@ -545,17 +545,10 @@ router.get('/donations/:donorId', async (req, res) =>  {
   try {
     // Fetch donation history with event and creator info (LEFT JOIN to include all donations)
     const query = `
-      SELECT DISTINCT
-        d.amount,
-        d.paid_at AS date,
-        ec.title AS projectTitle,
-        IF(ec.creator_type='foundation', f.foundation_name, CONCAT(i.first_name, ' ', i.last_name)) AS foundationName
-      FROM donation d
-      LEFT JOIN event_creation ec ON d.creation_id = ec.creation_id
-      LEFT JOIN foundation f ON ec.foundation_id = f.foundation_id
-      LEFT JOIN individual i ON ec.individual_id = i.individual_id
-      WHERE d.donor_id = ?
-      ORDER BY d.paid_at DESC
+      SELECT amount, date, projectTitle, foundationName
+      FROM donor_donation_history
+      WHERE donor_id = ?
+      ORDER BY date DESC
     `;
     const donations = await new Promise((resolve, reject) => {
       db.query(query, [donorId], (err, results) => {
