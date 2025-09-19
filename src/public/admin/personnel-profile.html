@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Personnel Profile</title>
+  <link rel="stylesheet" href="../admin/admin.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+  body { background:#f8fafc; }
+  .page { max-width: 1000px; margin: 90px auto 40px; padding: 0 16px; }
+  .topbar { position:fixed; top:0; left:0; right:0; height:70px; display:flex; align-items:center; background:#fff; border-bottom:1px solid #e2e8f0; padding:0 16px; z-index:10; }
+  .topbar a { color:#4a7c59; text-decoration:none; font-weight:600; }
+  .header-card { background: linear-gradient(135deg, #4a7c59 0%, #2f6f4e 100%); color:#fff; border-radius:16px; padding:24px; box-shadow:0 10px 30px rgba(0,0,0,.12); position:relative; overflow:hidden; }
+  .header-wrap { display:flex; align-items:center; gap:16px; }
+  .avatar { width:72px; height:72px; border-radius:16px; background:rgba(255,255,255,.2); display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:700; backdrop-filter: blur(6px); }
+  .title { font-size:24px; font-weight:700; }
+  .sub { display:flex; gap:10px; align-items:center; margin-top:6px; opacity:.95; }
+  .idchip { background: rgba(255,255,255,0.2); padding:4px 10px; border-radius:999px; font-size:12px; font-weight:600; }
+  .badge { padding:4px 10px; border-radius:999px; font-size:12px; text-transform:capitalize; font-weight:700; }
+  .badge.unverified { background:rgba(254,245,231,.9); color:#92400e; }
+  .badge.verified { background:rgba(198,246,213,.95); color:#22543d; }
+  .badge.suspended { background:rgba(254,215,215,.95); color:#c53030; }
+  .content { margin-top:16px; }
+  .card { background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+  .actions { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; margin-top:12px; }
+  .btn { padding:10px 14px; border:none; border-radius:8px; font-weight:700; cursor:pointer; }
+  .btn-approve { background:#c6f6d5; color:#22543d; }
+  .btn-reject { background:#fed7d7; color:#c53030; }
+  .btn-unsuspend { background:#e6f3ff; color:#2b6cb0; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:16px; }
+  .info { background:#f8fafc; border-left:4px solid #4a7c59; border-radius:12px; padding:14px; }
+  .info label { display:block; font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:.4px; margin-bottom:4px; }
+  .info .val { font-weight:600; color:#2d3748; }
+  .muted { color:#718096; }
+  @media (max-width: 640px){ .header-wrap{flex-direction:column; align-items:flex-start;} .actions{justify-content:flex-start;} }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="./personnel-verification.html" onclick="event.preventDefault(); history.back();">← Back</a>
+  </div>
+  <div class="page" aria-live="polite">
+    <h1 style="margin-bottom:12px">Personnel Profile</h1>
+    <div id="card" class="card"></div>
+  </div>
+
+  <script>
+    const apiBase = '/api/admin';
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      alert('Please login as admin first.');
+      window.location.href = './index.html';
+    }
+
+    function getParam(key){ const u=new URL(location.href); return u.searchParams.get(key); }
+
+    async function apiRequest(endpoint, options={}) {
+      const res = await fetch(apiBase + endpoint, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token,
+          ...(options.headers||{})
+        }
+      });
+      if (res.status === 401) { alert('Session expired. Login again.'); location.href='./index.html'; return null; }
+      return res.json();
+    }
+
+    function formatDateOnly(v){
+      if (!v) return '';
+      if (typeof v === 'string') {
+        if (v.includes('T')) return v.split('T')[0];
+        if (v.includes(' ')) return v.split(' ')[0];
+        return v;
+      }
+      try { return new Date(v).toISOString().split('T')[0]; } catch { return String(v); }
+    }
+
+    function renderProfile(d){
+      const fullName = (d.first_name && d.last_name) ? `${d.first_name} ${d.last_name}` : (d.full_name || d.username || '');
+      const initials = (fullName || 'P').trim().charAt(0).toUpperCase();
+      const card = document.getElementById('card');
+      card.innerHTML = `
+        <div class="header-card">
+          <div class="header-wrap">
+            <div class="avatar" aria-hidden="true">${initials}</div>
+            <div>
+              <div class="title">${fullName}</div>
+              <div class="sub">
+                <span class="badge ${d.status}">${d.status}</span>
+                <span class="idchip">ID: ${d.staff_id}</span>
+              </div>
+            </div>
+          </div>
+          <div class="actions">
+            ${d.status==='unverified' ? `
+              <button class="btn btn-approve" type="button" title="Approve personnel" aria-label="Approve personnel" onclick="approveStaff('${d.staff_id}')"><i class='fas fa-check' aria-hidden="true"></i> Approve</button>
+              <button class="btn btn-reject" type="button" title="Reject and delete" aria-label="Reject and delete" onclick="rejectStaff('${d.staff_id}')"><i class='fas fa-trash' aria-hidden="true"></i> Reject</button>
+            `:''}
+            ${d.status==='verified' ? `
+              <button class="btn" type="button" style="background:#fed7d7;color:#c53030" title="Suspend personnel" aria-label="Suspend personnel" onclick="suspendStaff('${d.staff_id}')"><i class='fas fa-ban' aria-hidden="true"></i> Suspend</button>
+            `:''}
+            ${d.status==='suspended' ? `
+              <button class="btn btn-unsuspend" type="button" title="Unsuspend personnel" aria-label="Unsuspend personnel" onclick="unsuspendStaff('${d.staff_id}')"><i class='fas fa-unlock' aria-hidden="true"></i> Unsuspend</button>
+            `:''}
+            ${d.has_cv?`<button class="btn" type="button" style="background:#edf2f7;color:#2d3748" title="Download CV" aria-label="Download CV" onclick="downloadCV('${d.staff_id}')"><i class='fas fa-file-arrow-down' aria-hidden="true"></i> Download CV</button>`:''}
+          </div>
+        </div>
+
+        <div class="content">
+          <div class="grid">
+            <div class="info">
+              <label>Username</label>
+              <div class="val">${d.username || ''}</div>
+            </div>
+            <div class="info">
+              <label>Email</label>
+              <div class="val">${d.email || ''}</div>
+            </div>
+            <div class="info">
+              <label>Mobile</label>
+              <div class="val">${d.mobile || ''}</div>
+            </div>
+            <div class="info">
+              <label>NID</label>
+              <div class="val">${d.nid || ''}</div>
+            </div>
+            <div class="info">
+              <label>Date of Birth</label>
+              <div class="val">${formatDateOnly(d.dob)}</div>
+            </div>
+            <div class="info">
+              <label>Location</label>
+              <div class="val">${[d.area, d.district, d.administrative_div, d.zip].filter(Boolean).join(', ')}</div>
+            </div>
+            <div class="info">
+              <label>Address</label>
+              <div class="val">${[d.house_no, d.road_no].filter(Boolean).join(', ')}</div>
+            </div>
+          </div>
+          <div class="muted" style="margin-top:10px;">CV: ${d.has_cv ? (d.cv_size + ' bytes') : 'not uploaded'}</div>
+        </div>
+      `;
+    }
+
+    async function approveStaff(id){
+      const resp = await apiRequest(`/staff/${encodeURIComponent(id)}/verify`, {
+        method: 'PUT', body: JSON.stringify({ action: 'verify', notes: 'approved' })
+      });
+      if (!resp || !resp.success) { alert(resp?.message || 'Approval failed'); return; }
+      // Mark that data has changed
+      localStorage.setItem('personnelDataChanged', 'true');
+      alert('Personnel approved successfully');
+      await loadProfile();
+    }
+
+    async function rejectStaff(id){
+      if (!confirm('This will permanently delete the personnel record. Continue?')) return;
+      try {
+        const res = await fetch(`${apiBase}/staff/${encodeURIComponent(id)}`, { 
+          method: 'DELETE', 
+          headers: { 'Authorization': token } 
+        });
+        const json = await res.json().catch(() => null);
+        if (!res.ok || !json?.success) throw new Error(json?.message || 'Rejection failed');
+        // Mark that data has changed
+        localStorage.setItem('personnelDataChanged', 'true');
+        alert('Personnel rejected and deleted');
+        window.location.href = './personnel-verification.html';
+      } catch (e) {
+        alert(e.message || 'Rejection failed');
+      }
+    }
+
+    async function suspendStaff(id){
+      const resp = await apiRequest(`/staff/${encodeURIComponent(id)}/verify`, {
+        method: 'PUT', body: JSON.stringify({ action: 'suspend', notes: 'suspended' })
+      });
+      if (!resp || !resp.success) { alert(resp?.message || 'Suspension failed'); return; }
+      // Mark that data has changed
+      localStorage.setItem('personnelDataChanged', 'true');
+      alert('Personnel suspended successfully');
+      await loadProfile();
+    }
+
+    async function unsuspendStaff(id){
+      const resp = await apiRequest(`/staff/${encodeURIComponent(id)}/verify`, {
+        method: 'PUT', body: JSON.stringify({ action: 'verify', notes: 'unsuspended' })
+      });
+      if (!resp || !resp.success) { alert(resp?.message || 'Unsuspension failed'); return; }
+      // Mark that data has changed
+      localStorage.setItem('personnelDataChanged', 'true');
+      alert('Personnel unsuspended successfully');
+      await loadProfile();
+    }
+
+    window.approveStaff = approveStaff;
+    window.rejectStaff = rejectStaff;
+    window.suspendStaff = suspendStaff;
+    window.unsuspendStaff = unsuspendStaff;
+
+    async function downloadCV(id){
+      try {
+        const res = await fetch(`${apiBase}/staff/${encodeURIComponent(id)}/cv`, {
+          headers: { 'Authorization': token }
+        });
+        if (!res.ok) { throw new Error('Failed to download CV'); }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `personnel_${id}_cv`;
+        document.body.appendChild(a);
+        a.click();
+        URL.revokeObjectURL(url);
+        a.remove();
+      } catch (e) {
+        alert(e.message || 'Download failed');
+      }
+    }
+    window.downloadCV = downloadCV;
+
+    async function loadProfile(){
+      const id = getParam('id');
+      if (!id) { alert('Missing personnel id'); location.href='./personnel-verification.html'; return; }
+      const data = await apiRequest(`/staff/${encodeURIComponent(id)}/details`);
+      if (!data || !data.success) { alert('Failed to load personnel'); location.href='./personnel-verification.html'; return; }
+      renderProfile(data.data);
+    }
+
+    document.addEventListener('DOMContentLoaded', loadProfile);
+  </script>
+</body>
+</html>

@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personnel Details - SHODESH Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="admin.css">
+    <style>
+        .page { 
+            max-width: 1000px; 
+            margin: 90px auto 40px; 
+            padding: 0 20px; 
+        }
+        
+        .topbar { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            right: 0; 
+            height: 70px; 
+            display: flex; 
+            align-items: center; 
+            background: #fff; 
+            border-bottom: 1px solid #e2e8f0; 
+            padding: 0 20px; 
+            z-index: 10; 
+        }
+        
+        .topbar a { 
+            color: #2563eb; 
+            text-decoration: none; 
+            font-weight: 600; 
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .topbar a:hover {
+            color: #1d4ed8;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .page-header h1 {
+            font-size: 28px;
+            color: #1a202c;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .type-badge.staff {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .type-badge.volunteer {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-badge { 
+            padding: 8px 16px; 
+            border-radius: 20px; 
+            font-size: 14px; 
+            font-weight: 600;
+            text-transform: capitalize; 
+        }
+        
+        .status-badge.unverified { 
+            background: #fef3c7; 
+            color: #92400e; 
+        }
+        
+        .status-badge.verified { 
+            background: #d1fae5; 
+            color: #065f46; 
+        }
+        
+        .status-badge.rejected { 
+            background: #fecaca; 
+            color: #991b1b; 
+        }
+        
+        .status-badge.suspended { 
+            background: #fed7d7; 
+            color: #c53030; 
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .card { 
+            background: #fff; 
+            border: 1px solid #e5e7eb; 
+            border-radius: 12px; 
+            padding: 24px; 
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); 
+        }
+        
+        .card h2 {
+            margin: 0 0 20px 0;
+            font-size: 20px;
+            color: #1a202c;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .detail-grid { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 20px; 
+        }
+        
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .detail-label { 
+            font-weight: 600; 
+            color: #374151; 
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .detail-value {
+            color: #1a202c;
+            font-size: 16px;
+        }
+        
+        .detail-value.empty {
+            color: #9ca3af;
+            font-style: italic;
+        }
+        
+        .actions-card {
+            position: sticky;
+            top: 100px;
+        }
+        
+        .action-buttons { 
+            display: flex; 
+            flex-direction: column;
+            gap: 12px; 
+        }
+        
+        .btn { 
+            padding: 12px 20px; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            font-size: 14px;
+            cursor: pointer; 
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-approve { 
+            background: #10b981; 
+            color: #fff; 
+        }
+        
+        .btn-approve:hover:not(:disabled) {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+        
+        .btn-reject { 
+            background: #ef4444; 
+            color: #fff; 
+        }
+        
+        .btn-reject:hover:not(:disabled) {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+        
+        .btn-suspend { 
+            background: #f59e0b; 
+            color: #fff; 
+        }
+        
+        .btn-suspend:hover:not(:disabled) {
+            background: #d97706;
+            transform: translateY(-1px);
+        }
+        
+        .btn-reactivate {
+            background: #3b82f6;
+            color: #fff;
+        }
+        
+        .btn-reactivate:hover:not(:disabled) {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        
+        .action-history {
+            margin-top: 20px;
+        }
+        
+        .history-item {
+            padding: 12px 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: #f9fafb;
+        }
+        
+        .history-date {
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        
+        .history-action {
+            font-weight: 600;
+            color: #1a202c;
+            margin-top: 4px;
+        }
+        
+        .history-reason {
+            color: #4b5563;
+            margin-top: 4px;
+            font-size: 14px;
+        }
+        
+        .loading-state {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            color: #6b7280;
+        }
+        
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #2563eb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 12px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #ef4444;
+        }
+        
+        .error-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <a href="./personnel-verification.html">
+            <i class="fas fa-arrow-left"></i>
+            Back to Personnel Verification
+        </a>
+    </div>
+    
+    <div class="page" aria-live="polite">
+        <div id="pageContent" class="loading-state">
+            <div class="spinner"></div>
+            Loading personnel details...
+        </div>
+    </div>
+
+    <script>
+        const apiBase = '/api/admin';
+        const token = localStorage.getItem('adminToken');
+        
+        if (!token) {
+            alert('Please login as admin first.');
+            window.location.href = './login.html';
+        }
+
+        let personnelType = '';
+        let personnelId = '';
+        let personnelData = null;
+
+        function getUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            personnelId = urlParams.get('id');
+            
+            // Since we only have STAFF table, we don't need type parameter
+            if (!personnelId) {
+                showError('Invalid personnel ID');
+                return false;
+            }
+            return true;
+        }
+
+        async function apiRequest(endpoint, options = {}) {
+            try {
+                const res = await fetch(apiBase + endpoint, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': token,
+                        ...(options.headers || {})
+                    }
+                });
+                
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                }
+                
+                return await res.json();
+            } catch (error) {
+                console.error('API request failed:', error);
+                throw error;
+            }
+        }
+
+        async function loadPersonnelDetails() {
+            try {
+                // Since we only have STAFF table, always use staff endpoint
+                const endpoint = `/staff/${personnelId}`;
+                const response = await apiRequest(endpoint);
+                
+                personnelData = response.data.staff;
+                personnelType = 'staff'; // Force to staff since that's what we have
+                renderPersonnelDetails();
+            } catch (error) {
+                console.error('Failed to load personnel details:', error);
+                showError('Failed to load personnel details. Please try again.');
+            }
+        }
+
+        function renderPersonnelDetails() {
+            const staff = personnelData;
+            
+            // Build address from individual components
+            let address = '';
+            if (staff.house_no || staff.road_no || staff.area || staff.district) {
+                const parts = [
+                    staff.house_no,
+                    staff.road_no ? `Road ${staff.road_no}` : '',
+                    staff.area,
+                    staff.district,
+                    staff.administrative_div,
+                    staff.zip
+                ].filter(part => part && part.trim());
+                address = parts.join(', ');
+            }
+            
+            document.getElementById('pageContent').innerHTML = `
+                <div class="page-header">
+                    <h1>
+                        ${staff.first_name} ${staff.last_name}
+                        <div class="type-badge staff">
+                            <i class="fas fa-briefcase"></i>
+                            Staff Member
+                        </div>
+                    </h1>
+                    <div class="status-badge ${staff.status}">${staff.status}</div>
+                </div>
+                
+                <div class="content-grid">
+                    <div class="main-content">
+                        <div class="card">
+                            <h2><i class="fas fa-user"></i> Basic Information</h2>
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <div class="detail-label">Staff ID</div>
+                                    <div class="detail-value">${staff.staff_id}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Full Name</div>
+                                    <div class="detail-value">${staff.first_name} ${staff.last_name}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Username</div>
+                                    <div class="detail-value">${staff.username}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Email</div>
+                                    <div class="detail-value">${staff.email || 'Not provided'}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Mobile</div>
+                                    <div class="detail-value">${staff.mobile}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Date of Birth</div>
+                                    <div class="detail-value">${staff.dob ? new Date(staff.dob).toLocaleDateString() : 'Not provided'}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">National ID</div>
+                                    <div class="detail-value">${staff.nid}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Status</div>
+                                    <div class="detail-value">
+                                        <span class="status-badge ${staff.status}">${staff.status}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${address ? `
+                        <div class="card">
+                            <h2><i class="fas fa-map-marker-alt"></i> Address Information</h2>
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <div class="detail-label">Full Address</div>
+                                    <div class="detail-value">${address}</div>
+                                </div>
+                                ${staff.house_no ? `
+                                <div class="detail-item">
+                                    <div class="detail-label">House No</div>
+                                    <div class="detail-value">${staff.house_no}</div>
+                                </div>` : ''}
+                                ${staff.road_no ? `
+                                <div class="detail-item">
+                                    <div class="detail-label">Road No</div>
+                                    <div class="detail-value">${staff.road_no}</div>
+                                </div>` : ''}
+                                ${staff.area ? `
+                                <div class="detail-item">
+                                    <div class="detail-label">Area</div>
+                                    <div class="detail-value">${staff.area}</div>
+                                </div>` : ''}
+                                ${staff.district ? `
+                                <div class="detail-item">
+                                    <div class="detail-label">District</div>
+                                    <div class="detail-value">${staff.district}</div>
+                                </div>` : ''}
+                                ${staff.administrative_div ? `
+                                <div class="detail-item">
+                                    <div class="detail-label">Division</div>
+                                    <div class="detail-value">${staff.administrative_div}</div>
+                                </div>` : ''}
+                                ${staff.zip ? `
+                                <div class="detail-item">
+                                    <div class="detail-label">Zip Code</div>
+                                    <div class="detail-value">${staff.zip}</div>
+                                </div>` : ''}
+                            </div>
+                        </div>` : ''}
+                        
+                        ${staff.has_cv ? `
+                        <div class="card">
+                            <h2><i class="fas fa-file-pdf"></i> Documents</h2>
+                            <div class="detail-item">
+                                <div class="detail-label">CV/Resume</div>
+                                <div class="detail-value">
+                                    <a href="/api/admin/staff/${staff.staff_id}/cv" target="_blank" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; text-decoration: none;">
+                                        <i class="fas fa-download"></i>
+                                        Download CV
+                                    </a>
+                                </div>
+                            </div>
+                        </div>` : ''}
+                    </div>
+                    
+                    <div class="sidebar">
+                        <div class="card actions-card">
+                            <h2><i class="fas fa-cog"></i> Actions</h2>
+                            <div class="action-buttons">
+                                ${staff.status === 'unverified' ? `
+                                    <button class="btn btn-approve" onclick="approvePersonnel()">
+                                        <i class="fas fa-check"></i> Approve Staff
+                                    </button>
+                                    <button class="btn btn-reject" onclick="rejectPersonnel()">
+                                        <i class="fas fa-times"></i> Reject Staff
+                                    </button>
+                                ` : ''}
+                                
+                                ${staff.status === 'verified' ? `
+                                    <button class="btn btn-reject" onclick="suspendPersonnel()">
+                                        <i class="fas fa-ban"></i> Suspend Staff
+                                    </button>
+                                ` : ''}
+                                
+                                ${staff.status === 'suspended' ? `
+                                    <button class="btn btn-approve" onclick="reactivatePersonnel()">
+                                        <i class="fas fa-undo"></i> Reactivate Staff
+                                    </button>
+                                ` : ''}
+                                
+                                <button class="btn btn-secondary" onclick="contactPersonnel()">
+                                    <i class="fas fa-envelope"></i> Send Message
+                                </button>
+                                
+                                <button class="btn btn-secondary" onclick="viewHistory()">
+                                    <i class="fas fa-history"></i> View History
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function approvePersonnel() {
+            if (!confirm(`Are you sure you want to approve this staff member?`)) return;
+            
+            try {
+                await apiRequest(`/staff/${personnelId}/approve`, { method: 'POST' });
+                alert('Staff member approved successfully!');
+                await loadPersonnelDetails(); // Reload to update status
+            } catch (error) {
+                alert('Failed to approve staff member: ' + error.message);
+            }
+        }
+
+        async function rejectPersonnel() {
+            const reason = prompt('Please provide a reason for rejecting this staff member:');
+            if (!reason || !reason.trim()) return;
+            
+            try {
+                await apiRequest(`/staff/${personnelId}/reject`, { 
+                    method: 'POST',
+                    body: JSON.stringify({ reason: reason.trim() })
+                });
+                alert('Staff member rejected successfully!');
+                await loadPersonnelDetails(); // Reload to update status
+            } catch (error) {
+                alert('Failed to reject staff member: ' + error.message);
+            }
+        }
+
+        async function suspendPersonnel() {
+            const reason = prompt('Please provide a reason for suspending this staff member:');
+            if (!reason || !reason.trim()) return;
+            
+            try {
+                await apiRequest(`/staff/${personnelId}/reject`, { 
+                    method: 'POST',
+                    body: JSON.stringify({ reason: reason.trim() })
+                });
+                alert('Staff member suspended successfully!');
+                await loadPersonnelDetails(); // Reload to update status
+            } catch (error) {
+                alert('Failed to suspend staff member: ' + error.message);
+            }
+        }
+
+        async function reactivatePersonnel() {
+            if (!confirm('Are you sure you want to reactivate this staff member?')) return;
+            
+            try {
+                await apiRequest(`/staff/${personnelId}/reactivate`, { method: 'POST' });
+                alert('Staff member reactivated successfully!');
+                await loadPersonnelDetails(); // Reload to update status
+            } catch (error) {
+                alert('Failed to reactivate staff member: ' + error.message);
+            }
+        }
+
+        function contactPersonnel() {
+            if (personnelData.email) {
+                window.open(`mailto:${personnelData.email}?subject=SHODESH - Administrative Contact`);
+            } else {
+                alert('Email address not available for this person.');
+            }
+        }
+
+        function viewHistory() {
+            // This would typically load and display the action history
+            alert('History functionality would be implemented here.');
+        }
+
+        function showError(message) {
+            document.getElementById('pageContent').innerHTML = `
+                <div class="error-state">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Error</h3>
+                    <p>${message}</p>
+                    <button class="btn btn-secondary" onclick="window.history.back()">Go Back</button>
+                </div>
+            `;
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            if (getUrlParams()) {
+                loadPersonnelDetails();
+            }
+        });
+    </script>
+</body>
+</html>
