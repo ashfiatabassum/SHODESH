@@ -508,6 +508,11 @@ body {
     border: 1px solid #e2e8f0;
 }
 
+.chart-container.full-width {
+    grid-column: 1 / -1;
+    width: 100%;
+}
+
 .donation-stats {
     background: white;
     border-radius: 12px;
