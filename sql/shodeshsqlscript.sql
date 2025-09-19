@@ -251,7 +251,7 @@ CREATE TABLE EVENT_CREATION (
   cover_photo   LONGBLOB NULL,
 
   -- simple verification/lifecycle
-  verification_status ENUM('unverified','verified') NOT NULL DEFAULT 'unverified',
+  verification_status ENUM('unverified','verified','rejected') NOT NULL DEFAULT 'unverified',
   lifecycle_status    ENUM('inactive','active','closed') NOT NULL DEFAULT 'inactive',
 
   -- if 1 → needs staff round (round_no=2) before it can be verified/active
@@ -275,7 +275,7 @@ CREATE TABLE EVENT_CREATION (
   INDEX IDX_EVENT_EBC   (ebc_id),
   INDEX IDX_EVENT_DIV   (division)
 );
-
+SELECT * FROM CATEGORY;
 /* ===================== EVENT_PHOTO (many per event) ===================== */
 CREATE TABLE EVENT_PHOTO (
   photo_id     BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -992,6 +992,7 @@ SELECT
   ec.lifecycle_status,
   ec.amount_needed,
   ec.amount_received,
+  ec.cover_photo,
   CAST(ROUND(IFNULL(ec.amount_received / NULLIF(ec.amount_needed,0) * 100, 0), 1) AS DECIMAL(5,1)) AS progress_pct,
 
   -- taxonomy
@@ -1196,7 +1197,7 @@ CREATE PROCEDURE sp_search_events_stats(
 BEGIN
   SELECT
     creation_id, title, description, short_description, division,
-    amount_needed, amount_received, progress_pct,
+    amount_needed, amount_received, progress_pct, cover_photo,
     category_id, category_name, event_type_id, event_type_name,
     creator_type, creator_name, creator_id,
     total_donors, total_donations, total_raised,
@@ -1594,3 +1595,265 @@ SELECT
 FROM event_creation e
 LEFT JOIN donation d ON e.creation_id = d.creation_id
 LEFT JOIN donor ON d.donor_id = donor.donor_id;
+
+SELECT * FROM EVENT_CREATION;
+ALTER TABLE EVENT_VERIFICATION MODIFY COLUMN decision ENUM('verified','unverified','rejected') NOT NULL DEFAULT 'unverified';
+
+-- Stored procedure and triggers to support admin event verification
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS sp_admin_verify_event $$
+CREATE PROCEDURE sp_admin_verify_event(
+    IN p_creation_id VARCHAR(7),
+    IN p_decision ENUM('verified','unverified'),
+    IN p_notes VARCHAR(1000),
+    IN p_staff_id VARCHAR(7)
+)
+BEGIN
+    DECLARE v_exists INT DEFAULT 0;
+    DECLARE v_round TINYINT DEFAULT 1;
+
+    -- Validate event exists
+    SELECT COUNT(*) INTO v_exists FROM EVENT_CREATION WHERE creation_id = p_creation_id;
+    IF v_exists = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Event not found';
+    END IF;
+
+    -- Determine round number (latest + 1 or 1 if none)
+    SELECT IFNULL(MAX(round_no), 0) + 1 INTO v_round FROM EVENT_VERIFICATION WHERE creation_id = p_creation_id;
+
+    INSERT INTO EVENT_VERIFICATION(log_id, creation_id, round_no, staff_id, decision, request_staff_verification, notes, verified_at)
+    VALUES(CONCAT('EV', RIGHT(HEX(UNIX_TIMESTAMP(NOW())), 5)), p_creation_id, v_round, p_staff_id, p_decision, 0, p_notes, NOW());
+
+    -- Apply to EVENT_CREATION (in case trigger missing)
+    UPDATE EVENT_CREATION SET verification_status = p_decision WHERE creation_id = p_creation_id;
+END $$
+
+DROP TRIGGER IF EXISTS BI_EVENT_VERIFICATION_ENFORCE $$
+CREATE TRIGGER BI_EVENT_VERIFICATION_ENFORCE BEFORE INSERT ON EVENT_VERIFICATION
+FOR EACH ROW
+BEGIN
+    DECLARE v_exists INT DEFAULT 0;
+    IF NEW.decision NOT IN ('verified','unverified') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid decision';
+    END IF;
+    SELECT COUNT(*) INTO v_exists FROM EVENT_CREATION WHERE creation_id = NEW.creation_id;
+    IF v_exists = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Referenced event missing';
+    END IF;
+END $$
+
+DROP TRIGGER IF EXISTS AI_EVENT_VERIFICATION_APPLY $$
+CREATE TRIGGER AI_EVENT_VERIFICATION_APPLY AFTER INSERT ON EVENT_VERIFICATION
+FOR EACH ROW
+BEGIN
+    UPDATE EVENT_CREATION SET verification_status = NEW.decision WHERE creation_id = NEW.creation_id;
+END $$
+
+DELIMITER ;
+
+-- VERY VERY IMPORTANT 
+ALTER TABLE EVENT_CREATION
+  MODIFY COLUMN verification_status
+    ENUM('unverified','verified','rejected')
+    NOT NULL
+    DEFAULT 'unverified';
+
+
+
+-- Stored procedure and triggers to support admin event verification
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS sp_admin_verify_event $$
+CREATE PROCEDURE sp_admin_verify_event(
+    IN p_creation_id VARCHAR(7),
+    IN p_decision ENUM('verified','unverified','rejected'),
+    IN p_notes VARCHAR(1000),
+    IN p_staff_id VARCHAR(7)
+)
+BEGIN
+    DECLARE v_exists INT DEFAULT 0;
+    DECLARE v_round TINYINT DEFAULT 1;
+
+    -- Validate event exists
+    SELECT COUNT(*) INTO v_exists FROM EVENT_CREATION WHERE creation_id = p_creation_id;
+    IF v_exists = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Event not found';
+    END IF;
+
+    -- Determine round number (latest + 1 or 1 if none)
+    SELECT IFNULL(MAX(round_no), 0) + 1 INTO v_round FROM EVENT_VERIFICATION WHERE creation_id = p_creation_id;
+
+    INSERT INTO EVENT_VERIFICATION(log_id, creation_id, round_no, staff_id, decision, request_staff_verification, notes, verified_at)
+    VALUES(CONCAT('EV', RIGHT(HEX(UNIX_TIMESTAMP(NOW())), 5)), p_creation_id, v_round, p_staff_id, p_decision, 0, p_notes, NOW());
+
+    -- Apply to EVENT_CREATION (in case trigger missing)
+    -- Update both verification_status and lifecycle_status based on decision
+    CASE p_decision
+        WHEN 'verified' THEN
+            UPDATE EVENT_CREATION SET 
+                verification_status = 'verified', 
+                lifecycle_status = 'active',
+                updated_at = NOW()
+            WHERE creation_id = p_creation_id;
+        WHEN 'rejected' THEN
+            UPDATE EVENT_CREATION SET 
+                verification_status = 'rejected', 
+                lifecycle_status = 'inactive',
+                updated_at = NOW()
+            WHERE creation_id = p_creation_id;
+        ELSE
+            -- unverified or any other case
+            UPDATE EVENT_CREATION SET 
+                verification_status = 'unverified', 
+                lifecycle_status = 'inactive',
+                updated_at = NOW()
+            WHERE creation_id = p_creation_id;
+    END CASE;
+END $$
+
+DROP TRIGGER IF EXISTS BI_EVENT_VERIFICATION_ENFORCE $$
+CREATE TRIGGER BI_EVENT_VERIFICATION_ENFORCE BEFORE INSERT ON EVENT_VERIFICATION
+FOR EACH ROW
+BEGIN
+    DECLARE v_exists INT DEFAULT 0;
+    IF NEW.decision NOT IN ('verified','unverified','rejected') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid decision';
+    END IF;
+    SELECT COUNT(*) INTO v_exists FROM EVENT_CREATION WHERE creation_id = NEW.creation_id;
+    IF v_exists = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Referenced event missing';
+    END IF;
+END $$
+
+DROP TRIGGER IF EXISTS AI_EVENT_VERIFICATION_APPLY $$
+CREATE TRIGGER AI_EVENT_VERIFICATION_APPLY AFTER INSERT ON EVENT_VERIFICATION
+FOR EACH ROW
+BEGIN
+    -- Update both verification_status and lifecycle_status based on decision
+    CASE NEW.decision
+        WHEN 'verified' THEN
+            UPDATE EVENT_CREATION SET 
+                verification_status = 'verified', 
+                lifecycle_status = 'active',
+                updated_at = NOW()
+            WHERE creation_id = NEW.creation_id;
+        WHEN 'rejected' THEN
+            UPDATE EVENT_CREATION SET 
+                verification_status = 'rejected', 
+                lifecycle_status = 'inactive',
+                updated_at = NOW()
+            WHERE creation_id = NEW.creation_id;
+        ELSE
+            -- unverified or any other case
+            UPDATE EVENT_CREATION SET 
+                verification_status = 'unverified', 
+                lifecycle_status = 'inactive',
+                updated_at = NOW()
+            WHERE creation_id = NEW.creation_id;
+    END CASE;
+END $$
+
+DELIMITER ;
+
+SELECT * FROM EVENT_CREATION;
+
+
+
+-- 1. Update the v_event_catalog view to include cover_photo and support both individuals and foundations
+DROP VIEW IF EXISTS v_event_catalog;
+
+CREATE VIEW v_event_catalog AS
+SELECT
+  ec.creation_id,
+  ec.title,
+  ec.description,
+  ec.division,
+  ec.verification_status,
+  ec.lifecycle_status,
+  ec.amount_needed,
+  ec.amount_received,
+  ec.cover_photo,
+  ec.created_at,
+  ec.updated_at,
+  CAST(ROUND(IFNULL(ec.amount_received / NULLIF(ec.amount_needed,0) * 100, 0), 1) AS DECIMAL(5,1)) AS progress_pct,
+
+  -- taxonomy
+  ebc.ebc_id,
+  cat.category_id,  cat.category_name,
+  et.event_type_id, et.event_type_name,
+
+  -- creator (supports both individual and foundation)
+  ec.creator_type,
+  CASE 
+    WHEN ec.creator_type = 'individual' THEN CONCAT(i.first_name, ' ', i.last_name)
+    WHEN ec.creator_type = 'foundation' THEN f.foundation_name
+    ELSE 'Unknown'
+  END AS creator_name,
+  CASE 
+    WHEN ec.creator_type = 'individual' THEN i.individual_id
+    WHEN ec.creator_type = 'foundation' THEN f.foundation_id
+    ELSE NULL
+  END AS creator_id,
+
+  -- contact details (supports both individual and foundation)
+  CASE 
+    WHEN ec.creator_type = 'individual' THEN i.mobile 
+    WHEN ec.creator_type = 'foundation' THEN f.mobile 
+    ELSE NULL
+  END AS contact_phone,
+  CASE 
+    WHEN ec.creator_type = 'individual' THEN i.email  
+    WHEN ec.creator_type = 'foundation' THEN f.email  
+    ELSE NULL
+  END AS contact_email,
+  
+  -- quick summary
+  LEFT(ec.description, 180) AS short_description
+
+FROM EVENT_CREATION ec
+JOIN EVENT_BASED_ON_CATEGORY ebc ON ebc.ebc_id = ec.ebc_id
+LEFT JOIN CATEGORY     cat ON cat.category_id     = ebc.category_id
+LEFT JOIN EVENT_TYPE   et  ON et.event_type_id    = ebc.event_type_id
+LEFT JOIN INDIVIDUAL   i   ON i.individual_id     = ec.individual_id AND ec.creator_type = 'individual'
+LEFT JOIN FOUNDATION   f   ON f.foundation_id     = ec.foundation_id AND ec.creator_type = 'foundation';
+
+
+
+-- 2. Update the stored procedure to include cover_photo
+DROP PROCEDURE IF EXISTS sp_search_events_stats;
+
+DELIMITER $$
+CREATE PROCEDURE sp_search_events_stats(
+  IN p_category_id   VARCHAR(7),
+  IN p_event_type_id VARCHAR(7),
+  IN p_division      VARCHAR(30),
+  IN p_q             VARCHAR(200)
+)
+BEGIN
+  SELECT
+    creation_id, title, description, short_description, division,
+    amount_needed, amount_received, progress_pct, cover_photo,
+    category_id, category_name, event_type_id, event_type_name,
+    creator_type, creator_name, creator_id,
+    total_donors, total_donations, total_raised,
+    raised_this_month, donors_this_month, last_donation_at
+  FROM v_event_catalog_open_with_stats
+  WHERE (p_category_id   IS NULL OR p_category_id   = '' OR category_id   = p_category_id)
+    AND (p_event_type_id IS NULL OR p_event_type_id = '' OR event_type_id = p_event_type_id)
+    AND (p_division      IS NULL OR p_division      = '' OR division      = p_division)
+    AND (
+      p_q IS NULL OR p_q = '' OR
+      title LIKE CONCAT('%', p_q, '%') OR
+      description LIKE CONCAT('%', p_q, '%')
+    )
+  ORDER BY
+    progress_pct DESC,
+    (amount_needed - amount_received) DESC,
+    title ASC;
+END $$
+DELIMITER ;
+
+
