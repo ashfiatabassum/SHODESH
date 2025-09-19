@@ -62,6 +62,7 @@ router.get("/ping", (req, res) => {
 // POST /register - Register a new individual
 router.post("/register", async (req, res) => {
   console.log("👤 New individual registration request received");
+  console.log("Request body:", req.body);
 
   try {
     // Extract request body
@@ -87,11 +88,31 @@ router.post("/register", async (req, res) => {
       assistedByStaffUsername,
     } = req.body;
 
-    // Log if this is a staff-assisted registration
+    // Validate staff assistance data if present
     if (assistedByStaffId) {
       console.log(
         `👥 This registration is being assisted by staff: ${assistedByStaffUsername} (${assistedByStaffId})`
       );
+
+      // Verify staff exists and is active
+      const [staffResults] = await db.query(
+        "SELECT staff_id, status FROM STAFF WHERE staff_id = ? AND username = ?",
+        [assistedByStaffId, assistedByStaffUsername]
+      );
+
+      if (staffResults.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid staff assistance credentials",
+        });
+      }
+
+      if (staffResults[0].status !== "active") {
+        return res.status(400).json({
+          success: false,
+          message: "Staff account is not active",
+        });
+      }
     }
 
     // Basic validation
@@ -138,17 +159,28 @@ router.post("/register", async (req, res) => {
       });
     }
 
-    // Check if username already exists
-    const [usernameResults] = await db.query(
-      "SELECT individual_id FROM INDIVIDUAL WHERE username = ?",
-      [username]
+    // Check if username or email already exists
+    const [existingUser] = await db.query(
+      "SELECT individual_id, username, email FROM INDIVIDUAL WHERE username = ? OR email = ?",
+      [username, email]
     );
 
-    if (usernameResults.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Username is already taken",
-      });
+    if (existingUser.length > 0) {
+      const exists = existingUser[0];
+      if (exists.username === username) {
+        return res.status(400).json({
+          success: false,
+          message: "Username is already taken",
+          field: "username",
+        });
+      }
+      if (exists.email === email) {
+        return res.status(400).json({
+          success: false,
+          message: "Email is already registered",
+          field: "email",
+        });
+      }
     }
 
     // Check if email already exists

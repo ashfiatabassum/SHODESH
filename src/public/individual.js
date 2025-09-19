@@ -2,15 +2,47 @@
 
 // Check if this registration is being assisted by a staff member
 function checkStaffAssistance() {
-  const staffId = localStorage.getItem("staffId");
-  const staffUsername = localStorage.getItem("staffUsername");
+  const staffId = localStorage.getItem("assistedByStaffId");
+  const staffUsername = localStorage.getItem("assistedByStaffUsername");
 
   if (staffId && staffUsername) {
     console.log("📋 Registration is being assisted by staff:", staffUsername);
 
-    // Set the hidden field values only - no visual indicator
+    // Set the hidden field values
     document.getElementById("assistedByStaffId").value = staffId;
     document.getElementById("assistedByStaffUsername").value = staffUsername;
+
+    // Add visual indicator that this is a staff-assisted registration
+    const formHeader = document.querySelector(".form-header");
+    if (formHeader) {
+      const staffAssistBadge = document.createElement("div");
+      staffAssistBadge.className = "staff-assist-badge";
+      staffAssistBadge.innerHTML = `<i class="fas fa-user-shield"></i> Staff Assisted Registration by ${staffUsername}`;
+      formHeader.appendChild(staffAssistBadge);
+    }
+
+    // Add style for the badge if not already present
+    if (!document.getElementById("staff-assist-style")) {
+      const style = document.createElement("style");
+      style.id = "staff-assist-style";
+      style.textContent = `
+        .staff-assist-badge {
+          background: #e3f2fd;
+          color: #1565c0;
+          padding: 8px 12px;
+          border-radius: 4px;
+          margin-top: 10px;
+          font-size: 0.9em;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .staff-assist-badge i {
+          font-size: 1.1em;
+        }
+      `;
+      document.head.appendChild(style);
+    }
   }
 }
 
@@ -366,6 +398,9 @@ function setFieldState(group, state) {
 
 // Main validation and submission function
 async function validateAndSubmit() {
+  // Clear any existing alerts
+  removeLoadingAlert();
+
   // Get all form values
   const formData = {
     firstName: document.getElementById("firstName").value.trim(),
@@ -458,6 +493,10 @@ async function submitRegistration(formData) {
   const btnText = submitBtn.querySelector("span");
   const btnLoader = submitBtn.querySelector(".btn-loader");
 
+  // Clear any existing alerts first
+  removeLoadingAlert();
+  let xhr;
+
   try {
     console.log("🔄 Setting loading state...");
     // Show loading state
@@ -471,16 +510,30 @@ async function submitRegistration(formData) {
     console.log("📤 Sending request to /api/individual/register...");
 
     // Use XMLHttpRequest instead of fetch and await the parsed JSON response
-    const xhr = new XMLHttpRequest();
+    xhr = new XMLHttpRequest();
     xhr.open("POST", "/api/individual/register", true);
     xhr.setRequestHeader("Content-Type", "application/json");
 
     const xhrPromise = new Promise((resolve, reject) => {
+      // Add timeout
+      const timeout = setTimeout(() => {
+        xhr.abort();
+        reject(new Error("Request timed out"));
+      }, 30000); // 30 second timeout
+
       xhr.onload = function () {
+        clearTimeout(timeout);
+        const response = xhr.responseText;
+        console.log("Server response:", response);
+
         if (xhr.status >= 200 && xhr.status < 300) {
           try {
-            resolve(JSON.parse(xhr.responseText));
+            const data = JSON.parse(response);
+            console.log("Parsed response data:", data);
+            removeLoadingAlert(); // Clear loading state before resolving
+            resolve(data);
           } catch (e) {
+            removeLoadingAlert(); // Clear loading state before rejecting
             reject(new Error("Invalid JSON response from server"));
           }
         } else {
@@ -503,6 +556,7 @@ async function submitRegistration(formData) {
       };
 
       xhr.onerror = function () {
+        removeLoadingAlert(); // Clear loading state on network error
         reject(new Error("Network error occurred"));
       };
 
@@ -555,6 +609,10 @@ async function submitRegistration(formData) {
 
     if (data && data.success) {
       console.log("✅ Registration successful!");
+      // Clear loading state
+      removeLoadingAlert();
+
+      // Show success message
       showCustomAlert(
         `🎉 <strong>Registration Successful!</strong><br><br>
                 Your Individual ID: <strong>${data.individualId}</strong><br><br>
@@ -564,6 +622,10 @@ async function submitRegistration(formData) {
       );
 
       // Redirect to signin page after a delay
+      // Clean up staff assistance data
+      localStorage.removeItem("assistedByStaffId");
+      localStorage.removeItem("assistedByStaffUsername");
+
       setTimeout(() => {
         window.location.href = "signin.html";
       }, 4000);
@@ -574,14 +636,18 @@ async function submitRegistration(formData) {
       let errorMessage = data.message;
       let alertType = "error";
 
-      if (data.code === "USERNAME_EXISTS") {
+      if (data.field === "username") {
         errorMessage = `<strong>Username Already Taken!</strong><br><br>${data.message}<br><br><small>Please try a different username.</small>`;
-      } else if (data.code === "EMAIL_EXISTS") {
+        document.getElementById("username").focus();
+      } else if (data.field === "email") {
         errorMessage = `<strong>Email Already Registered!</strong><br><br>${data.message}<br><br><small>Try logging in instead or use a different email.</small>`;
-      } else if (data.code === "MOBILE_EXISTS") {
+        document.getElementById("email").focus();
+      } else if (data.field === "mobile") {
         errorMessage = `<strong>Mobile Number Already Registered!</strong><br><br>${data.message}<br><br><small>Please use a different mobile number.</small>`;
-      } else if (data.code === "NID_EXISTS") {
+        document.getElementById("phoneNumber").focus();
+      } else if (data.field === "nid") {
         errorMessage = `<strong>NID Already Registered!</strong><br><br>${data.message}<br><br><small>Each person can only have one account.</small>`;
+        document.getElementById("nid").focus();
       } else {
         errorMessage = `<strong>Registration Failed!</strong><br><br>${data.message}`;
       }
@@ -603,6 +669,8 @@ async function submitRegistration(formData) {
   } catch (error) {
     console.error("💥 Registration error:", error);
     console.error("💥 Error stack:", error.stack);
+
+    removeLoadingAlert();
 
     // Attempt to get any xhr details if available
     let errorDetails = "";
@@ -638,6 +706,11 @@ async function submitRegistration(formData) {
 
 // Function to check username/email/mobile/nid availability
 function checkAvailability(field, value, inputElement) {
+  // Reset previous styling
+  inputElement.style.borderColor = "";
+  inputElement.style.boxShadow = "";
+  inputElement.title = "";
+
   // Add cache-busting parameter
   const cacheBuster = new Date().getTime();
   // Make a direct XMLHttpRequest instead of fetch to bypass service worker
@@ -687,13 +760,33 @@ function checkAvailability(field, value, inputElement) {
     */
 }
 
+// Function to remove loading alerts and reset button state
+function removeLoadingAlert() {
+  // Remove loading alerts
+  const loadingAlerts = document.querySelectorAll(".custom-alert.loading");
+  loadingAlerts.forEach((alert) => alert.remove());
+
+  // Reset button state if needed
+  const submitBtn = document.getElementById("submitBtn");
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    const btnText = submitBtn.querySelector("span");
+    const btnLoader = submitBtn.querySelector(".btn-loader");
+    if (btnText) btnText.style.display = "inline";
+    if (btnLoader) btnLoader.style.display = "none";
+  }
+}
+
 // Custom alert functions (same as signin and donor registration)
 function showCustomAlert(message, type = "info", duration = 5000) {
-  // Remove any existing alerts
-  const existingAlerts = document.querySelectorAll(".custom-alert");
+  // Remove any existing alerts of the same type
+  const existingAlerts = document.querySelectorAll(`.custom-alert.${type}`);
   existingAlerts.forEach((alert) => alert.remove());
 
-  // Create alert container
+  // Only remove loading alert if showing a different type
+  if (type !== "loading") {
+    removeLoadingAlert();
+  } // Create alert container
   const alertContainer = document.createElement("div");
   alertContainer.className = `custom-alert ${type}`;
 

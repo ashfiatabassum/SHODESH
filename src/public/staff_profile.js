@@ -3,11 +3,39 @@ document.addEventListener("DOMContentLoaded", () => {
   const staffId = localStorage.getItem("staffId");
   const username = localStorage.getItem("staffUsername");
 
+  // If this is a staff member, set up assistance data for new registrations
+  if (staffId && username) {
+    localStorage.setItem(
+      "staffAssistance",
+      JSON.stringify({
+        staffId: staffId,
+        staffUsername: username,
+        timestamp: new Date().toISOString(),
+      })
+    );
+  }
+
   // Setup sign out button
   const signoutBtn = document.getElementById("signout-btn");
   if (signoutBtn) {
     signoutBtn.addEventListener("click", handleSignOut);
   }
+
+  // Function to handle redirecting to individual registration
+  window.createNewIndividual = function () {
+    // Store staff assistance data
+    if (staffId && username) {
+      localStorage.setItem("assistedByStaffId", staffId);
+      localStorage.setItem("assistedByStaffUsername", username);
+      // Redirect to individual registration page
+      window.location.href = "individual.html";
+    } else {
+      showCustomAlert(
+        "Staff credentials not found. Please sign in again.",
+        "error"
+      );
+    }
+  };
 
   // Function to generate initials from name
   const getInitials = (firstName, lastName) => {
