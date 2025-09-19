@@ -44,10 +44,11 @@
                 <i class="fas fa-tachometer-alt"></i>
                 <span>Dashboard</span>
             </div>
-                <div class="menu-item" onclick="location.href='./staff-verification.html'">
-                    <i class="fas fa-user-check"></i>
-                    Staff Verification
-                </div>
+            <div class="menu-item" onclick="window.location.href='personnel-verification.html'">
+                <i class="fas fa-user-friends"></i>
+                <span>Personnel Verification</span>
+                <span class="badge">15</span>
+            </div>
             <div class="menu-item" onclick="window.location.href='event-verification.html'">
                 <i class="fas fa-calendar-check"></i>
                 <span>Event Verification</span>
@@ -70,11 +71,7 @@
                 <span>Foundation Verification</span>
                 <span class="badge">2</span>
             </div>
-            <div class="menu-item" onclick="showSection('volunteers')">
-                <i class="fas fa-users"></i>
-                <span>Volunteer Verification</span>
-                <span class="badge">8</span>
-            </div>
+
             <div class="menu-item" onclick="showSection('reports')">
                 <i class="fas fa-file-alt"></i>
                 <span>Reports</span>
@@ -389,22 +386,6 @@
             </div>
         </section>
 
-        <!-- Volunteers Verification Section -->
-        <section id="volunteers" class="admin-section" aria-label="Volunteer Verification">
-            <div class="section-header">
-                <h2>Volunteer Verification</h2>
-                <div class="header-actions">
-                    <select id="volunteerStatusFilter" class="filter-select" aria-label="Filter volunteers by status">
-                        <option value="unverified">Unverified</option>
-                        <option value="verified">Verified</option>
-                        <option value="suspended">Suspended</option>
-                        <option value="all">All</option>
-                    </select>
-                </div>
-            </div>
-            <div class="volunteers-grid"><!-- Populated by admin.js --></div>
-        </section>
-
         <!-- Reports Section -->
         <section id="reports" class="admin-section" aria-label="Reports">
             <div class="section-header"><h2>Reports</h2></div>
@@ -490,6 +471,14 @@
         </div>
     </div>
 </div>
+
+<!-- Navigation Footer -->
+<div style="text-align: center; padding: 20px; border-top: 1px solid #e5e7eb; margin-top: 40px; background: #f9fafb;">
+    <a href="../index.html" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; margin: 0 10px; transition: all 0.3s;">
+        <i class="fas fa-home" style="margin-right: 8px;"></i>Back to Homepage
+    </a>
+</div>
+
     <script src="admin.js"></script>
 </body>
 </html>
