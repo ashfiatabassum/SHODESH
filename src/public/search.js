@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
             campaigns = (campaignsRes.data || []).map(c => ({
                 ...c,
                 category: c.category || c.category_name || '',
-                image: c.image || 'images/browse.jpeg',
+                image: c.cover_photo ? `/api/events/${c.creation_id}/file/cover` : null,
                 donors: c.donors ?? 0,
                 daysLeft: c.daysLeft ?? 0,
                 urgency: c.urgency || ''
@@ -248,7 +248,7 @@ document.addEventListener('DOMContentLoaded', function() {
             campaigns = (data.data || []).map(c => ({
                 ...c,
                 category: c.category || c.category_name || '',
-                image: c.image || 'images/browse.jpeg',
+                image: c.cover_photo ? `/api/events/${c.creation_id}/file/cover` : null,
                 donors: c.donors ?? 0,
                 daysLeft: c.daysLeft ?? 0,
                 urgency: c.urgency || ''
@@ -324,7 +324,17 @@ document.addEventListener('DOMContentLoaded', function() {
         
         card.innerHTML = `
             <div class="card-image">
-                <img src="${campaign.image}" alt="${campaign.title}" onerror="this.src='images/browse.jpeg'">
+                ${campaign.image 
+                    ? `<img src="${campaign.image}" alt="${campaign.title}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                       <div class="no-image-placeholder" style="display:none;">
+                           <i class="fas fa-image"></i>
+                           <span>No cover photo uploaded</span>
+                       </div>`
+                    : `<div class="no-image-placeholder">
+                           <i class="fas fa-image"></i>
+                           <span>No cover photo uploaded</span>
+                       </div>`
+                }
                 <div class="urgency-badge ${campaign.urgency || ''}">
                     <i class="fas fa-exclamation-circle"></i>
                     ${((campaign.urgency || '').charAt(0).toUpperCase() + (campaign.urgency || '').slice(1))}
