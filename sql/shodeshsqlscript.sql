@@ -1857,3 +1857,86 @@ END $$
 DELIMITER ;
 
 
+USE shodesh;
+DELIMITER $$
+DROP TRIGGER IF EXISTS staff_au_audit;
+DROP PROCEDURE IF EXISTS sp_admin_verify_staff $$
+CREATE PROCEDURE sp_admin_verify_staff(
+    IN p_staff_id   VARCHAR(7),
+    IN p_action     VARCHAR(10),   -- 'verify' | 'suspend' | 'unsuspend'
+    IN p_notes      TEXT,
+    IN p_admin_user VARCHAR(100)
+)
+BEGIN
+    DECLARE v_status ENUM('verified','suspended','unverified');
+    
+    -- Roll back on any SQL error and bubble it up
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    -- Lock the row to avoid concurrent flips
+    SELECT status
+      INTO v_status
+      FROM STAFF
+     WHERE staff_id = p_staff_id
+     FOR UPDATE;
+
+    IF v_status IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Staff not found';
+    END IF;
+
+    CASE p_action
+        WHEN 'verify' THEN
+            IF v_status IN ('unverified','suspended') THEN
+                UPDATE STAFF
+                   SET status = 'verified',
+                       updated_at = CURRENT_TIMESTAMP
+                 WHERE staff_id = p_staff_id;
+            ELSE
+                SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Already verified';
+            END IF;
+
+        WHEN 'suspend' THEN
+            IF v_status <> 'suspended' THEN
+                UPDATE STAFF
+                   SET status = 'suspended',
+                       updated_at = CURRENT_TIMESTAMP
+                 WHERE staff_id = p_staff_id;
+            ELSE
+                SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Already suspended';
+            END IF;
+
+        WHEN 'unsuspend' THEN
+            IF v_status = 'suspended' THEN
+                UPDATE STAFF
+                   SET status = 'verified',
+                       updated_at = CURRENT_TIMESTAMP
+                 WHERE staff_id = p_staff_id;
+            ELSE
+                SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Not suspended';
+            END IF;
+
+        ELSE
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'Invalid action (use verify | suspend | unsuspend)';
+    END CASE;
+
+    -- Optional: log the admin action if you have a log table
+    -- INSERT INTO STAFF_STATUS_LOG(log_id, staff_id, admin_user, action, notes, created_at)
+    -- VALUES (CONCAT('SL', LPAD(FLOOR(RAND()*100000), 5, '0')), p_staff_id, p_admin_user, p_action, p_notes, NOW());
+
+    COMMIT;
+
+    SELECT 'success' AS status, p_staff_id AS staff_id, p_action AS action;
+END $$
+DELIMITER ;
+

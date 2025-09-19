@@ -1389,9 +1389,4 @@ router.post('/categories/:categoryId/add-event-type', authenticateAdmin, async (
     }
 });
 
-
-
-
-
-
 module.exports = router;
