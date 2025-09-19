@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin • Event Details</title>
+  <link rel="stylesheet" href="../event.css"/>
+  <style>
+    .admin-actions{display:flex;gap:10px;margin-top:12px}
+    .admin-actions .btn{padding:10px 14px;border-radius:8px;border:none;cursor:pointer;font-weight:600}
+    .btn-approve{background:#22c55e;color:#fff}
+    .btn-reject{background:#ef4444;color:#fff}
+    .docBox{margin-top:12px}
+    .docBox a{color:#2563eb}
+    /* Status badge colors */
+    .badge.verified{background:#10b981;color:#fff}
+    .badge.unverified{background:#f59e0b;color:#fff}
+    .badge.rejected{background:#ef4444;color:#fff}
+  </style>
+</head>
+<body>
+  <header class="header">
+    <a class="brand" href="./event-verification.html">← Back to Verification</a>
+    <nav><a href="/">Home</a></nav>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div class="media">
+        <img id="cover" src="https://placehold.co/960x540?text=SHODESH" alt="Event cover">
+      </div>
+      <div class="info">
+        <div class="meta">
+          <span id="badge" class="badge">Status</span>
+          <span id="catTag" class="badge">Category • Event</span>
+          <span id="divisionTag" class="badge">Division</span>
+          <span id="createdAtTag" class="badge">Created —</span>
+        </div>
+        <h1 id="title" class="title">Loading…</h1>
+        <p id="desc" class="sub">Please wait while we fetch event details.</p>
+
+        <div class="kv">
+          <div class="item"><div class="k">Goal</div><div id="goal" class="v">—</div></div>
+          <div class="item"><div class="k">Raised</div><div id="raised" class="v">—</div></div>
+          <div class="item"><div class="k">Progress</div><div id="pct" class="v">0%</div></div>
+        </div>
+        <div class="progress"><div id="bar" class="bar"></div></div>
+
+        <div class="admin-actions">
+          <button id="approveBtn" class="btn btn-approve">Approve</button>
+          <button id="rejectBtn" class="btn btn-reject">Reject</button>
+        </div>
+        <div class="docBox" id="docBox">
+          <span class="muted">No document</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>About this event</h2>
+      <div id="about">—</div>
+    </section>
+
+    <section class="section" id="contactSection" hidden>
+      <h2>Contact</h2>
+      <div id="contact"></div>
+    </section>
+  </main>
+
+  <footer>© SHODESH</footer>
+  <script src="./event-details.js" type="module"></script>
+</body>
+</html>
