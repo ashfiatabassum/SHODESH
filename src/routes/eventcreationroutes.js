@@ -39,7 +39,7 @@ router.get('/events/:id/file/:type', (req, res) => {
     return res.status(400).send('Invalid file type');
   }
 
-  db.query(`SELECT ${column} FROM event_creation WHERE creation_id = ?`, [id], (err, rows) => {
+  db.query(`SELECT ${column} FROM EVENT_CREATION WHERE creation_id = ?`, [id], (err, rows) => {
     if (err || rows.length === 0 || !rows[0][column]) return res.status(404).send('File not found');
 
     const fileBuffer = rows[0][column];
