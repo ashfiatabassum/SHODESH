@@ -1389,4 +1389,573 @@ router.post('/categories/:categoryId/add-event-type', authenticateAdmin, async (
     }
 });
 
+// =============================
+// DONATION ANALYTICS ROUTES
+// =============================
+
+// Test route to verify analytics routes are loading
+router.get('/analytics/test', (req, res) => {
+    res.json({ success: true, message: 'Analytics routes are loaded!' });
+});
+
+// Analytics overview with KPIs and basic trends
+router.get('/analytics/overview', authenticateAdmin, async (req, res) => {
+    try {
+        const { start_date, end_date } = req.query;
+        
+        console.log('📊 Analytics Overview - Date range:', start_date, 'to', end_date);
+        
+        // Call stored procedure for comprehensive analytics
+        const [results] = await adminDb.execute(
+            'CALL sp_get_donation_analytics(?, ?, ?)',
+            [start_date || null, end_date || null, 1]
+        );
+        
+        // Parse stored procedure results - multiple result sets
+        const kpiRow = results[0][0] || {}; // First row of first result set  
+        const trendData = results[1] || []; // Second result set (daily trends)
+        const geographic = results[2] || []; // Third result set (geographic data)
+        
+        console.log('📊 Raw stored procedure results:', results.length, 'result sets');
+        console.log('📊 Results[0] (status):', results[0]);
+        console.log('📊 Results[1] (KPIs):', results[1]);
+        console.log('📊 KPI Row:', JSON.stringify(kpiRow, null, 2));
+        
+        // The stored procedure returns: [status], [kpis], [trends], [geographic]
+        // So we need to adjust the indices
+        const actualKpiRow = results[1] && results[1][0] ? results[1][0] : {};
+        const actualTrendData = results[2] || [];
+        const actualGeographic = results[3] || [];
+        
+        console.log('📊 Actual KPI Row:', JSON.stringify(actualKpiRow, null, 2));
+        
+        // Format KPI data for frontend - use the actual data from stored procedure
+        const kpis = {
+            total_donations: actualKpiRow.total_donations || 0,
+            unique_donors: actualKpiRow.unique_donors || 0,
+            total_amount_raised: parseFloat(actualKpiRow.total_amount) || 0,
+            average_donation: parseFloat(actualKpiRow.average_donation) || 0,
+            min_donation: parseFloat(actualKpiRow.min_donation) || 0,
+            max_donation: parseFloat(actualKpiRow.max_donation) || 0,
+            campaigns_supported: actualKpiRow.campaigns_supported || 0,
+            active_days: actualKpiRow.active_days || 0,
+            
+            // Restored metrics from stored procedure  
+            active_campaigns: actualKpiRow.active_campaigns || 0,
+            repeat_donors: actualKpiRow.repeat_donors || 0,
+            
+            // Calculate growth (for now, set to 0 as we don't have comparison data)
+            amount_growth: 0,
+            donor_growth: 0,
+            donation_growth: 0,
+            avg_growth: 0
+        };
+        
+        console.log('📊 KPIs retrieved:', Object.keys(kpis).length, 'metrics');
+        console.log('📊 KPI values:', JSON.stringify(kpis, null, 2));
+        console.log('📊 Trends retrieved:', actualTrendData.length, 'days');
+        console.log('📊 Geographic data:', actualGeographic.length, 'regions');
+        
+        res.json({
+            success: true,
+            data: {
+                kpis: kpis,
+                trends: actualTrendData,
+                geographic: actualGeographic,
+                period: {
+                    start: start_date,
+                    end: end_date
+                }
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Analytics overview error:', error);
+        
+        // Fallback to basic queries if stored procedure fails
+        try {
+            const [overviewData] = await adminDb.execute(`
+                SELECT * FROM v_donation_overview 
+                WHERE (? IS NULL OR donation_date >= ?) 
+                AND (? IS NULL OR donation_date <= ?)
+                LIMIT 1
+            `, [start_date, start_date, end_date, end_date]);
+            
+            const [trendsData] = await adminDb.execute(`
+                SELECT * FROM v_donation_trends_monthly 
+                WHERE (? IS NULL OR donation_month >= DATE_FORMAT(?, '%Y-%m')) 
+                AND (? IS NULL OR donation_month <= DATE_FORMAT(?, '%Y-%m'))
+                ORDER BY donation_month DESC
+                LIMIT 12
+            `, [start_date, start_date, end_date, end_date]);
+            
+            res.json({
+                success: true,
+                data: {
+                    kpis: overviewData[0] || {},
+                    trends: trendsData,
+                    period: {
+                        start: start_date,
+                        end: end_date
+                    }
+                }
+            });
+            
+        } catch (fallbackError) {
+            console.error('❌ Analytics fallback error:', fallbackError);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to fetch analytics data',
+                error: error.message
+            });
+        }
+    }
+});
+
+// Detailed analytics with trend analysis
+router.get('/analytics/detailed', authenticateAdmin, async (req, res) => {
+    try {
+        const { start_date, end_date, period = 'month' } = req.query;
+        
+        // Call trend analysis stored procedure
+        const [results] = await adminDb.execute(
+            'CALL sp_get_trend_analysis(?, ?, ?)',
+            [start_date || null, end_date || null, period]
+        );
+        
+        res.json({
+            success: true,
+            data: results[0] || []
+        });
+        
+    } catch (error) {
+        console.error('❌ Detailed analytics error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch detailed analytics',
+            error: error.message
+        });
+    }
+});
+
+// Donor insights and segmentation
+router.get('/analytics/donors', authenticateAdmin, async (req, res) => {
+    try {
+        const { start_date, end_date } = req.query;
+        
+        // Get donor segmentation data
+        const [segmentData] = await adminDb.execute(`
+            SELECT * FROM v_donor_analytics 
+            WHERE (? IS NULL OR last_donation_date >= ?) 
+            AND (? IS NULL OR last_donation_date <= ?)
+            ORDER BY total_donated DESC
+        `, [start_date, start_date, end_date, end_date]);
+        
+        // Get top donors
+        const [topDonors] = await adminDb.execute(`
+            SELECT 
+                CONCAT(d.first_name, ' ', d.last_name) as donor_name,
+                d.email,
+                SUM(don.amount) as total_amount,
+                COUNT(don.donation_id) as donation_count,
+                MAX(don.paid_at) as last_donation_date,
+                fn_donor_segment_score(
+                    SUM(don.amount), 
+                    COUNT(don.donation_id), 
+                    DATEDIFF(CURDATE(), MAX(don.paid_at))
+                ) as segment_score
+            FROM DONOR d
+            JOIN DONATION don ON d.donor_id = don.donor_id
+            WHERE (? IS NULL OR don.paid_at >= ?) 
+            AND (? IS NULL OR don.paid_at <= ?)
+            GROUP BY d.donor_id, d.first_name, d.last_name, d.email
+            ORDER BY total_amount DESC
+            LIMIT 20
+        `, [start_date, start_date, end_date, end_date]);
+        
+        // Add segment labels to top donors
+        const topDonorsWithSegments = topDonors.map(donor => {
+            let segment = 'New';
+            const score = donor.segment_score || 0;
+            
+            if (score >= 8) segment = 'Champion';
+            else if (score >= 6) segment = 'Loyal';
+            else if (score >= 4) segment = 'Regular';
+            else if (score >= 2) segment = 'Repeat';
+            
+            return { ...donor, segment };
+        });
+        
+        // Group segments for chart
+        const segments = segmentData.reduce((acc, row) => {
+            const existing = acc.find(s => s.segment === row.segment);
+            if (existing) {
+                existing.donor_count += row.donor_count || 0;
+                existing.total_amount += parseFloat(row.total_amount || 0);
+            } else {
+                acc.push({
+                    segment: row.segment,
+                    donor_count: row.donor_count || 0,
+                    total_amount: parseFloat(row.total_amount || 0),
+                    avg_donation: parseFloat(row.avg_donation || 0)
+                });
+            }
+            return acc;
+        }, []);
+        
+        res.json({
+            success: true,
+            data: {
+                segments: segments,
+                top_donors: topDonorsWithSegments
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Donor analytics error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch donor analytics',
+            error: error.message
+        });
+    }
+});
+
+// Trends analysis
+router.get('/analytics/trends', authenticateAdmin, async (req, res) => {
+    try {
+        const { start_date, end_date, period = 'month' } = req.query;
+        
+        const [trendsData] = await adminDb.execute(`
+            SELECT 
+                YEAR(paid_at) as donation_year,
+                MONTH(paid_at) as donation_month,
+                DATE_FORMAT(paid_at, '%Y-%m') as month_year,
+                DATE_FORMAT(paid_at, '%M %Y') as month_name,
+                COUNT(donation_id) as donation_count,
+                COUNT(DISTINCT donor_id) as unique_donors,
+                SUM(amount) as total_amount,
+                AVG(amount) as avg_amount
+            FROM DONATION 
+            WHERE (? IS NULL OR paid_at >= ?) 
+            AND (? IS NULL OR paid_at <= ?)
+            GROUP BY YEAR(paid_at), MONTH(paid_at), DATE_FORMAT(paid_at, '%Y-%m'), DATE_FORMAT(paid_at, '%M %Y')
+            ORDER BY YEAR(paid_at) DESC, MONTH(paid_at) DESC
+            LIMIT 24
+        `, [start_date, start_date, end_date, end_date]);
+        
+        // Calculate growth rates
+        const trendsWithGrowth = trendsData.map((current, index) => {
+            if (index < trendsData.length - 1) {
+                const previous = trendsData[index + 1];
+                const growthRate = previous.total_amount > 0 
+                    ? ((current.total_amount - previous.total_amount) / previous.total_amount) * 100 
+                    : 0;
+                
+                return {
+                    period: current.donation_month,
+                    total_amount: current.total_amount,
+                    donation_count: current.donation_count,
+                    unique_donors: current.unique_donors,
+                    avg_donation: current.avg_donation,
+                    growth_rate: growthRate
+                };
+            }
+            
+            return {
+                period: current.donation_month,
+                total_amount: current.total_amount,
+                donation_count: current.donation_count,
+                unique_donors: current.unique_donors,
+                avg_donation: current.avg_donation,
+                growth_rate: 0
+            };
+        });
+        
+        res.json({
+            success: true,
+            data: trendsWithGrowth
+        });
+        
+    } catch (error) {
+        console.error('❌ Trends analytics error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch trends analytics',
+            error: error.message
+        });
+    }
+});
+
+// Geographic distribution
+router.get('/analytics/geographic', authenticateAdmin, async (req, res) => {
+    try {
+        const { start_date, end_date } = req.query;
+        
+        const [geoData] = await adminDb.execute(`
+            SELECT * FROM v_geographic_distribution 
+            WHERE (? IS NULL OR last_donation >= ?) 
+            AND (? IS NULL OR last_donation <= ?)
+            ORDER BY total_amount DESC
+        `, [start_date, start_date, end_date, end_date]);
+        
+        // Separate countries and divisions
+        const countries = geoData.filter(row => row.country).map(row => ({
+            country: row.country,
+            total_amount: parseFloat(row.total_amount || 0),
+            donor_count: row.donor_count || 0,
+            donation_count: row.donation_count || 0
+        }));
+        
+        const divisions = geoData.filter(row => row.division && row.country === 'Bangladesh').map(row => ({
+            division: row.division,
+            total_amount: parseFloat(row.total_amount || 0),
+            donor_count: row.donor_count || 0,
+            donation_count: row.donation_count || 0
+        }));
+        
+        res.json({
+            success: true,
+            data: {
+                countries: countries,
+                divisions: divisions
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Geographic analytics error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch geographic analytics',
+            error: error.message
+        });
+    }
+});
+
+// Campaign performance
+router.get('/analytics/campaigns', authenticateAdmin, async (req, res) => {
+    try {
+        const { start_date, end_date } = req.query;
+        
+        const [campaignData] = await adminDb.execute(`
+            SELECT * FROM v_campaign_performance 
+            WHERE (? IS NULL OR last_donation >= ?) 
+            AND (? IS NULL OR last_donation <= ?)
+            ORDER BY amount_received DESC
+            LIMIT 50
+        `, [start_date, start_date, end_date, end_date]);
+        
+        res.json({
+            success: true,
+            data: campaignData.map(row => ({
+                ...row,
+                total_amount: parseFloat(row.amount_received || 0),
+                avg_donation: parseFloat(row.avg_donation || 0),
+                success_rate: parseFloat(row.success_rate || 0)
+            }))
+        });
+        
+    } catch (error) {
+        console.error('❌ Campaign analytics error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch campaign analytics',
+            error: error.message
+        });
+    }
+});
+
+// Real-time analytics (cached)
+router.get('/analytics/realtime', authenticateAdmin, async (req, res) => {
+    try {
+        // Get real-time stats from the last 24 hours
+        const [realtimeStats] = await adminDb.execute(`
+            SELECT 
+                COUNT(*) as donations_today,
+                COALESCE(SUM(amount), 0) as amount_today,
+                COUNT(DISTINCT donor_id) as unique_donors_today
+            FROM DONATION 
+            WHERE DATE(paid_at) = CURDATE()
+        `);
+        
+        const [hourlyStats] = await adminDb.execute(`
+            SELECT 
+                HOUR(paid_at) as hour_of_day,
+                COUNT(*) as donation_count,
+                SUM(amount) as total_amount
+            FROM DONATION 
+            WHERE DATE(paid_at) = CURDATE()
+            GROUP BY HOUR(paid_at)
+            ORDER BY hour_of_day
+        `);
+        
+        res.json({
+            success: true,
+            data: {
+                today_summary: realtimeStats[0],
+                hourly_breakdown: hourlyStats
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Real-time analytics error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch real-time analytics',
+            error: error.message
+        });
+    }
+});
+
+// Export analytics data
+router.get('/analytics/export', authenticateAdmin, async (req, res) => {
+    try {
+        const { type, format, start_date, end_date } = req.query;
+        
+        let data = [];
+        let filename = 'analytics_export';
+        
+        switch (type) {
+            case 'donations':
+                const [donationData] = await adminDb.execute(`
+                    SELECT 
+                        d.donation_id,
+                        don.donor_name,
+                        don.email,
+                        d.amount,
+                        d.paid_at,
+                        ec.title as campaign_name,
+                        ec.verification_status
+                    FROM DONATION d
+                    LEFT JOIN DONOR don ON d.donor_id = don.donor_id
+                    LEFT JOIN EVENT_CREATION ec ON d.creation_id = ec.creation_id
+                    WHERE (? IS NULL OR DATE(d.paid_at) >= ?) 
+                    AND (? IS NULL OR DATE(d.paid_at) <= ?)
+                    ORDER BY d.paid_at DESC
+                `, [start_date, start_date, end_date, end_date]);
+                data = donationData;
+                filename = 'donations_export';
+                break;
+                
+            case 'donors':
+                const [donorData] = await adminDb.execute(`
+                    SELECT 
+                        d.donor_id,
+                        d.donor_name,
+                        d.email,
+                        d.mobile,
+                        d.country,
+                        d.division,
+                        COUNT(don.donation_id) as total_donations,
+                        SUM(don.amount) as total_amount,
+                        MAX(don.paid_at) as last_donation
+                    FROM DONOR d
+                    LEFT JOIN DONATION don ON d.donor_id = don.donor_id
+                    WHERE (? IS NULL OR DATE(don.paid_at) >= ?) 
+                    AND (? IS NULL OR DATE(don.paid_at) <= ?)
+                    GROUP BY d.donor_id
+                    ORDER BY total_amount DESC
+                `, [start_date, start_date, end_date, end_date]);
+                data = donorData;
+                filename = 'donors_export';
+                break;
+                
+            case 'campaigns':
+                const [campaignData] = await adminDb.execute(`
+                    SELECT * FROM v_campaign_performance 
+                    WHERE (? IS NULL OR last_donation >= ?) 
+                    AND (? IS NULL OR last_donation <= ?)
+                    ORDER BY total_donated DESC
+                `, [start_date, start_date, end_date, end_date]);
+                data = campaignData;
+                filename = 'campaigns_export';
+                break;
+                
+            case 'trends':
+                const [trendsData] = await adminDb.execute(`
+                    SELECT * FROM v_donation_trends_monthly 
+                    WHERE (? IS NULL OR month_year >= ?) 
+                    AND (? IS NULL OR month_year <= ?)
+                    ORDER BY donation_year ASC, donation_month ASC
+                `, [start_date, start_date, end_date, end_date]);
+                data = trendsData;
+                filename = 'trends_export';
+                break;
+                
+            default:
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid export type'
+                });
+        }
+        
+        if (format === 'csv') {
+            // Convert to CSV
+            if (data.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'No data to export'
+                });
+            }
+            
+            const headers = Object.keys(data[0]);
+            const csvContent = [
+                headers.join(','),
+                ...data.map(row => 
+                    headers.map(header => {
+                        const value = row[header];
+                        return typeof value === 'string' ? `"${value.replace(/"/g, '""')}"` : value;
+                    }).join(',')
+                )
+            ].join('\n');
+            
+            res.setHeader('Content-Type', 'text/csv');
+            res.setHeader('Content-Disposition', `attachment; filename="${filename}.csv"`);
+            res.send(csvContent);
+            
+        } else if (format === 'json') {
+            res.setHeader('Content-Type', 'application/json');
+            res.setHeader('Content-Disposition', `attachment; filename="${filename}.json"`);
+            res.json(data);
+            
+        } else {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid format. Use csv or json'
+            });
+        }
+        
+    } catch (error) {
+        console.error('❌ Export error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to export data',
+            error: error.message
+        });
+    }
+});
+
+// Refresh analytics cache
+router.post('/analytics/refresh-cache', authenticateAdmin, async (req, res) => {
+    try {
+        console.log('🔄 Refreshing analytics cache...');
+        
+        // Call cache refresh stored procedure
+        await adminDb.execute('CALL sp_refresh_analytics_cache()');
+        
+        res.json({
+            success: true,
+            message: 'Analytics cache refreshed successfully'
+        });
+        
+    } catch (error) {
+        console.error('❌ Cache refresh error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to refresh cache',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;

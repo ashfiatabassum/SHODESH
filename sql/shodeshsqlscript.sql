@@ -1940,3 +1940,826 @@ BEGIN
 END $$
 DELIMITER ;
 
+-- donation analytic ---
+
+-- ==================================================================
+-- DONATION ANALYTICS VIEWS
+-- Advanced SQL with Joins, Subqueries, Window Functions, and CTEs
+-- ==================================================================
+
+USE shodesh;
+
+-- ==================================================================
+-- DONATION ANALYTICS VIEWS (CORRECTED)
+-- Advanced SQL with Joins, Subqueries, Window Functions, and CTEs
+-- ==================================================================
+
+USE shodesh;
+
+-- Drop existing analytics views if they exist
+DROP VIEW IF EXISTS v_donation_overview;
+DROP VIEW IF EXISTS v_donation_trends_monthly;
+DROP VIEW IF EXISTS v_donor_analytics;
+DROP VIEW IF EXISTS v_geographic_distribution;
+DROP VIEW IF EXISTS v_campaign_performance;
+DROP VIEW IF EXISTS v_top_performers;
+
+-- ==================================================================
+-- 1. DONATION OVERVIEW - Comprehensive KPIs with Complex Joins
+-- ==================================================================
+CREATE VIEW v_donation_overview AS
+SELECT 
+    -- Total Statistics
+    COUNT(d.donation_id) as total_donations,
+    COUNT(DISTINCT d.donor_id) as unique_donors,
+    SUM(d.amount) as total_amount_raised,
+    AVG(d.amount) as average_donation,
+    
+    -- Time-based Statistics (Current Month)
+    SUM(CASE 
+        WHEN YEAR(d.paid_at) = YEAR(CURDATE()) 
+        AND MONTH(d.paid_at) = MONTH(CURDATE()) 
+        THEN d.amount 
+        ELSE 0 
+    END) as current_month_raised,
+    
+    COUNT(CASE 
+        WHEN YEAR(d.paid_at) = YEAR(CURDATE()) 
+        AND MONTH(d.paid_at) = MONTH(CURDATE()) 
+        THEN d.donation_id 
+    END) as current_month_donations,
+    
+    -- Previous Month for Growth Calculation
+    SUM(CASE 
+        WHEN YEAR(d.paid_at) = YEAR(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
+        AND MONTH(d.paid_at) = MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
+        THEN d.amount 
+        ELSE 0 
+    END) as previous_month_raised,
+    
+    -- Active Events Statistics
+    (SELECT COUNT(DISTINCT ec.creation_id) 
+     FROM EVENT_CREATION ec 
+     WHERE ec.creation_id IN (
+         SELECT DISTINCT d2.creation_id 
+         FROM DONATION d2 
+         WHERE d2.paid_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+     )
+    ) as active_events_last_30_days,
+    
+    -- Goal Achievement Rate
+    (SELECT 
+        AVG(CASE 
+            WHEN ec.amount_needed > 0 
+            THEN (ec.amount_received / ec.amount_needed) * 100 
+            ELSE 0 
+        END)
+     FROM EVENT_CREATION ec
+     WHERE ec.amount_received > 0
+    ) as avg_goal_achievement_rate,
+    
+    CURDATE() as calculation_date
+
+FROM DONATION d
+LEFT JOIN EVENT_CREATION ec ON d.creation_id = ec.creation_id
+LEFT JOIN DONOR dr ON d.donor_id = dr.donor_id;
+
+-- ==================================================================
+-- 2. MONTHLY TRENDS - Time Series Analysis with Window Functions
+-- ==================================================================
+CREATE VIEW v_donation_trends_monthly AS
+WITH monthly_stats AS (
+    SELECT 
+        YEAR(d.paid_at) as donation_year,
+        MONTH(d.paid_at) as donation_month,
+        DATE_FORMAT(d.paid_at, '%Y-%m') as month_year,
+        DATE_FORMAT(d.paid_at, '%M %Y') as month_name,
+        COUNT(d.donation_id) as donation_count,
+        COUNT(DISTINCT d.donor_id) as unique_donors,
+        SUM(d.amount) as total_amount,
+        AVG(d.amount) as avg_amount
+    FROM DONATION d
+    WHERE d.paid_at >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+    GROUP BY YEAR(d.paid_at), MONTH(d.paid_at)
+),
+trend_calculations AS (
+    SELECT 
+        donation_year,
+        donation_month,
+        donation_month as month_year,
+        month_name,
+        donation_count,
+        unique_donors,
+        total_amount,
+        avg_amount,
+        -- Window function for growth calculations
+        LAG(total_amount, 1) OVER (ORDER BY donation_year, donation_month) as prev_month_amount,
+        LAG(donation_count, 1) OVER (ORDER BY donation_year, donation_month) as prev_month_count,
+        -- Running totals
+        SUM(total_amount) OVER (ORDER BY donation_year, donation_month ROWS UNBOUNDED PRECEDING) as cumulative_amount,
+        -- Moving averages
+        AVG(total_amount) OVER (ORDER BY donation_year, donation_month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) as moving_avg_3month
+    FROM monthly_stats
+)
+SELECT 
+    donation_year,
+    donation_month,
+    month_year,
+    month_name,
+    donation_count,
+    unique_donors,
+    total_amount,
+    avg_amount,
+    cumulative_amount,
+    moving_avg_3month,
+    -- Growth calculations
+    CASE 
+        WHEN prev_month_amount > 0 
+        THEN ROUND(((total_amount - prev_month_amount) / prev_month_amount) * 100, 2)
+        ELSE 0 
+    END as amount_growth_percent,
+    CASE 
+        WHEN prev_month_count > 0 
+        THEN ROUND(((donation_count - prev_month_count) / prev_month_count) * 100, 2)
+        ELSE 0 
+    END as count_growth_percent
+FROM trend_calculations
+ORDER BY donation_year DESC, donation_month DESC;
+
+-- ==================================================================
+-- 3. DONOR ANALYTICS - Advanced Donor Segmentation
+-- ==================================================================
+CREATE VIEW v_donor_analytics AS
+WITH donor_stats AS (
+    SELECT 
+        dr.donor_id,
+        CONCAT(COALESCE(dr.first_name, ''), ' ', COALESCE(dr.last_name, '')) as donor_name,
+        dr.email,
+        dr.country,
+        dr.division,
+        dr.profile_created_at,
+        COUNT(d.donation_id) as total_donations,
+        SUM(d.amount) as total_donated,
+        AVG(d.amount) as avg_donation,
+        MIN(d.paid_at) as first_donation_date,
+        MAX(d.paid_at) as last_donation_date,
+        DATEDIFF(MAX(d.paid_at), MIN(d.paid_at)) as donor_lifespan_days
+    FROM DONOR dr
+    LEFT JOIN DONATION d ON dr.donor_id = d.donor_id
+    WHERE d.donation_id IS NOT NULL
+    GROUP BY dr.donor_id
+),
+donor_segments AS (
+    SELECT 
+        *,
+        -- Donor Value Segmentation
+        CASE 
+            WHEN total_donated >= 10000 THEN 'Champion'
+            WHEN total_donated >= 5000 THEN 'Loyal'
+            WHEN total_donated >= 1000 THEN 'Regular'
+            WHEN total_donated >= 500 THEN 'Repeat'
+            ELSE 'New'
+        END as segment,
+        
+        -- Donation Frequency Segmentation
+        CASE 
+            WHEN total_donations >= 10 THEN 'Frequent'
+            WHEN total_donations >= 5 THEN 'Regular'
+            WHEN total_donations >= 2 THEN 'Occasional'
+            ELSE 'One-time'
+        END as frequency_segment,
+        
+        -- Recency Segmentation
+        CASE 
+            WHEN DATEDIFF(CURDATE(), last_donation_date) <= 30 THEN 'Recent'
+            WHEN DATEDIFF(CURDATE(), last_donation_date) <= 90 THEN 'Active'
+            WHEN DATEDIFF(CURDATE(), last_donation_date) <= 365 THEN 'At Risk'
+            ELSE 'Inactive'
+        END as recency_segment
+    FROM donor_stats
+)
+SELECT 
+    *,
+    -- Donor Score (weighted combination of segments)
+    (CASE segment 
+        WHEN 'Champion' THEN 4 
+        WHEN 'Loyal' THEN 3 
+        WHEN 'Regular' THEN 2 
+        WHEN 'Repeat' THEN 2
+        ELSE 1 
+    END +
+    CASE frequency_segment 
+        WHEN 'Frequent' THEN 4 
+        WHEN 'Regular' THEN 3 
+        WHEN 'Occasional' THEN 2 
+        ELSE 1 
+    END +
+    CASE recency_segment 
+        WHEN 'Recent' THEN 4 
+        WHEN 'Active' THEN 3 
+        WHEN 'At Risk' THEN 2 
+        ELSE 1 
+    END) as donor_score
+FROM donor_segments
+ORDER BY donor_score DESC, total_donated DESC;
+
+-- ==================================================================
+-- 4. GEOGRAPHIC DISTRIBUTION - Location-based Analytics
+-- ==================================================================
+CREATE VIEW v_geographic_distribution AS
+SELECT 
+    COALESCE(dr.country, 'Unknown') as country,
+    COALESCE(dr.division, 'Other') as division,
+    COUNT(DISTINCT dr.donor_id) as donor_count,
+    COUNT(d.donation_id) as donation_count,
+    SUM(d.amount) as total_amount,
+    AVG(d.amount) as avg_donation,
+    MAX(d.paid_at) as last_donation
+FROM DONOR dr
+LEFT JOIN DONATION d ON dr.donor_id = d.donor_id
+WHERE d.donation_id IS NOT NULL
+GROUP BY dr.country, dr.division
+ORDER BY total_amount DESC;
+
+-- ==================================================================
+-- 5. CAMPAIGN PERFORMANCE - Event Success Analysis
+-- ==================================================================
+CREATE VIEW v_campaign_performance AS
+WITH event_stats AS (
+    SELECT 
+        ec.creation_id,
+        ec.title as event_name,
+        ec.creator_type,
+        CASE ec.creator_type 
+            WHEN 'foundation' THEN COALESCE(f.foundation_name, 'Unknown Foundation')
+            ELSE CONCAT(COALESCE(i.first_name, ''), ' ', COALESCE(i.last_name, ''))
+        END as creator_name,
+        ec.amount_needed,
+        ec.amount_received,
+        ec.verification_status as event_status,
+        COUNT(d.donation_id) as total_donations,
+        COUNT(DISTINCT d.donor_id) as unique_donors,
+        AVG(d.amount) as avg_donation,
+        MIN(d.paid_at) as first_donation,
+        MAX(d.paid_at) as last_donation,
+        COALESCE(DATEDIFF(CURDATE(), MIN(d.paid_at)), 0) as days_active
+    FROM EVENT_CREATION ec
+    LEFT JOIN DONATION d ON ec.creation_id = d.creation_id
+    LEFT JOIN FOUNDATION f ON ec.foundation_id = f.foundation_id
+    LEFT JOIN INDIVIDUAL i ON ec.individual_id = i.individual_id
+    GROUP BY ec.creation_id
+    HAVING total_donations > 0
+)
+SELECT 
+    *,
+    -- Goal achievement rate
+    CASE 
+        WHEN amount_needed > 0 
+        THEN ROUND((amount_received / amount_needed) * 100, 2)
+        ELSE 0 
+    END as success_rate,
+    
+    -- Efficiency metrics
+    CASE 
+        WHEN days_active > 0 
+        THEN ROUND(amount_received / days_active, 2)
+        ELSE amount_received 
+    END as daily_average
+FROM event_stats
+ORDER BY success_rate DESC, amount_received DESC;
+
+-- ==================================================================
+-- 6. TOP PERFORMERS - Leaderboards (SIMPLIFIED)
+-- ==================================================================
+CREATE VIEW v_top_performers AS
+-- Top Donors by Total Amount
+SELECT 
+    'donor' as performer_type,
+    'total_amount' as metric_type,
+    CONCAT(COALESCE(dr.first_name, ''), ' ', COALESCE(dr.last_name, '')) as name,
+    dr.donor_id as id,
+    SUM(d.amount) as value,
+    COUNT(d.donation_id) as transaction_count,
+    MAX(d.paid_at) as last_activity
+FROM DONOR dr
+INNER JOIN DONATION d ON dr.donor_id = d.donor_id
+GROUP BY dr.donor_id, dr.first_name, dr.last_name
+ORDER BY value DESC
+LIMIT 10;
+
+-- ==================================================================
+-- DONATION ANALYTICS STORED PROCEDURES & FUNCTIONS
+-- Advanced PL/SQL with Exception Handling, Complex Logic, and Validation
+-- ==================================================================
+
+USE shodesh;
+
+-- Drop existing procedures and functions
+DROP FUNCTION IF EXISTS fn_calculate_growth_rate;
+DROP FUNCTION IF EXISTS fn_donor_segment_score;
+DROP FUNCTION IF EXISTS fn_campaign_health_score;
+DROP PROCEDURE IF EXISTS sp_get_donation_analytics;
+DROP PROCEDURE IF EXISTS sp_get_donor_insights;
+DROP PROCEDURE IF EXISTS sp_get_trend_analysis;
+DROP PROCEDURE IF EXISTS sp_refresh_analytics_cache;
+
+DELIMITER $$
+
+-- ==================================================================
+-- 1. UTILITY FUNCTIONS
+-- ==================================================================
+
+-- Function to calculate growth rate with error handling
+CREATE FUNCTION fn_calculate_growth_rate(
+    current_value DECIMAL(12,2),
+    previous_value DECIMAL(12,2)
+) RETURNS DECIMAL(10,2)
+READS SQL DATA
+DETERMINISTIC
+BEGIN
+    DECLARE growth_rate DECIMAL(10,2) DEFAULT 0.00;
+    
+    -- Handle division by zero and null values
+    IF previous_value IS NULL OR previous_value = 0 THEN
+        IF current_value > 0 THEN
+            RETURN 100.00; -- 100% growth from zero
+        ELSE
+            RETURN 0.00;
+        END IF;
+    END IF;
+    
+    IF current_value IS NULL THEN
+        SET current_value = 0;
+    END IF;
+    
+    SET growth_rate = ((current_value - previous_value) / previous_value) * 100;
+    
+    -- Cap extreme values
+    IF growth_rate > 1000 THEN
+        SET growth_rate = 1000.00;
+    ELSEIF growth_rate < -100 THEN
+        SET growth_rate = -100.00;
+    END IF;
+    
+    RETURN ROUND(growth_rate, 2);
+END$$
+
+-- Function to calculate donor segment score
+CREATE FUNCTION fn_donor_segment_score(
+    total_donated DECIMAL(12,2),
+    donation_count INT,
+    days_since_last_donation INT
+) RETURNS INT
+READS SQL DATA
+DETERMINISTIC
+BEGIN
+    DECLARE value_score INT DEFAULT 0;
+    DECLARE frequency_score INT DEFAULT 0;
+    DECLARE recency_score INT DEFAULT 0;
+    DECLARE total_score INT DEFAULT 0;
+    
+    -- Value Score (1-4)
+    IF total_donated >= 10000 THEN SET value_score = 4;
+    ELSEIF total_donated >= 5000 THEN SET value_score = 3;
+    ELSEIF total_donated >= 1000 THEN SET value_score = 2;
+    ELSE SET value_score = 1;
+    END IF;
+    
+    -- Frequency Score (1-4)
+    IF donation_count >= 10 THEN SET frequency_score = 4;
+    ELSEIF donation_count >= 5 THEN SET frequency_score = 3;
+    ELSEIF donation_count >= 2 THEN SET frequency_score = 2;
+    ELSE SET frequency_score = 1;
+    END IF;
+    
+    -- Recency Score (1-4)
+    IF days_since_last_donation <= 30 THEN SET recency_score = 4;
+    ELSEIF days_since_last_donation <= 90 THEN SET recency_score = 3;
+    ELSEIF days_since_last_donation <= 365 THEN SET recency_score = 2;
+    ELSE SET recency_score = 1;
+    END IF;
+    
+    SET total_score = value_score + frequency_score + recency_score;
+    
+    RETURN total_score;
+END$$
+
+-- Function to calculate campaign health score
+CREATE FUNCTION fn_campaign_health_score(
+    amount_needed DECIMAL(12,2),
+    amount_received DECIMAL(12,2),
+    donation_count INT,
+    days_active INT
+) RETURNS DECIMAL(5,2)
+READS SQL DATA
+DETERMINISTIC
+BEGIN
+    DECLARE health_score DECIMAL(5,2) DEFAULT 0.00;
+    DECLARE goal_ratio DECIMAL(5,2) DEFAULT 0.00;
+    DECLARE activity_score DECIMAL(5,2) DEFAULT 0.00;
+    DECLARE momentum_score DECIMAL(5,2) DEFAULT 0.00;
+    DECLARE daily_avg DECIMAL(10,2) DEFAULT 0.00;
+    
+    -- Handle edge cases
+    IF amount_needed <= 0 OR amount_received IS NULL THEN
+        RETURN 0.00;
+    END IF;
+    
+    -- Goal achievement ratio (0-40 points)
+    SET goal_ratio = LEAST((amount_received / amount_needed) * 40, 40);
+    
+    -- Activity score based on donation count (0-30 points)
+    IF donation_count >= 50 THEN SET activity_score = 30;
+    ELSEIF donation_count >= 20 THEN SET activity_score = 25;
+    ELSEIF donation_count >= 10 THEN SET activity_score = 20;
+    ELSEIF donation_count >= 5 THEN SET activity_score = 15;
+    ELSEIF donation_count >= 1 THEN SET activity_score = 10;
+    ELSE SET activity_score = 0;
+    END IF;
+    
+    -- Momentum score based on daily average (0-30 points)
+    IF days_active > 0 THEN
+        SET daily_avg = amount_received / days_active;
+        
+        IF daily_avg >= 1000 THEN SET momentum_score = 30;
+        ELSEIF daily_avg >= 500 THEN SET momentum_score = 25;
+        ELSEIF daily_avg >= 100 THEN SET momentum_score = 20;
+        ELSEIF daily_avg >= 50 THEN SET momentum_score = 15;
+        ELSEIF daily_avg >= 10 THEN SET momentum_score = 10;
+        ELSE SET momentum_score = 5;
+        END IF;
+    ELSE
+        SET momentum_score = 0;
+    END IF;
+    
+    SET health_score = goal_ratio + activity_score + momentum_score;
+    
+    RETURN ROUND(health_score, 2);
+END$$
+
+-- ==================================================================
+-- 2. MAIN ANALYTICS PROCEDURES
+-- ==================================================================
+
+-- Comprehensive donation analytics procedure
+
+
+-- Donor insights procedure with segmentation
+CREATE PROCEDURE sp_get_donor_insights(
+    IN p_limit INT,
+    IN p_min_donations INT
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1
+            @sql_state = RETURNED_SQLSTATE,
+            @error_message = MESSAGE_TEXT;
+        
+        SELECT 
+            'error' as status,
+            @sql_state as sql_state,
+            @error_message as message,
+            'sp_get_donor_insights' as procedure_name;
+    END;
+    
+    -- Set default values
+    IF p_limit IS NULL OR p_limit <= 0 OR p_limit > 1000 THEN
+        SET p_limit = 50;
+    END IF;
+    
+    IF p_min_donations IS NULL OR p_min_donations < 1 THEN
+        SET p_min_donations = 1;
+    END IF;
+    
+    SELECT 'success' as status, 'Donor insights retrieved successfully' as message;
+    
+    -- Detailed donor analysis with custom scoring
+    SELECT 
+        dr.donor_id,
+        CONCAT(dr.first_name, ' ', dr.last_name) as donor_name,
+        dr.country,
+        dr.division,
+        COUNT(d.donation_id) as total_donations,
+        SUM(d.amount) as total_donated,
+        AVG(d.amount) as avg_donation,
+        MIN(d.paid_at) as first_donation,
+        MAX(d.paid_at) as last_donation,
+        DATEDIFF(CURDATE(), MAX(d.paid_at)) as days_since_last_donation,
+        DATEDIFF(MAX(d.paid_at), MIN(d.paid_at)) as donor_lifespan_days,
+        
+        -- Calculate custom scores using our function
+        fn_donor_segment_score(
+            SUM(d.amount), 
+            COUNT(d.donation_id), 
+            DATEDIFF(CURDATE(), MAX(d.paid_at))
+        ) as donor_score,
+        
+        -- Donation frequency (donations per month)
+        CASE 
+            WHEN DATEDIFF(MAX(d.paid_at), MIN(d.paid_at)) > 0
+            THEN ROUND(COUNT(d.donation_id) / (DATEDIFF(MAX(d.paid_at), MIN(d.paid_at)) / 30), 2)
+            ELSE COUNT(d.donation_id)
+        END as donations_per_month,
+        
+        -- Engagement categories
+        CASE 
+            WHEN COUNT(d.donation_id) >= 10 AND SUM(d.amount) >= 5000 THEN 'Champion'
+            WHEN COUNT(d.donation_id) >= 5 AND SUM(d.amount) >= 2000 THEN 'Loyal'
+            WHEN COUNT(d.donation_id) >= 3 AND SUM(d.amount) >= 1000 THEN 'Regular'
+            WHEN COUNT(d.donation_id) >= 2 THEN 'Repeat'
+            ELSE 'New'
+        END as engagement_category
+        
+    FROM DONOR dr
+    INNER JOIN DONATION d ON dr.donor_id = d.donor_id
+    GROUP BY dr.donor_id
+    HAVING COUNT(d.donation_id) >= p_min_donations
+    ORDER BY donor_score DESC, total_donated DESC
+    LIMIT p_limit;
+    
+    -- Donor segmentation summary
+    SELECT 
+        engagement_category,
+        COUNT(*) as donor_count,
+        SUM(total_donated) as segment_total,
+        AVG(total_donated) as avg_donated_per_donor,
+        AVG(donor_score) as avg_score
+    FROM (
+        SELECT 
+            dr.donor_id,
+            SUM(d.amount) as total_donated,
+            fn_donor_segment_score(
+                SUM(d.amount), 
+                COUNT(d.donation_id), 
+                DATEDIFF(CURDATE(), MAX(d.paid_at))
+            ) as donor_score,
+            CASE 
+                WHEN COUNT(d.donation_id) >= 10 AND SUM(d.amount) >= 5000 THEN 'Champion'
+                WHEN COUNT(d.donation_id) >= 5 AND SUM(d.amount) >= 2000 THEN 'Loyal'
+                WHEN COUNT(d.donation_id) >= 3 AND SUM(d.amount) >= 1000 THEN 'Regular'
+                WHEN COUNT(d.donation_id) >= 2 THEN 'Repeat'
+                ELSE 'New'
+            END as engagement_category
+        FROM DONOR dr
+        INNER JOIN DONATION d ON dr.donor_id = d.donor_id
+        GROUP BY dr.donor_id
+    ) segment_data
+    GROUP BY engagement_category
+    ORDER BY segment_total DESC;
+    
+END$$
+
+-- Advanced trend analysis procedure
+CREATE PROCEDURE sp_get_trend_analysis(
+    IN p_period ENUM('daily', 'weekly', 'monthly'),
+    IN p_months_back INT
+)
+BEGIN
+    DECLARE v_start_date DATE;
+    DECLARE v_date_format VARCHAR(20);
+    DECLARE v_interval_type VARCHAR(10);
+    
+    -- Exception handling
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1
+            @sql_state = RETURNED_SQLSTATE,
+            @error_message = MESSAGE_TEXT;
+        
+        SELECT 
+            'error' as status,
+            @sql_state as sql_state,
+            @error_message as message,
+            'sp_get_trend_analysis' as procedure_name;
+    END;
+    
+    -- Validate and set parameters
+    IF p_months_back IS NULL OR p_months_back <= 0 OR p_months_back > 24 THEN
+        SET p_months_back = 6;
+    END IF;
+    
+    IF p_period IS NULL THEN
+        SET p_period = 'daily';
+    END IF;
+    
+    SET v_start_date = DATE_SUB(CURDATE(), INTERVAL p_months_back MONTH);
+    
+    -- Set formatting based on period
+    CASE p_period
+        WHEN 'daily' THEN 
+            SET v_date_format = '%Y-%m-%d';
+            SET v_interval_type = 'DAY';
+        WHEN 'weekly' THEN 
+            SET v_date_format = '%Y-W%u';
+            SET v_interval_type = 'WEEK';
+        WHEN 'monthly' THEN 
+            SET v_date_format = '%Y-%m';
+            SET v_interval_type = 'MONTH';
+        ELSE
+            SET v_date_format = '%Y-%m-%d';
+            SET v_interval_type = 'DAY';
+    END CASE;
+    
+    SELECT 'success' as status, CONCAT('Trend analysis (', p_period, ') retrieved successfully') as message;
+    
+    -- Dynamic trend analysis query
+    SET @sql = CONCAT('
+        WITH trend_data AS (
+            SELECT 
+                DATE_FORMAT(d.paid_at, ''', v_date_format, ''') as period,
+                MIN(DATE(d.paid_at)) as period_start,
+                MAX(DATE(d.paid_at)) as period_end,
+                COUNT(d.donation_id) as donation_count,
+                COUNT(DISTINCT d.donor_id) as unique_donors,
+                SUM(d.amount) as total_amount,
+                AVG(d.amount) as avg_donation,
+                COUNT(DISTINCT d.creation_id) as campaigns_count
+            FROM DONATION d
+            WHERE d.paid_at >= ''', v_start_date, '''
+            GROUP BY DATE_FORMAT(d.paid_at, ''', v_date_format, ''')
+        ),
+        trend_with_growth AS (
+            SELECT 
+                *,
+                LAG(total_amount, 1) OVER (ORDER BY period_start) as prev_period_amount,
+                LAG(donation_count, 1) OVER (ORDER BY period_start) as prev_period_count,
+                SUM(total_amount) OVER (ORDER BY period_start) as cumulative_amount,
+                AVG(total_amount) OVER (ORDER BY period_start ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) as moving_avg
+            FROM trend_data
+        )
+        SELECT 
+            period,
+            period_start,
+            period_end,
+            donation_count,
+            unique_donors,
+            total_amount,
+            avg_donation,
+            campaigns_count,
+            cumulative_amount,
+            moving_avg,
+            fn_calculate_growth_rate(total_amount, prev_period_amount) as amount_growth_rate,
+            fn_calculate_growth_rate(donation_count, prev_period_count) as count_growth_rate
+        FROM trend_with_growth
+        ORDER BY period_start'
+    );
+    
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+    
+END$$
+
+-- Cache refresh procedure for performance optimization
+CREATE PROCEDURE sp_refresh_analytics_cache()
+BEGIN
+    DECLARE v_error_count INT DEFAULT 0;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1
+            @sql_state = RETURNED_SQLSTATE,
+            @error_message = MESSAGE_TEXT;
+        
+        SELECT 
+            'error' as status,
+            @sql_state as sql_state,
+            @error_message as message,
+            'sp_refresh_analytics_cache' as procedure_name;
+    END;
+    
+    -- Create or refresh materialized view alternatives (using tables for caching)
+    DROP TABLE IF EXISTS cache_daily_donations;
+    
+    CREATE TABLE cache_daily_donations AS
+    SELECT 
+        DATE(d.paid_at) as donation_date,
+        COUNT(d.donation_id) as daily_donations,
+        SUM(d.amount) as daily_amount,
+        COUNT(DISTINCT d.donor_id) as daily_unique_donors,
+        AVG(d.amount) as daily_avg_donation
+    FROM DONATION d
+    WHERE d.paid_at >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)
+    GROUP BY DATE(d.paid_at)
+    ORDER BY donation_date;
+    
+    -- Add index for performance
+    ALTER TABLE cache_daily_donations ADD PRIMARY KEY (donation_date);
+    
+    SELECT 
+        'success' as status,
+        'Analytics cache refreshed successfully' as message,
+        NOW() as refresh_timestamp;
+        
+END$$
+
+DELIMITER ;
+
+
+
+DELIMITER //
+
+CREATE PROCEDURE sp_get_donation_analytics(
+    IN p_start_date DATE,
+    IN p_end_date DATE,
+    IN p_include_trends TINYINT
+)
+BEGIN
+    -- Exception handler
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1
+            @sql_state = RETURNED_SQLSTATE,
+            @error_message = MESSAGE_TEXT;
+        
+        SELECT 
+            'error' as status,
+            @sql_state as sql_state,
+            @error_message as message,        
+            'sp_get_donation_analytics' as procedure_name;
+    END;
+
+    -- Validate parameters
+    IF p_include_trends IS NULL THEN
+        SET p_include_trends = 1;
+    END IF;
+
+    IF p_start_date IS NULL OR p_end_date IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Start date and end date are required';
+    END IF;
+
+    IF p_start_date > p_end_date THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Start date cannot be greater than end date';
+    END IF;
+
+    IF p_end_date > CURDATE() THEN
+        SET p_end_date = CURDATE();
+    END IF;
+
+    -- Result Set 1: Status
+    SELECT
+        'success' as status,
+        'Analytics data retrieved successfully' as message;
+    
+    -- Result Set 2: Enhanced KPIs with active campaigns and repeat donors
+    SELECT
+        COUNT(d.donation_id) as total_donations,
+        COUNT(DISTINCT d.donor_id) as unique_donors,
+        SUM(d.amount) as total_amount,
+        AVG(d.amount) as average_donation,
+        MIN(d.amount) as min_donation,
+        MAX(d.amount) as max_donation,
+        STD(d.amount) as donation_std_dev,
+        COUNT(DISTINCT d.creation_id) as campaigns_supported,
+        COUNT(DISTINCT DATE(d.paid_at)) as active_days,
+        -- New metrics
+        COUNT(DISTINCT d.creation_id) as active_campaigns,
+        (SELECT COUNT(*) FROM (
+            SELECT donor_id FROM DONATION 
+            WHERE DATE(paid_at) BETWEEN p_start_date AND p_end_date 
+            GROUP BY donor_id HAVING COUNT(*) > 1
+        ) as repeat_query) as repeat_donors
+    FROM DONATION d
+    WHERE DATE(d.paid_at) BETWEEN p_start_date AND p_end_date;
+
+    -- Result Set 3: Daily trends (if requested)
+    IF p_include_trends = 1 THEN
+        WITH RECURSIVE date_series AS (
+            SELECT p_start_date as date_val
+            UNION ALL
+            SELECT DATE_ADD(date_val, INTERVAL 1 DAY)
+            FROM date_series
+            WHERE date_val < p_end_date
+        )
+        SELECT
+            ds.date_val as date,
+            COALESCE(COUNT(d.donation_id), 0) as donation_count,
+            COALESCE(SUM(d.amount), 0) as total_amount,
+            COALESCE(COUNT(DISTINCT d.donor_id), 0) as unique_donors,
+            SUM(COALESCE(SUM(d.amount), 0)) OVER (ORDER BY ds.date_val) as cumulative_amount,
+            AVG(COALESCE(SUM(d.amount), 0)) OVER (
+                ORDER BY ds.date_val
+                ROWS BETWEEN 6 PRECEDING AND CURRENT ROW
+            ) as moving_avg_7day
+        FROM date_series ds
+        LEFT JOIN DONATION d ON DATE(d.paid_at) = ds.date_val
+        GROUP BY ds.date_val
+        ORDER BY ds.date_val;
+    END IF;
+
+    -- Result Set 4: Geographic data
+    SELECT
+        dr.country,
+        dr.division,
+        COUNT(d.donation_id) as donation_count,
+        SUM(d.amount) as total_amount,
+        AVG(d.amount) as avg_amount,
+        COUNT(DISTINCT d.donor_id) as unique_donors
+    FROM DONATION d
+    INNER JOIN DONOR dr ON d.donor_id = dr.donor_id
+    WHERE DATE(d.paid_at) BETWEEN p_start_date AND p_end_date
+    GROUP BY dr.country, dr.division
+    ORDER BY total_amount DESC;
+END//
+
+DELIMITER ;
