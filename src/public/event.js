@@ -83,6 +83,72 @@ async function main() {
     } else {
       coverEl.replaceWith(Object.assign(document.createElement('div'), {textContent:'No photo uploaded', id:'cover', style:'display:flex;align-items:center;justify-content:center;height:320px;background:#e2e8f0;color:#475569;font-weight:600;font-size:18px;border-radius:12px;'}));
     }
+
+    // Handle document section visibility and download
+    const documentsSection = $("#documentsSection");
+    const downloadDocBtn = $("#downloadDocBtn");
+    
+    // Check if event has supporting documentation (assuming doc field exists in response)
+    if (e.has_doc || e.doc || e.doc_url) {
+      documentsSection.hidden = false;
+      
+      // Set up document download functionality
+      downloadDocBtn.addEventListener('click', async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        try {
+          // Show loading state
+          const originalText = downloadDocBtn.innerHTML;
+          downloadDocBtn.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+              <path d="M16 12L12 8L8 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M12 8V16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Downloading...`;
+          downloadDocBtn.disabled = true;
+          
+          // Create download link and trigger download
+          const downloadUrl = `/api/events/${encodeURIComponent(id)}/file/doc`;
+          const link = document.createElement('a');
+          link.href = downloadUrl;
+          link.download = `${e.title || 'Event'}_Supporting_Documents`;
+          link.target = '_blank';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          // Reset button state after a short delay
+          setTimeout(() => {
+            downloadDocBtn.innerHTML = originalText;
+            downloadDocBtn.disabled = false;
+          }, 2000);
+          
+        } catch (error) {
+          console.error('Document download failed:', error);
+          
+          // Show error state
+          downloadDocBtn.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10" stroke="#ef4444" stroke-width="2"/>
+              <path d="M15 9L9 15" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M9 9L15 15" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Failed`;
+          downloadDocBtn.style.background = '#ef4444';
+          
+          // Reset after delay
+          setTimeout(() => {
+            downloadDocBtn.innerHTML = originalText;
+            downloadDocBtn.disabled = false;
+            downloadDocBtn.style.background = '';
+          }, 3000);
+        }
+      });
+    } else {
+      documentsSection.hidden = true;
+    }
     $("#title").textContent = e.title || "Untitled event";
     $("#desc").textContent = e.description || "";
     $("#catTag").textContent = `${e.category_name || ''}${e.event_type_name ? ' • ' + e.event_type_name : ''}`.trim();
