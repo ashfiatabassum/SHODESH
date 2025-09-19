@@ -69,7 +69,7 @@ router.get('/events', async (req, res) => {
             let sql = `SELECT 
                 ec.creation_id AS id, ec.title, ec.description,
                 ec.amount_needed AS goal, ec.amount_received AS raised,
-                ec.division AS location, ec.created_at,
+                ec.division AS location, ec.created_at, ec.cover_photo,
                 ebc.ebc_id, c.category_id, c.category_name, et.event_type_id, et.event_type_name,
                 IFNULL((SELECT COUNT(DISTINCT d.donor_id) FROM DONATION d WHERE d.creation_id=ec.creation_id),0) AS donors,
                 IFNULL((SELECT SUM(d.amount) FROM DONATION d WHERE d.creation_id=ec.creation_id),0) AS total_raised,
@@ -95,6 +95,8 @@ router.get('/events', async (req, res) => {
                 raised: r.raised,
                 location: r.location,
                 created_at: r.created_at,
+                creation_id: r.id,
+                cover_photo: r.cover_photo,
                 ebc_id: r.ebc_id,
                 category_id: r.category_id,
                 category_name: r.category_name,
@@ -124,6 +126,8 @@ router.get('/events', async (req, res) => {
             raised: r.amount_received, // backward compatibility for existing UI
             location: r.division,
             created_at: r.created_at,
+            creation_id: r.creation_id,
+            cover_photo: r.cover_photo,
             ebc_id: r.ebc_id,
             category_id: r.category_id,
             category_name: r.category_name,

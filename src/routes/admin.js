@@ -30,128 +30,308 @@ const authenticateAdmin = (req, res, next) => {
 // Dashboard Overview
 router.get('/dashboard/stats', authenticateAdmin, async (req, res) => {
     try {
-        // Get various statistics for the dashboard
-        const [eventStats] = await adminDb.execute(`
+        // Use actual schema tables (uppercase) from DBMS.txt
+        const [eventStatsRows] = await adminDb.execute(`
             SELECT 
-                COUNT(*) as total_events,
-                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_events,
-                SUM(CASE WHEN status = 'verified' THEN 1 ELSE 0 END) as verified_events,
-                SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected_events
-            FROM events
-        `);
-        
-        const [donationStats] = await adminDb.execute(`
+                COUNT(*) AS total_events,
+                SUM(CASE WHEN verification_status = 'unverified' THEN 1 ELSE 0 END) AS pending_events,
+                SUM(CASE WHEN verification_status = 'verified' THEN 1 ELSE 0 END) AS verified_events,
+                SUM(CASE WHEN verification_status = 'rejected' THEN 1 ELSE 0 END) AS rejected_events
+            FROM EVENT_CREATION 
+            WHERE lifecycle_status != 'closed'`);
+
+        const [donationStatsRows] = await adminDb.execute(`
             SELECT 
-                COUNT(*) as total_donations,
-                SUM(amount) as total_amount,
-                AVG(amount) as average_amount
-            FROM donations
-        `);
-        
-        const [foundationStats] = await adminDb.execute(`
+                COUNT(*) AS total_donations,
+                COALESCE(SUM(amount),0) AS total_amount,
+                COALESCE(AVG(amount),0) AS average_amount
+            FROM DONATION`);
+
+        const [foundationStatsRows] = await adminDb.execute(`
             SELECT 
-                COUNT(*) as total_foundations,
-                SUM(CASE WHEN status = 'unverified' THEN 1 ELSE 0 END) as pending_foundations,
-                SUM(CASE WHEN status = 'verified' THEN 1 ELSE 0 END) as approved_foundations
-            FROM foundation
-        `);
-        
-        const [volunteerStats] = await adminDb.execute(`
-            SELECT 
-                COUNT(*) as total_volunteers,
-                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_volunteers,
-                SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved_volunteers
-            FROM volunteers
-        `);
-        
+                COUNT(*) AS total_foundations,
+                SUM(CASE WHEN status = 'unverified' THEN 1 ELSE 0 END) AS pending_foundations,
+                SUM(CASE WHEN status = 'verified'   THEN 1 ELSE 0 END) AS approved_foundations
+            FROM FOUNDATION`);
+
+        let volunteerStats = { total_volunteers: 0, pending_volunteers: 0, approved_volunteers: 0 };
+        try {
+            const [volRows] = await adminDb.execute(`
+                SELECT 
+                    COUNT(*) AS total_volunteers,
+                    SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending_volunteers,
+                    SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) AS approved_volunteers
+                FROM VOLUNTEER`);
+            volunteerStats = volRows[0] || volunteerStats;
+        } catch (e) {
+            // VOLUNTEER table may not exist in current schema; default zeros
+            console.warn('VOLUNTEER stats skipped:', e.message);
+        }
+
         res.json({
             success: true,
             data: {
-                events: eventStats[0],
-                donations: donationStats[0],
-                foundations: foundationStats[0],
-                volunteers: volunteerStats[0]
+                events: eventStatsRows[0] || {},
+                donations: donationStatsRows[0] || {},
+                foundations: foundationStatsRows[0] || {},
+                volunteers: volunteerStats
             }
         });
     } catch (error) {
         console.error('Dashboard stats error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch dashboard statistics' 
-        });
+        res.status(500).json({ success: false, message: 'Failed to fetch dashboard statistics', error: error.message });
     }
 });
 
-// Event Management Routes
+// Event Management Routes — list campaigns (mirrors verification list behavior)
 router.get('/events', authenticateAdmin, async (req, res) => {
     try {
-        const { status, category, page = 1, limit = 10 } = req.query;
-        const offset = (page - 1) * limit;
-        
-        let query = `
-            SELECT e.*, f.name as organizer_name, c.name as category_name
-            FROM events e
-            LEFT JOIN foundations f ON e.foundation_id = f.id
-            LEFT JOIN categories c ON e.category_id = c.id
-        `;
-        
-        const conditions = [];
+        const {
+            status = '',
+            category_id = '',
+            event_type_id = '',
+            ebc_id = '',
+            creator_type = '',
+            sort_by = 'recent',
+            limit = 100,
+            offset = 0,
+            include_inactive = 'false'
+        } = req.query;
+
+        // Use raw JOIN mirroring search.js fallback, but include unverified as well and keep lifecycle active
+        let sql = `
+            SELECT 
+                ec.creation_id,
+                ec.creator_type,
+                CASE 
+                  WHEN ec.creator_type='individual' THEN CONCAT(COALESCE(i.first_name,''),' ',COALESCE(i.last_name,''))
+                  WHEN ec.creator_type='foundation' THEN COALESCE(f.foundation_name,'')
+                  ELSE 'Unknown Creator'
+                END AS creator_name,
+                ec.individual_id,
+                ec.foundation_id,
+                ec.title,
+                ec.description,
+                ec.amount_needed,
+                ec.amount_received,
+                ec.division,
+                ec.verification_status,
+                ec.lifecycle_status,
+                ec.second_verification_required,
+                ec.created_at,
+                ebc.ebc_id,
+                c.category_id, c.category_name,
+                et.event_type_id, et.event_type_name,
+                CASE WHEN ec.cover_photo IS NOT NULL THEN 1 ELSE 0 END AS has_cover_photo,
+                CASE WHEN ec.doc IS NOT NULL THEN 1 ELSE 0 END AS has_document
+            FROM EVENT_CREATION ec
+            JOIN EVENT_BASED_ON_CATEGORY ebc ON ebc.ebc_id = ec.ebc_id
+            JOIN CATEGORY c ON c.category_id = ebc.category_id
+            JOIN EVENT_TYPE et ON et.event_type_id = ebc.event_type_id
+            LEFT JOIN INDIVIDUAL i ON i.individual_id = ec.individual_id
+            LEFT JOIN FOUNDATION f ON f.foundation_id = ec.foundation_id
+            WHERE 1=1`;
+
         const params = [];
         
+        // For admin verification, we need to show both:
+        // 1. Unverified events (which are typically inactive)
+        // 2. Verified events (which are typically active)
+        // So we don't filter by lifecycle_status by default
+        
         if (status) {
-            conditions.push('e.status = ?');
+            sql += ' AND ec.verification_status = ?';
             params.push(status);
+        } else {
+            // Show all three verification statuses: unverified, verified, and rejected
+            sql += " AND ec.verification_status IN (?,?,?)";
+            params.push('unverified');
+            params.push('verified');
+            params.push('rejected');
         }
         
-        if (category) {
-            conditions.push('c.name = ?');
-            params.push(category);
-        }
+        // Only exclude closed events (keep inactive for unverified and active for verified)
+        sql += " AND ec.lifecycle_status != 'closed'";
+        if (category_id) { sql += ' AND c.category_id = ?'; params.push(category_id); }
+        if (event_type_id) { sql += ' AND et.event_type_id = ?'; params.push(event_type_id); }
+        if (ebc_id) { sql += ' AND ebc.ebc_id = ?'; params.push(ebc_id); }
+        if (creator_type) { sql += ' AND ec.creator_type = ?'; params.push(creator_type); }
+        sql += sort_by === 'recent' ? ' ORDER BY ec.created_at DESC' : ' ORDER BY ec.created_at DESC';
+        sql += ' LIMIT ? OFFSET ?';
         
-        if (conditions.length > 0) {
-            query += ' WHERE ' + conditions.join(' AND ');
-        }
+        // Add pagination parameters
+        const limitNum = parseInt(limit, 10) || 100;
+        const offsetNum = parseInt(offset, 10) || 0;
+        params.push(limitNum);
+        params.push(offsetNum);
         
-        query += ' ORDER BY e.created_at DESC LIMIT ? OFFSET ?';
-        params.push(parseInt(limit), offset);
+        // Use query() with manual escaping instead of execute() with prepared statements
+        const escapedParams = params.map(p => adminDb.escape(p));
+        let finalSql = sql;
+        let paramIndex = 0;
+        finalSql = finalSql.replace(/\?/g, () => escapedParams[paramIndex++]);
         
-        const [events] = await adminDb.execute(query, params);
-        
-        res.json({
-            success: true,
-            data: events
-        });
+        const [rows] = await adminDb.query(finalSql);
+        return res.json({ success: true, data: rows, total: rows.length });
     } catch (error) {
         console.error('Events fetch error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch events' 
-        });
+        res.status(500).json({ success: false, message: 'Failed to fetch events', error: error.message });
     }
 });
 
+// Shortcut for unverified events - delegate to /events route
+router.get('/events/unverified', authenticateAdmin, async (req, res) => {
+    req.query.status = 'unverified';
+    // Use req.app to properly delegate to the /events route
+    return req.app.handle({ 
+        ...req, 
+        url: req.url.replace('/unverified', ''),
+        path: req.path.replace('/unverified', '')
+    }, res);
+});
+
+// Approve/Reject an event (insert into EVENT_VERIFICATION; triggers should apply to EVENT_CREATION)
 router.put('/events/:id/verify', authenticateAdmin, async (req, res) => {
+    const conn = adminDb; // promise pool
     try {
-        const { id } = req.params;
-        const { action, notes } = req.body; // action: 'approve', 'reject'
-        
-        const status = action === 'approve' ? 'verified' : 'rejected';
-        
-        await adminDb.execute(
-            'UPDATE events SET status = ?, admin_notes = ?, verified_at = NOW() WHERE id = ?',
-            [status, notes || null, id]
+        const { id } = req.params; // creation_id like ECxxxxx
+        const { action, notes } = req.body; // 'approve' or 'reject'
+        const decision = action === 'approve' ? 'verified' : 'rejected';
+        const staffId = req.headers['x-admin-staff-id'] || null; // optional
+
+        // Try stored procedure first if available
+        try {
+            console.log(`🔍 Attempting stored procedure for ${id} with decision: ${decision}`);
+            await conn.execute('CALL sp_admin_verify_event(?,?,?,?)', [id, decision, notes || null, staffId]);
+            console.log(`✅ Stored procedure succeeded for ${id}: ${decision}`);
+            return res.json({ success: true, message: `Event ${decision} via procedure` });
+        } catch (spErr) {
+            // Fallback to manual insert + direct status update (if trigger not present)
+            console.log(`⚠️  Stored procedure failed for ${id}, falling back to manual update. Error:`, spErr.message);
+            if (spErr && spErr.code !== 'ER_SP_DOES_NOT_EXIST') {
+                console.warn('sp_admin_verify_event failed, falling back. Cause:', spErr.message);
+            }
+        }
+
+        // Generate a simple log_id (7-char): EV + timestamp base36 last 5
+        const logId = 'EV' + (Date.now().toString(36).slice(-5)).toUpperCase();
+        // Insert verification log
+        await conn.execute(
+            `INSERT INTO EVENT_VERIFICATION (log_id, creation_id, round_no, staff_id, decision, request_staff_verification, notes, verified_at)
+             VALUES (?, ?, 1, ?, ?, 0, ?, NOW())`,
+            [logId, id, staffId, decision, notes || null]
         );
+        // Apply to EVENT_CREATION directly in case trigger not present
+        // When approving: set verification_status='verified' AND lifecycle_status='active'
+        // When rejecting: set verification_status='rejected' and lifecycle_status='inactive'
+        // Note: Unverified events remain 'unverified' unless explicitly rejected
+        console.log(`🔄 Manual update for ${id}: action=${action}, decision=${decision}`);
         
-        res.json({
-            success: true,
-            message: `Event ${action === 'approve' ? 'approved' : 'rejected'} successfully`
-        });
+        if (action === 'approve') {
+            console.log(`✅ Approving event ${id}: verified/active`);
+            await conn.execute(
+                `UPDATE EVENT_CREATION SET 
+                    verification_status = 'verified', 
+                    lifecycle_status = 'active',
+                    updated_at = NOW() 
+                WHERE creation_id = ?`,
+                [id]
+            );
+        } else if (action === 'reject') {
+            console.log(`❌ Rejecting event ${id}: rejected/inactive`);
+            await conn.execute(
+                `UPDATE EVENT_CREATION SET 
+                    verification_status = 'rejected',
+                    lifecycle_status = 'inactive',
+                    updated_at = NOW()
+                WHERE creation_id = ?`,
+                [id]
+            );
+        }
+        
+        console.log(`✅ Manual update completed for ${id}`);
+        return res.json({ success: true, message: `Event ${decision} successfully` });
     } catch (error) {
         console.error('Event verification error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to update event status' 
-        });
+        res.status(500).json({ success: false, message: 'Failed to verify event', error: error.message });
+    }
+});
+
+// Admin: Event details (rich) for a creation_id
+router.get('/events/:id/details', authenticateAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const sql = `SELECT
+            ec.creation_id,
+            ec.title,
+            ec.description,
+            ec.amount_needed,
+            ec.amount_received,
+            ec.division,
+            ec.verification_status,
+            ec.lifecycle_status,
+            ec.created_at,
+            ec.updated_at,
+            (ec.cover_photo IS NOT NULL) AS has_cover_photo,
+            (ec.doc IS NOT NULL) AS has_document,
+            ebc.ebc_id,
+            c.category_id, c.category_name,
+            et.event_type_id, et.event_type_name,
+            ec.creator_type,
+            CASE WHEN ec.creator_type='individual' THEN CONCAT(i.first_name,' ',i.last_name) ELSE f.foundation_name END AS creator_name,
+            CASE WHEN ec.creator_type='individual' THEN i.mobile ELSE f.mobile END AS contact_phone,
+            CASE WHEN ec.creator_type='individual' THEN i.email  ELSE f.email  END AS contact_email,
+            (SELECT COUNT(*) FROM DONATION d WHERE d.creation_id=ec.creation_id) AS total_donors,
+            (SELECT COALESCE(SUM(d.amount),0) FROM DONATION d WHERE d.creation_id=ec.creation_id) AS total_raised,
+            (SELECT MAX(d.paid_at) FROM DONATION d WHERE d.creation_id=ec.creation_id) AS last_donation_at
+        FROM EVENT_CREATION ec
+        JOIN EVENT_BASED_ON_CATEGORY ebc ON ebc.ebc_id = ec.ebc_id
+        JOIN CATEGORY c ON c.category_id = ebc.category_id
+        JOIN EVENT_TYPE et ON et.event_type_id = ebc.event_type_id
+        LEFT JOIN INDIVIDUAL i ON i.individual_id = ec.individual_id
+        LEFT JOIN FOUNDATION f ON f.foundation_id = ec.foundation_id
+        WHERE ec.creation_id = ?`;
+        const [rows] = await adminDb.execute(sql, [id]);
+        if (!rows.length) return res.status(404).json({ success:false, message:'Event not found' });
+        const e = rows[0];
+        e.cover_photo_url = e.has_cover_photo ? `/api/admin/events/${id}/cover-photo` : null;
+        e.document_url = e.has_document ? `/api/admin/events/${id}/document` : null;
+        return res.json({ success:true, data: e });
+    } catch (error) {
+        console.error('Admin event details error:', error);
+        res.status(500).json({ success:false, message:'Failed to fetch event details', error: error.message });
+    }
+});
+
+// Admin: Stream cover photo BLOB
+router.get('/events/:id/cover-photo', authenticateAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const [rows] = await adminDb.execute('SELECT cover_photo FROM EVENT_CREATION WHERE creation_id = ?', [id]);
+        if (!rows.length || !rows[0].cover_photo) return res.status(404).json({ success:false, message:'No cover photo' });
+        const buf = rows[0].cover_photo;
+        res.setHeader('Content-Type', 'image/jpeg');
+        res.setHeader('Content-Disposition', `inline; filename="${id}_cover.jpg"`);
+        res.send(buf);
+    } catch (error) {
+        console.error('Cover photo stream error:', error);
+        res.status(500).json({ success:false, message:'Failed to stream cover photo' });
+    }
+});
+
+// Admin: Stream supporting document BLOB
+router.get('/events/:id/document', authenticateAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const [rows] = await adminDb.execute('SELECT doc FROM EVENT_CREATION WHERE creation_id = ?', [id]);
+        if (!rows.length || !rows[0].doc) return res.status(404).json({ success:false, message:'No document uploaded' });
+        const buf = rows[0].doc;
+        res.setHeader('Content-Type', 'application/octet-stream');
+        res.setHeader('Content-Disposition', `attachment; filename="${id}_document.bin"`);
+        res.send(buf);
+    } catch (error) {
+        console.error('Document stream error:', error);
+        res.status(500).json({ success:false, message:'Failed to download document' });
     }
 });
 
