@@ -1,11 +1,80 @@
 USE shodesh;
 SHOW VARIABLES LIKE 'secure_file_priv';
 
+-- Staff Authentication View
+CREATE OR REPLACE VIEW v_staff_auth AS
+SELECT 
+    staff_id,
+    username,
+    password,
+    first_name,
+    last_name,
+    email,
+    mobile,
+    status,
+    CASE 
+        WHEN status = 'unverified' THEN 'Pending Verification'
+        WHEN status = 'active' THEN 'Active'
+        ELSE status
+    END as status_display
+FROM STAFF;
+
+-- Staff Performance View
+CREATE OR REPLACE VIEW v_staff_performance AS
+SELECT 
+    s.staff_id,
+    s.username,
+    COUNT(DISTINCT e.event_id) as total_events,
+    SUM(CASE WHEN e.status = 'completed' THEN 1 ELSE 0 END) as completed_events,
+    ROUND(AVG(CASE WHEN e.status = 'completed' THEN 1 ELSE 0 END) * 100, 2) as completion_rate
+FROM STAFF s
+LEFT JOIN EVENT e ON s.staff_id = e.staff_id
+GROUP BY s.staff_id, s.username;
+
 -- NOTE: Added use of functions, GROUP BY, CASE expressions, views, JOINs,
 --       PL/SQL routines, and exception handling where appropriate.
 --       (Grammar fixed for clarity.)
 GRANT SELECT ON shodesh.* TO 'root'@'localhost';
 FLUSH PRIVILEGES;
+
+-- Staff Workload Calculation Function
+DELIMITER //
+CREATE OR REPLACE FUNCTION fn_calculate_staff_workload(p_staff_id VARCHAR(7)) 
+RETURNS DECIMAL(5,2)
+DETERMINISTIC
+BEGIN
+    DECLARE v_workload DECIMAL(5,2);
+    
+    SELECT 
+        COUNT(CASE WHEN status = 'active' THEN 1 END) * 1.5 +
+        COUNT(CASE WHEN status = 'pending' THEN 1 END) * 1.0 +
+        COUNT(CASE WHEN status = 'completed' THEN 1 END) * 0.5
+    INTO v_workload
+    FROM EVENT
+    WHERE staff_id = p_staff_id
+    AND status IN ('active', 'pending', 'completed');
+    
+    RETURN COALESCE(v_workload, 0);
+END //
+DELIMITER ;
+
+-- Staff Status Change Tracking Procedure
+DELIMITER //
+CREATE OR REPLACE PROCEDURE sp_track_status_change(
+    IN p_staff_id VARCHAR(7),
+    IN p_new_status VARCHAR(20),
+    IN p_reason VARCHAR(255)
+)
+BEGIN
+    INSERT INTO staff_status_log (staff_id, status, reason, change_date)
+    VALUES (p_staff_id, p_new_status, p_reason, NOW());
+    
+    UPDATE STAFF 
+    SET status = p_new_status,
+        last_status_update = NOW()
+    WHERE staff_id = p_staff_id;
+END //
+DELIMITER ;
 -- ========================
 -- Table: INDIVIDUAL
 -- ========================
@@ -34,6 +103,19 @@ CREATE TABLE INDIVIDUAL (
   CONSTRAINT INDIVIDUAL_MOBILE_U UNIQUE (mobile)
 );
 SELECT * FROM INDIVIDUAL;
+
+-- ========================
+-- Table: STAFF_STATUS_LOG
+-- ========================
+CREATE TABLE IF NOT EXISTS staff_status_log (
+    log_id INT AUTO_INCREMENT PRIMARY KEY,
+    staff_id VARCHAR(7) NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    reason VARCHAR(255),
+    change_date DATETIME NOT NULL,
+    FOREIGN KEY (staff_id) REFERENCES STAFF(staff_id)
+);
+
 -- ========================
 -- Table: FOUNDATION
 -- ========================

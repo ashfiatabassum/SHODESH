@@ -26,12 +26,22 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderProfile(staffData, opts = { setHeader: true }) {
     if (!staffData) return;
 
+    console.log(
+      "Rendering profile with data:",
+      JSON.stringify(staffData, null, 2)
+    );
+
     const byId = (id) => document.getElementById(id);
     const set = (id, val, fallback = "Not provided") => {
       const el = byId(id);
-      if (el) el.textContent = (val ?? "").toString().trim() || fallback;
+      if (el) {
+        const displayValue = (val ?? "").toString().trim() || fallback;
+        console.log(`Setting ${id} to: ${displayValue}`);
+        el.textContent = displayValue;
+      } else {
+        console.warn(`Element with ID ${id} not found in the DOM`);
+      }
     };
-
     const first = staffData.first_name || staffData.firstName || "";
     const last = staffData.last_name || staffData.lastName || "";
     const fullName = `${first} ${last}`.trim();
@@ -44,10 +54,78 @@ document.addEventListener("DOMContentLoaded", () => {
     set("staff-name", fullName || usernameNow, usernameNow);
     set("staff-username", usernameNow, "");
     set("staff-email", staffData.email);
-    set("staff-phone", staffData.mobile, "");
-    set("staff-nid", staffData.nid, "");
+    set("staff-phone", staffData.mobile);
+    set("staff-nid", staffData.nid);
 
     // DOB formatting
+    if (staffData.dob) {
+      set("staff-dob", staffData.dob);
+    } else if (staffData.birth_date) {
+      set("staff-dob", staffData.birth_date);
+    }
+
+    // Enhanced address handling for compatibility with both nested and flat structures
+    // First check if we have a nested address structure
+    if (staffData.address) {
+      const address = staffData.address;
+      set("staff-area", address.area);
+      // Use the correct ID for administrative division (staff-division)
+      set(
+        "staff-division",
+        address.administrativeDiv || address.administrative_div
+      );
+      set("staff-district", address.district);
+      set("staff-house-no", address.houseNo || address.house_no);
+      set("staff-road-no", address.roadNo || address.road_no);
+      set("staff-zip", address.zipCode || address.zip);
+    }
+
+    // Then check for flat structure (this will override nested values if both exist)
+    // This ensures we get the data regardless of which format it's in
+    set(
+      "staff-area",
+      staffData.area || (staffData.address && staffData.address.area)
+    );
+
+    // Add debug logging for administrative division
+    console.log("Administrative Division Data:", {
+      direct: staffData.administrative_div,
+      fromAddressNested:
+        staffData.address && staffData.address.administrativeDiv,
+      fromAddressFlat:
+        staffData.address && staffData.address.administrative_div,
+    });
+
+    // Use the correct ID for administrative division (staff-division)
+    set(
+      "staff-division",
+      staffData.administrative_div ||
+        (staffData.address &&
+          (staffData.address.administrativeDiv ||
+            staffData.address.administrative_div))
+    );
+    set(
+      "staff-district",
+      staffData.district || (staffData.address && staffData.address.district)
+    );
+    set(
+      "staff-house-no",
+      staffData.house_no ||
+        (staffData.address &&
+          (staffData.address.houseNo || staffData.address.house_no))
+    );
+    set(
+      "staff-road-no",
+      staffData.road_no ||
+        (staffData.address &&
+          (staffData.address.roadNo || staffData.address.road_no))
+    );
+    set(
+      "staff-zip",
+      staffData.zip ||
+        (staffData.address &&
+          (staffData.address.zipCode || staffData.address.zip))
+    );
     const dobElement = byId("staff-dob");
     const birthDate =
       staffData.birth_date || staffData.birthDate || staffData.dob;
@@ -74,12 +152,24 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // Address fields
+    // Address fields - these are the actual HTML element IDs
     set("staff-house", staffData.house_no);
     set("staff-road", staffData.road_no);
     set("staff-area", staffData.area);
     set("staff-district", staffData.district);
-    set("staff-division", staffData.administrative_div);
+
+    // Special handling for division field to ensure it always gets populated
+    const adminDiv =
+      staffData.administrative_div ||
+      (staffData.address &&
+        (staffData.address.administrativeDiv ||
+          staffData.address.administrative_div));
+    console.log("Administrative Division final value:", adminDiv);
+    const divisionElement = document.getElementById("staff-division");
+    if (divisionElement) {
+      divisionElement.textContent = adminDiv || "Not provided";
+    }
+
     set("staff-zip", staffData.zip);
 
     // Initials
@@ -90,8 +180,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Function to fetch and display staff data
-  //   const loadStaffProfile = async (forceRefresh = false) => {
+  // Function to fetch and display staff data - commented out old version
+  // Original loadStaffProfile commented out
   //     console.log(
   //       "Loading staff profile with staffId:",
   //       staffId,
@@ -310,10 +400,13 @@ document.addEventListener("DOMContentLoaded", () => {
   //     }
   //   };
 
+  // Enhanced function to fetch and display staff data with improved address handling
   const loadStaffProfile = async (forceRefresh = false) => {
     const staffId = localStorage.getItem("staffId"); // recompute each call
     const username = localStorage.getItem("staffUsername"); // recompute each call
     const token = localStorage.getItem("staffToken") || "";
+
+    console.log("Loading staff profile for:", username || staffId);
 
     let staffData = forceRefresh
       ? null
@@ -341,22 +434,78 @@ document.addEventListener("DOMContentLoaded", () => {
           const result = await res.json();
           let profileData = result.profile || result.data;
 
-          // Normalize nested address shape if needed
-          if (profileData?.address && !profileData.house_no) {
+          console.log(
+            "Profile data received from API:",
+            JSON.stringify(profileData, null, 2)
+          );
+
+          // Specifically check for administrative division values
+          console.log("Administrative Division from API:", {
+            flatValue: profileData.administrative_div,
+            nestedValue:
+              profileData.address && profileData.address.administrativeDiv,
+            nestedFlatValue:
+              profileData.address && profileData.address.administrative_div,
+          });
+
+          // Our updated API provides both nested and flat structure
+          // So we don't need to normalize, but we'll ensure we have a complete profile object
+          // by checking if important fields are present
+          if (profileData && (!profileData.house_no || !profileData.road_no)) {
+            // Log the situation for debugging
+            console.log("Enhancing profile data with address information");
+
+            // Create a complete profile object with all necessary fields
             profileData = {
-              first_name: profileData.firstName || profileData.first_name,
-              last_name: profileData.lastName || profileData.last_name,
-              username: profileData.username,
-              email: profileData.email,
-              mobile: profileData.mobile,
-              nid: profileData.nid,
-              house_no: profileData.address.houseNo,
-              road_no: profileData.address.roadNo,
-              area: profileData.address.area,
-              district: profileData.address.district,
-              administrative_div: profileData.address.administrativeDiv,
-              zip: profileData.address.zipCode,
-              birth_date: profileData.birthDate || profileData.birth_date,
+              // Personal info
+              staff_id: profileData.staffId || profileData.staff_id || "",
+              first_name: profileData.firstName || profileData.first_name || "",
+              last_name: profileData.lastName || profileData.last_name || "",
+              username: profileData.username || "",
+              email: profileData.email || "",
+              mobile: profileData.mobile || "",
+              nid: profileData.nid || "",
+              dob: profileData.dob || "",
+              status: profileData.status || "",
+
+              // Address info - try both nested and flat structures
+              house_no:
+                profileData.house_no ||
+                (profileData.address && profileData.address.houseNo) ||
+                "",
+              road_no:
+                profileData.road_no ||
+                (profileData.address && profileData.address.roadNo) ||
+                "",
+              area:
+                profileData.area ||
+                (profileData.address && profileData.address.area) ||
+                "",
+              district:
+                profileData.district ||
+                (profileData.address && profileData.address.district) ||
+                "",
+              administrative_div:
+                profileData.administrative_div ||
+                (profileData.address &&
+                  (profileData.address.administrativeDiv ||
+                    profileData.address.administrative_div)) ||
+                "",
+              zip:
+                profileData.zip ||
+                (profileData.address &&
+                  (profileData.address.zipCode || profileData.address.zip)) ||
+                "",
+
+              // Preserve address field for compatibility
+              address: profileData.address || {
+                houseNo: profileData.house_no || "",
+                roadNo: profileData.road_no || "",
+                area: profileData.area || "",
+                district: profileData.district || "",
+                administrativeDiv: profileData.administrative_div || "",
+                zipCode: profileData.zip || "",
+              },
             };
           }
 
@@ -842,9 +991,87 @@ document.addEventListener("DOMContentLoaded", () => {
     openEditModal();
     setupPasswordToggles();
   });
+
+  // Add event listener for the "Help Create Individual Account" button
+  document
+    .querySelector(".create-individual-btn")
+    .addEventListener("click", () => {
+      window.location.href = "/individual.html";
+    });
+
+  // Load staff-assisted accounts
+  fetchStaffAssistedAccounts();
+
   document
     .querySelector(".close-modal")
     .addEventListener("click", closeEditModal);
+
+  // Function to fetch staff-assisted accounts and update the counter
+  async function fetchStaffAssistedAccounts() {
+    const staffId = localStorage.getItem("staffId");
+    console.log("🔍 Attempting to fetch staff-assisted accounts");
+    console.log("Staff ID from localStorage:", staffId);
+
+    if (!staffId) {
+      console.log(
+        "❌ No staff ID found in localStorage, cannot fetch assisted accounts"
+      );
+      return;
+    }
+
+    try {
+      console.log(
+        `🔄 Fetching assisted accounts for staff ${staffId} from /api/individual/assisted-by/${staffId}`
+      );
+      const response = await fetch(`/api/individual/assisted-by/${staffId}`);
+      const data = await response.json();
+      console.log("📊 Assisted accounts data received:", data);
+
+      if (data.success) {
+        // Update the counter
+        document.getElementById("accounts-count").textContent = data.count;
+
+        // Update the list of accounts
+        const accountsList = document.getElementById("created-accounts-list");
+
+        if (data.count > 0) {
+          // Clear any existing content
+          accountsList.innerHTML = "";
+
+          // Add each account to the list
+          data.individuals.forEach((individual) => {
+            const accountItem = document.createElement("div");
+            accountItem.className = "account-item";
+
+            const formattedDate = new Date(
+              individual.assist_date
+            ).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            });
+
+            accountItem.innerHTML = `
+              <div class="account-details">
+                <div class="account-name">${individual.first_name} ${individual.last_name}</div>
+                <div class="account-username">@${individual.username}</div>
+                <div class="account-date">Created on: ${formattedDate}</div>
+              </div>
+            `;
+
+            accountsList.appendChild(accountItem);
+          });
+        } else {
+          accountsList.innerHTML =
+            '<div class="no-accounts-message">No accounts created yet</div>';
+        }
+      } else {
+        console.error("Failed to fetch assisted accounts:", data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching assisted accounts:", error);
+    }
+  }
   document
     .getElementById("editProfileForm")
     .addEventListener("submit", saveProfileChanges);
@@ -856,6 +1083,232 @@ document.addEventListener("DOMContentLoaded", () => {
       closeEditModal();
     }
   });
+
+  // Function to fetch events that need verification
+  async function fetchEventsForVerification() {
+    try {
+      // Simulate data until backend is implemented
+      // Replace this with actual API call when backend is ready
+      const mockEvents = [
+        {
+          id: 1,
+          title: "Community Cleanup Drive",
+          description:
+            "Join us for a community cleanup event at Gulshan Lake Park. Bring gloves and water.",
+          location: "Gulshan Lake Park, Dhaka",
+          event_date: "2025-10-15",
+          event_time: "09:00 AM - 12:00 PM",
+          organizer_name: "Green Bangladesh Initiative",
+          created_at: "2025-09-10",
+        },
+        {
+          id: 2,
+          title: "Education Workshop for Rural Children",
+          description:
+            "A workshop to teach basic computer skills to underprivileged children in rural areas.",
+          location: "Manikganj Community Center",
+          event_date: "2025-10-20",
+          event_time: "10:00 AM - 03:00 PM",
+          organizer_name: "Digital Bangladesh Foundation",
+          created_at: "2025-09-12",
+        },
+        {
+          id: 3,
+          title: "Health Camp for Elderly",
+          description:
+            "Free medical checkups and medicines for elderly people in the community.",
+          location: "Baridhara DOHS Community Center",
+          event_date: "2025-10-25",
+          event_time: "08:00 AM - 04:00 PM",
+          organizer_name: "Care for Seniors NGO",
+          created_at: "2025-09-15",
+        },
+      ];
+
+      // Display the mock events
+      displayEventsForVerification(mockEvents);
+
+      // Uncomment the code below when backend is ready
+      /*
+      const response = await fetch("/api/staff/events-for-verification", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+
+      const events = await response.json();
+      displayEventsForVerification(events);
+      */
+    } catch (error) {
+      console.error("Failed to fetch events for verification:", error);
+      showMessage(
+        "Failed to load events for verification. Please try again.",
+        "error"
+      );
+    }
+  }
+
+  // Function to display events that need verification
+  function displayEventsForVerification(events) {
+    const container = document.getElementById("events-verification-container");
+    container.innerHTML = "";
+
+    if (events.length === 0) {
+      container.innerHTML = `<div class="no-events-message">No events pending verification.</div>`;
+      return;
+    }
+
+    events.forEach((event) => {
+      const eventCard = document.createElement("div");
+      eventCard.className = "event-card";
+      eventCard.innerHTML = `
+        <h3>${event.title || "Untitled Event"}</h3>
+        <p><strong>Description:</strong> ${
+          event.description || "No description"
+        }</p>
+        <p><strong>Location:</strong> ${
+          event.location || "No location specified"
+        }</p>
+        <p><strong>Date:</strong> ${new Date(
+          event.event_date
+        ).toLocaleDateString()}</p>
+        <p><strong>Time:</strong> ${event.event_time || "Not specified"}</p>
+        <p><strong>Organizer:</strong> ${event.organizer_name || "Unknown"}</p>
+        <p><strong>Submitted on:</strong> ${new Date(
+          event.created_at
+        ).toLocaleDateString()}</p>
+        <div class="verification-actions">
+          <button class="verify-btn" data-id="${event.id}">Verify Event</button>
+          <button class="reject-btn" data-id="${event.id}">Reject Event</button>
+        </div>
+      `;
+      container.appendChild(eventCard);
+
+      // Add event listeners for verify and reject buttons
+      eventCard
+        .querySelector(".verify-btn")
+        .addEventListener("click", () => verifyEvent(event.id));
+      eventCard
+        .querySelector(".reject-btn")
+        .addEventListener("click", () => rejectEvent(event.id));
+    });
+  }
+
+  // Function to verify an event
+  async function verifyEvent(eventId) {
+    try {
+      // Simulate API call until backend is implemented
+      console.log(`Verifying event with ID: ${eventId}`);
+      showMessage("Event successfully verified", "success");
+
+      // Remove the verified event from the list
+      const eventCard = document
+        .querySelector(`.verify-btn[data-id="${eventId}"]`)
+        .closest(".event-card");
+      if (eventCard) {
+        eventCard.style.opacity = "0";
+        setTimeout(() => {
+          eventCard.remove();
+
+          // Check if there are no more events
+          const container = document.getElementById(
+            "events-verification-container"
+          );
+          if (container.children.length === 0) {
+            container.innerHTML = `<div class="no-events-message">No events pending verification.</div>`;
+          }
+        }, 300);
+      }
+
+      // Uncomment when backend is ready
+      /*
+      const response = await fetch(`/api/staff/verify-event/${eventId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ status: "verified" }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+
+      showMessage("Event successfully verified", "success");
+      fetchEventsForVerification(); // Refresh the list
+      */
+    } catch (error) {
+      console.error("Failed to verify event:", error);
+      showMessage("Failed to verify event. Please try again.", "error");
+    }
+  }
+
+  // Function to reject an event
+  async function rejectEvent(eventId) {
+    const reason = prompt("Please provide a reason for rejecting this event:");
+    if (!reason) return; // User cancelled
+
+    try {
+      // Simulate API call until backend is implemented
+      console.log(`Rejecting event with ID: ${eventId}. Reason: ${reason}`);
+      showMessage("Event rejected", "success");
+
+      // Remove the rejected event from the list
+      const eventCard = document
+        .querySelector(`.reject-btn[data-id="${eventId}"]`)
+        .closest(".event-card");
+      if (eventCard) {
+        eventCard.style.opacity = "0";
+        setTimeout(() => {
+          eventCard.remove();
+
+          // Check if there are no more events
+          const container = document.getElementById(
+            "events-verification-container"
+          );
+          if (container.children.length === 0) {
+            container.innerHTML = `<div class="no-events-message">No events pending verification.</div>`;
+          }
+        }, 300);
+      }
+
+      // Uncomment when backend is ready
+      /*
+      const response = await fetch(`/api/staff/reject-event/${eventId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ 
+          status: "rejected",
+          rejection_reason: reason
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+
+      showMessage("Event rejected", "success");
+      fetchEventsForVerification(); // Refresh the list
+      */
+    } catch (error) {
+      console.error("Failed to reject event:", error);
+      showMessage("Failed to reject event. Please try again.", "error");
+    }
+  }
+
+  // Load staff-assisted accounts and events for verification
+  fetchStaffAssistedAccounts();
+  fetchEventsForVerification();
 
   // Initial load of the profile
   loadStaffProfile();

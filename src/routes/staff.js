@@ -5,54 +5,73 @@ const multer = require("multer");
 const path = require("path");
 const crypto = require("crypto");
 
-// Query helper functions to use with promises
-const executeQuery = (query, params = []) => {
-  return db.promise().execute(query, params)
-    .then(([results]) => results)
-    .catch(error => {
-      console.error('Database error:', error);
-      throw error;
-    });
+// Query helper functions to use promises
+const executeQuery = async (query, params = []) => {
+  try {
+    const [results] = await db.execute(query, params);
+    return results;
+  } catch (error) {
+    console.error("Database error:", error);
+    throw error;
+  }
 };
 
 // Function to get staff performance metrics using view
 const getStaffPerformance = async (staffId) => {
-  return executeQuery(
-    'SELECT * FROM v_staff_performance WHERE staff_id = ?',
-    [staffId]
-  );
+  return executeQuery("SELECT * FROM v_staff_performance WHERE staff_id = ?", [
+    staffId,
+  ]);
 };
 
-// Function to validate staff auth using view
+// Function to validate staff auth using direct table access
 const validateStaffAuth = async (username, password) => {
-  return executeQuery(
-    'SELECT * FROM v_staff_auth WHERE username = ? AND password = ?',
-    [username, password]
-  );
-};
+  try {
+    const hashedPassword = crypto
+      .createHash("sha256")
+      .update(password)
+      .digest("hex");
 
-// Function to get staff workload using SQL function
+    const result = await executeQuery(
+      `SELECT 
+        staff_id, 
+        username, 
+        first_name, 
+        last_name, 
+        email, 
+        mobile, 
+        status,
+        nid,
+        DATE_FORMAT(dob, '%Y-%m-%d') as dob,
+        house_no,
+        road_no,
+        area,
+        district,
+        administrative_div,
+        zip
+      FROM STAFF WHERE username = ? AND password = ?`,
+      [username, hashedPassword]
+    );
+
+    console.log("Query result:", result);
+    return result;
+  } catch (error) {
+    console.error("Error in validateStaffAuth:", error);
+    throw error;
+  }
+}; // Function to get staff workload using SQL function
 const getStaffWorkload = async (staffId) => {
-  return executeQuery(
-    'SELECT fn_calculate_staff_workload(?) as workload',
-    [staffId]
-  );
+  return executeQuery("SELECT fn_calculate_staff_workload(?) as workload", [
+    staffId,
+  ]);
 };
 
 // Function to track staff status changes using stored procedure
 const trackStatusChange = async (staffId, newStatus, reason) => {
-  return executeQuery(
-    'CALL sp_track_status_change(?, ?, ?)',
-    [staffId, newStatus, reason]
-  );
-};
-
-// Function to get staff workload using SQL function
-const getStaffWorkload = async (staffId) => {
-  return executeQuery(
-    'SELECT fn_calculate_staff_workload(?) as workload',
-    [staffId]
-  );
+  return executeQuery("CALL sp_track_status_change(?, ?, ?)", [
+    staffId,
+    newStatus,
+    reason,
+  ]);
 };
 
 // Create uploads directory if it doesn't exist
@@ -517,12 +536,18 @@ router.post(
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'unverified')
         `;
 
+      // Hash the password before storing
+      const hashedPassword = crypto
+        .createHash("sha256")
+        .update(password)
+        .digest("hex");
+
       const insertValues = [
         staffId,
         firstName,
         lastName,
         username,
-        password,
+        hashedPassword,
         mobileNumber,
         email,
         nid,
@@ -611,103 +636,62 @@ router.post("/signin", async (req, res) => {
 
   try {
     const { username, password } = req.body;
-    console.log(`🔍 Attempting to authenticate staff with username: ${username}`);
+    console.log(
+      `🔍 Attempting to authenticate staff with username: ${username}`
+    );
 
     // Use our view to validate credentials and get staff info
     const staffAuth = await validateStaffAuth(username, password);
-    console.log(`🔐 Authentication result: ${staffAuth.length > 0 ? "Success" : "Failed"}`);
+    console.log(
+      `🔐 Authentication result: ${staffAuth.length > 0 ? "Success" : "Failed"}`
+    );
 
     if (staffAuth.length === 0) {
       // Check if username exists but password is wrong
       const userCheck = await executeQuery(
-        "SELECT username FROM v_staff_auth WHERE username = ?",
+        "SELECT username FROM STAFF WHERE username = ?",
         [username]
       );
 
+      console.log(`❌ Authentication failed for username: ${username}`);
       return res.status(401).json({
         success: false,
-        message: userCheck.length > 0
-          ? "Invalid password"
-          : "Invalid username or account not found",
+        message:
+          userCheck.length > 0
+            ? "Invalid password"
+            : "Invalid username or account not found",
       });
     }
 
-    // Get staff performance metrics
-    const performanceData = await getStaffPerformance(staffAuth[0].staff_id);
-    
-    // Get current workload using SQL function
-    const workloadData = await getStaffWorkload(staffAuth[0].staff_id);
+    console.log(
+      `✅ Staff authenticated successfully: ${staffAuth[0].username} (${staffAuth[0].staff_id})`
+    );
+    console.log(`📊 Staff status: ${staffAuth[0].status}`);
 
-    // Track login activity using stored procedure
-    await trackStatusChange(staffAuth[0].staff_id, 'LOGGED_IN', 'User login');
-
-    // Return enhanced response with performance metrics
+    // Return enhanced staff info with complete profile data
+    const staff = staffAuth[0];
     res.json({
       success: true,
       message: "Login successful",
-      staff: {
-        id: staffAuth[0].staff_id,
-        username: staffAuth[0].username,
-        firstName: staffAuth[0].first_name,
-        lastName: staffAuth[0].last_name,
-        email: staffAuth[0].email,
-        status: staffAuth[0].status,
-        performance: performanceData[0] || {},
-        currentWorkload: workloadData[0]?.workload || 0
-      }
-    });
-        [username]
-      );
-
-      if (userExists.length > 0) {
-        console.log(
-          `⚠️ Username '${username}' found but password is incorrect`
-        );
-        return res.status(401).json({
-          success: false,
-          message: "Incorrect password. Please try again.",
-        });
-      } else {
-        console.log(`❌ Username '${username}' not found`);
-        return res.status(401).json({
-          success: false,
-          message: "Username not found. Please check your username or sign up.",
-        });
-      }
-    }
-
-    const staff = rows[0];
-    console.log(
-      `✅ Staff authenticated successfully: ${staff.username} (${staff.staff_id})`
-    );
-    console.log(`📊 Staff status: ${staff.status || "unverified"}`);
-
-    // Send back staff info for profile
-    res.json({
-      success: true,
       staffId: staff.staff_id,
-      staffStatus: staff.status || "unverified",
       staffData: {
+        id: staff.staff_id,
+        username: staff.username,
         first_name: staff.first_name,
         last_name: staff.last_name,
-        username: staff.username,
         email: staff.email,
+        status: staff.status,
         mobile: staff.mobile,
         nid: staff.nid,
+        dob: staff.dob,
+        // Include address fields directly
         house_no: staff.house_no,
         road_no: staff.road_no,
         area: staff.area,
         district: staff.district,
         administrative_div: staff.administrative_div,
         zip: staff.zip,
-      },
-      profile: {
-        firstName: staff.first_name,
-        lastName: staff.last_name,
-        username: staff.username,
-        email: staff.email,
-        mobile: staff.mobile,
-        nid: staff.nid,
+        // Also include nested address structure for consistency
         address: {
           houseNo: staff.house_no,
           roadNo: staff.road_no,
@@ -717,20 +701,59 @@ router.post("/signin", async (req, res) => {
           zipCode: staff.zip,
         },
       },
+      staffStatus: staff.status,
     });
   } catch (error) {
-    console.error("Error during signin:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    console.error("❌ Error during signin:", error);
+    res.status(500).json({
+      success: false,
+      message:
+        error.code === "ER_SP_DOES_NOT_EXIST"
+          ? "Service temporarily unavailable"
+          : "Internal server error",
+    });
   }
 });
 
 // Get staff profile data
 router.get("/profile/:staffId", async (req, res) => {
   try {
-    const [rows] = await db.execute(
-      "SELECT staff_id, first_name, last_name, username, email, mobile, nid, house_no, road_no, area, district, administrative_div, zip FROM staff WHERE staff_id = ?",
-      [req.params.staffId]
-    );
+    console.log("Getting profile for staffId:", req.params.staffId);
+    const staffId = req.params.staffId;
+
+    if (!staffId) {
+      return res.status(400).json({
+        success: false,
+        message: "Staff ID is required",
+      });
+    }
+
+    // Improved query with comprehensive staff information
+    // Using direct table access with all fields explicitly selected
+    const query = `
+      SELECT 
+        staff_id,
+        first_name,
+        last_name,
+        username,
+        email,
+        mobile,
+        nid,
+        DATE_FORMAT(dob, '%Y-%m-%d') as dob,
+        house_no,
+        road_no,
+        area,
+        district,
+        administrative_div,
+        zip,
+        status,
+        created_at,
+        last_updated
+      FROM STAFF 
+      WHERE staff_id = ? OR username = ?
+    `;
+
+    const [rows] = await db.execute(query, [staffId, staffId]);
 
     if (rows.length === 0) {
       return res.status(404).json({
@@ -740,15 +763,22 @@ router.get("/profile/:staffId", async (req, res) => {
     }
 
     const staff = rows[0];
+    console.log("Fetched staff data:", staff);
+
+    // Enhanced response with both nested and flat structure for better compatibility
     res.json({
       success: true,
       profile: {
+        staffId: staff.staff_id,
         firstName: staff.first_name,
         lastName: staff.last_name,
         username: staff.username,
         email: staff.email,
         mobile: staff.mobile,
         nid: staff.nid,
+        dob: staff.dob,
+        status: staff.status,
+        // Include both nested and flat structure for address
         address: {
           houseNo: staff.house_no,
           roadNo: staff.road_no,
@@ -757,6 +787,15 @@ router.get("/profile/:staffId", async (req, res) => {
           administrativeDiv: staff.administrative_div,
           zipCode: staff.zip,
         },
+        // Add flat structure fields for direct access
+        house_no: staff.house_no,
+        road_no: staff.road_no,
+        area: staff.area,
+        district: staff.district,
+        administrative_div: staff.administrative_div,
+        zip: staff.zip,
+        created_at: staff.created_at,
+        last_updated: staff.last_updated,
       },
     });
   } catch (error) {
@@ -926,7 +965,12 @@ router.put("/update/:staffId", async (req, res) => {
 
       // For simplicity, we're assuming passwords are stored in plaintext
       // In a real app, you would use bcrypt or similar to compare hashed passwords
-      if (storedPassword !== currentPassword) {
+      const hashedCurrentPassword = crypto
+        .createHash("sha256")
+        .update(currentPassword)
+        .digest("hex");
+
+      if (storedPassword !== hashedCurrentPassword) {
         console.error("Current password verification failed");
         return res.status(400).json({
           success: false,
@@ -934,9 +978,15 @@ router.put("/update/:staffId", async (req, res) => {
         });
       }
 
+      // Hash the new password before storing
+      const hashedNewPassword = crypto
+        .createHash("sha256")
+        .update(newPassword)
+        .digest("hex");
+
       // Add password to updates
       updates.push("password = ?");
-      values.push(newPassword);
+      values.push(hashedNewPassword);
 
       console.log("Password verification successful, will update password");
     }
@@ -960,18 +1010,10 @@ router.put("/update/:staffId", async (req, res) => {
     console.log("Executing update query:", query);
     console.log("With values:", values);
 
-    // Use transaction to ensure data integrity
-    let result;
+    // Execute the update query directly without transaction
     try {
-      await db.execute("SET TRANSACTION ISOLATION LEVEL READ COMMITTED");
-      await db.beginTransaction();
-
-      const [queryResult] = await db.execute(query, values);
-      result = queryResult;
+      const [result] = await db.execute(query, values);
       console.log("Update result:", result);
-
-      await db.commit();
-      console.log("Transaction committed successfully");
 
       // Log if any rows were actually updated
       if (result.affectedRows === 0) {
@@ -987,12 +1029,6 @@ router.put("/update/:staffId", async (req, res) => {
       }
     } catch (dbError) {
       console.error("Database error during update:", dbError);
-      try {
-        await db.rollback();
-        console.log("Transaction rolled back due to error");
-      } catch (rollbackError) {
-        console.error("Error during rollback:", rollbackError);
-      }
       return res.status(500).json({
         success: false,
         message: "Database error: " + dbError.message,

@@ -1,541 +1,683 @@
 // SHODESH Individual Registration - Modern JavaScript with Backend Integration
 
+// Check if this registration is being assisted by a staff member
+function checkStaffAssistance() {
+  const staffId = localStorage.getItem("staffId");
+  const staffUsername = localStorage.getItem("staffUsername");
+
+  if (staffId && staffUsername) {
+    console.log("📋 Registration is being assisted by staff:", staffUsername);
+
+    // Set the hidden field values only - no visual indicator
+    document.getElementById("assistedByStaffId").value = staffId;
+    document.getElementById("assistedByStaffUsername").value = staffUsername;
+  }
+}
+
 // Initialize districts when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    initializeDistricts();
-    initializeFormValidation();
-    initializePasswordToggle();
+document.addEventListener("DOMContentLoaded", function () {
+  initializeDistricts();
+  initializeFormValidation();
+  initializePasswordToggle();
+  checkStaffAssistance();
 });
 
 // Bangladesh districts array
 function initializeDistricts() {
-    const districtSelect = document.getElementById('district');
-    const districts = [
-        'Bagerhat', 'Bandarban', 'Barguna', 'Barisal', 'Bhola', 'Bogra', 'Brahmanbaria',
-        'Chandpur', 'Chittagong', 'Chuadanga', 'Comilla', "Cox's Bazar", 'Dhaka', 'Dinajpur',
-        'Faridpur', 'Feni', 'Gaibandha', 'Gazipur', 'Gopalganj', 'Habiganj', 'Jamalpur',
-        'Jessore', 'Jhalokati', 'Jhenaidah', 'Joypurhat', 'Khagrachhari', 'Khulna',
-        'Kishoreganj', 'Kurigram', 'Kushtia', 'Lakshmipur', 'Lalmonirhat', 'Madaripur',
-        'Magura', 'Manikganj', 'Meherpur', 'Moulvibazar', 'Munshiganj', 'Mymensingh',
-        'Naogaon', 'Narail', 'Narayanganj', 'Narsingdi', 'Natore', 'Nawabganj', 'Netrakona',
-        'Nilphamari', 'Noakhali', 'Pabna', 'Panchagarh', 'Patuakhali', 'Pirojpur', 'Rajbari',
-        'Rajshahi', 'Rangamati', 'Rangpur', 'Satkhira', 'Shariatpur', 'Sherpur', 'Sirajganj',
-        'Sunamganj', 'Sylhet', 'Tangail', 'Thakurgaon'
-    ];
-    
-    districts.forEach(district => {
-        const option = document.createElement('option');
-        option.value = district;
-        option.textContent = district;
-        districtSelect.appendChild(option);
-    });
+  const districtSelect = document.getElementById("district");
+  const districts = [
+    "Bagerhat",
+    "Bandarban",
+    "Barguna",
+    "Barisal",
+    "Bhola",
+    "Bogra",
+    "Brahmanbaria",
+    "Chandpur",
+    "Chittagong",
+    "Chuadanga",
+    "Comilla",
+    "Cox's Bazar",
+    "Dhaka",
+    "Dinajpur",
+    "Faridpur",
+    "Feni",
+    "Gaibandha",
+    "Gazipur",
+    "Gopalganj",
+    "Habiganj",
+    "Jamalpur",
+    "Jessore",
+    "Jhalokati",
+    "Jhenaidah",
+    "Joypurhat",
+    "Khagrachhari",
+    "Khulna",
+    "Kishoreganj",
+    "Kurigram",
+    "Kushtia",
+    "Lakshmipur",
+    "Lalmonirhat",
+    "Madaripur",
+    "Magura",
+    "Manikganj",
+    "Meherpur",
+    "Moulvibazar",
+    "Munshiganj",
+    "Mymensingh",
+    "Naogaon",
+    "Narail",
+    "Narayanganj",
+    "Narsingdi",
+    "Natore",
+    "Nawabganj",
+    "Netrakona",
+    "Nilphamari",
+    "Noakhali",
+    "Pabna",
+    "Panchagarh",
+    "Patuakhali",
+    "Pirojpur",
+    "Rajbari",
+    "Rajshahi",
+    "Rangamati",
+    "Rangpur",
+    "Satkhira",
+    "Shariatpur",
+    "Sherpur",
+    "Sirajganj",
+    "Sunamganj",
+    "Sylhet",
+    "Tangail",
+    "Thakurgaon",
+  ];
+
+  districts.forEach((district) => {
+    const option = document.createElement("option");
+    option.value = district;
+    option.textContent = district;
+    districtSelect.appendChild(option);
+  });
 }
 
 // Initialize real-time form validation
 function initializeFormValidation() {
-    // Username availability checking
-    const usernameInput = document.getElementById('username');
-    if (usernameInput) {
-        let usernameTimeout;
-        usernameInput.addEventListener('input', function() {
-            clearTimeout(usernameTimeout);
-            const username = this.value.trim();
-            
-            if (username.length >= 4) {
-                usernameTimeout = setTimeout(() => {
-                    checkAvailability('username', username, usernameInput);
-                }, 500); // Wait 500ms after user stops typing
-            }
-        });
-    }
+  // Username availability checking
+  const usernameInput = document.getElementById("username");
+  if (usernameInput) {
+    let usernameTimeout;
+    usernameInput.addEventListener("input", function () {
+      clearTimeout(usernameTimeout);
+      const username = this.value.trim();
 
-    // Email availability checking
-    const emailInput = document.getElementById('email');
-    if (emailInput) {
-        let emailTimeout;
-        emailInput.addEventListener('input', function() {
-            clearTimeout(emailTimeout);
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            const email = this.value.trim();
-            
-            if (email && emailRegex.test(email)) {
-                emailTimeout = setTimeout(() => {
-                    checkAvailability('email', email, emailInput);
-                }, 500); // Wait 500ms after user stops typing
-            } else if (email && !emailRegex.test(email)) {
-                this.style.borderColor = '#ff0000';
-                this.title = 'Please enter a valid email address';
-            } else {
-                this.style.borderColor = '';
-                this.title = '';
-            }
-        });
-    }
+      if (username.length >= 4) {
+        usernameTimeout = setTimeout(() => {
+          checkAvailability("username", username, usernameInput);
+        }, 500); // Wait 500ms after user stops typing
+      }
+    });
+  }
 
-    // Phone number validation and availability checking
-    const phoneInput = document.getElementById('phoneNumber');
-    if (phoneInput) {
-        let phoneTimeout;
-        phoneInput.addEventListener('input', function() {
-            this.value = this.value.replace(/[^0-9]/g, '');
-            validatePhoneNumber(this);
-            
-            clearTimeout(phoneTimeout);
-            const phoneNumber = this.value.trim();
-            
-            if (phoneNumber.length === 11) {
-                phoneTimeout = setTimeout(() => {
-                    // Format the number before checking
-                    let formattedNumber = phoneNumber;
-                    if (!formattedNumber.startsWith('0')) {
-                        formattedNumber = '0' + formattedNumber.substring(1);
-                    }
-                    checkAvailability('mobile', formattedNumber, phoneInput);
-                }, 500);
-            }
-        });
-    }
+  // Email availability checking
+  const emailInput = document.getElementById("email");
+  if (emailInput) {
+    let emailTimeout;
+    emailInput.addEventListener("input", function () {
+      clearTimeout(emailTimeout);
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const email = this.value.trim();
 
-    // NID validation and availability checking
-    const nidInput = document.getElementById('nid');
-    if (nidInput) {
-        let nidTimeout;
-        nidInput.addEventListener('input', function() {
-            this.value = this.value.replace(/[^0-9]/g, '');
-            validateNID(this);
-            
-            clearTimeout(nidTimeout);
-            const nid = this.value.trim();
-            
-            if (nid.length >= 10 && nid.length <= 17) {
-                nidTimeout = setTimeout(() => {
-                    checkAvailability('nid', nid, nidInput);
-                }, 500);
-            }
-        });
-    }
+      if (email && emailRegex.test(email)) {
+        emailTimeout = setTimeout(() => {
+          checkAvailability("email", email, emailInput);
+        }, 500); // Wait 500ms after user stops typing
+      } else if (email && !emailRegex.test(email)) {
+        this.style.borderColor = "#ff0000";
+        this.title = "Please enter a valid email address";
+      } else {
+        this.style.borderColor = "";
+        this.title = "";
+      }
+    });
+  }
 
-    // ZIP code validation
-    const zipInput = document.getElementById('zipCode');
-    if (zipInput) {
-        zipInput.addEventListener('input', function() {
-            this.value = this.value.replace(/[^0-9]/g, '');
-            validateZipCode(this);
-        });
-    }
+  // Phone number validation and availability checking
+  const phoneInput = document.getElementById("phoneNumber");
+  if (phoneInput) {
+    let phoneTimeout;
+    phoneInput.addEventListener("input", function () {
+      this.value = this.value.replace(/[^0-9]/g, "");
+      validatePhoneNumber(this);
 
-    // bKash number validation
-    const bkashInput = document.getElementById('bkashNumber');
-    if (bkashInput) {
-        bkashInput.addEventListener('input', function() {
-            this.value = this.value.replace(/[^0-9]/g, '');
-            validateBkashNumber(this);
-        });
-    }
+      clearTimeout(phoneTimeout);
+      const phoneNumber = this.value.trim();
 
-    // Password matching
-    const passwordInput = document.getElementById('password');
-    const confirmPasswordInput = document.getElementById('confirmPassword');
-    
-    if (confirmPasswordInput) {
-        confirmPasswordInput.addEventListener('input', function() {
-            validatePasswordMatch(passwordInput, confirmPasswordInput);
-        });
-    }
+      if (phoneNumber.length === 11) {
+        phoneTimeout = setTimeout(() => {
+          // Use the number as-is without any modification
+          checkAvailability("mobile", phoneNumber, phoneInput);
+        }, 500);
+      }
+    });
+  }
+
+  // NID validation and availability checking
+  const nidInput = document.getElementById("nid");
+  if (nidInput) {
+    let nidTimeout;
+    nidInput.addEventListener("input", function () {
+      this.value = this.value.replace(/[^0-9]/g, "");
+      validateNID(this);
+
+      clearTimeout(nidTimeout);
+      const nid = this.value.trim();
+
+      if (nid.length >= 10 && nid.length <= 17) {
+        nidTimeout = setTimeout(() => {
+          checkAvailability("nid", nid, nidInput);
+        }, 500);
+      }
+    });
+  }
+
+  // ZIP code validation
+  const zipInput = document.getElementById("zipCode");
+  if (zipInput) {
+    zipInput.addEventListener("input", function () {
+      this.value = this.value.replace(/[^0-9]/g, "");
+      validateZipCode(this);
+    });
+  }
+
+  // bKash number validation
+  const bkashInput = document.getElementById("bkashNumber");
+  if (bkashInput) {
+    bkashInput.addEventListener("input", function () {
+      this.value = this.value.replace(/[^0-9]/g, "");
+      validateBkashNumber(this);
+    });
+  }
+
+  // Password matching
+  const passwordInput = document.getElementById("password");
+  const confirmPasswordInput = document.getElementById("confirmPassword");
+
+  if (confirmPasswordInput) {
+    confirmPasswordInput.addEventListener("input", function () {
+      validatePasswordMatch(passwordInput, confirmPasswordInput);
+    });
+  }
 }
 
 // Password toggle functionality
 function initializePasswordToggle() {
-    // This function will be called by the onclick in HTML
+  // This function will be called by the onclick in HTML
 }
 
 function togglePassword(fieldId) {
-    const field = document.getElementById(fieldId);
-    const button = field.parentElement.querySelector('.toggle-password i');
-    
-    if (field.type === 'password') {
-        field.type = 'text';
-        button.className = 'fas fa-eye-slash';
-    } else {
-        field.type = 'password';
-        button.className = 'fas fa-eye';
-    }
+  const field = document.getElementById(fieldId);
+  const button = field.parentElement.querySelector(".toggle-password i");
+
+  if (field.type === "password") {
+    field.type = "text";
+    button.className = "fas fa-eye-slash";
+  } else {
+    field.type = "password";
+    button.className = "fas fa-eye";
+  }
 }
 
 // Validation functions
 function validatePhoneNumber(input) {
-    const value = input.value;
-    const group = input.closest('.form-group');
-    
-    if (value.length === 0) {
-        setFieldState(group, 'neutral');
-        return true;
-    }
-    
-    if (value.length !== 11 || !value.startsWith('0')) {
-        setFieldState(group, 'error');
-        return false;
-    }
-    
-    setFieldState(group, 'success');
+  const value = input.value;
+  const group = input.closest(".form-group");
+
+  if (value.length === 0) {
+    setFieldState(group, "neutral");
     return true;
+  }
+
+  if (value.length !== 11 || !value.startsWith("0")) {
+    setFieldState(group, "error");
+    return false;
+  }
+
+  setFieldState(group, "success");
+  return true;
 }
 
 function validateNID(input) {
-    const value = input.value;
-    const group = input.closest('.form-group');
-    
-    if (value.length === 0) {
-        setFieldState(group, 'neutral');
-        return true;
-    }
-    
-    if (value.length < 10 || value.length > 17) {
-        setFieldState(group, 'error');
-        return false;
-    }
-    
-    setFieldState(group, 'success');
+  const value = input.value;
+  const group = input.closest(".form-group");
+
+  if (value.length === 0) {
+    setFieldState(group, "neutral");
     return true;
+  }
+
+  if (value.length < 10 || value.length > 17) {
+    setFieldState(group, "error");
+    return false;
+  }
+
+  setFieldState(group, "success");
+  return true;
 }
 
 function validateZipCode(input) {
-    const value = input.value;
-    const group = input.closest('.form-group');
-    
-    if (value.length === 0) {
-        setFieldState(group, 'neutral');
-        return true;
-    }
-    
-    if (value.length !== 4) {
-        setFieldState(group, 'error');
-        return false;
-    }
-    
-    setFieldState(group, 'success');
+  const value = input.value;
+  const group = input.closest(".form-group");
+
+  if (value.length === 0) {
+    setFieldState(group, "neutral");
     return true;
+  }
+
+  if (value.length !== 4) {
+    setFieldState(group, "error");
+    return false;
+  }
+
+  setFieldState(group, "success");
+  return true;
 }
 
 function validateBkashNumber(input) {
-    const value = input.value;
-    const group = input.closest('.form-group');
-    
-    if (value.length === 0) {
-        setFieldState(group, 'neutral');
-        return true;
-    }
-    
-    if (value.length !== 11 || !value.startsWith('0')) {
-        setFieldState(group, 'error');
-        return false;
-    }
-    
-    setFieldState(group, 'success');
+  const value = input.value;
+  const group = input.closest(".form-group");
+
+  if (value.length === 0) {
+    setFieldState(group, "neutral");
     return true;
+  }
+
+  if (value.length !== 11 || !value.startsWith("0")) {
+    setFieldState(group, "error");
+    return false;
+  }
+
+  setFieldState(group, "success");
+  return true;
 }
 
 function validateEmail(input) {
-    const value = input.value;
-    const group = input.closest('.form-group');
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
-    if (value.length === 0) {
-        setFieldState(group, 'neutral');
-        return true;
-    }
-    
-    if (!emailRegex.test(value)) {
-        setFieldState(group, 'error');
-        return false;
-    }
-    
-    setFieldState(group, 'success');
+  const value = input.value;
+  const group = input.closest(".form-group");
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (value.length === 0) {
+    setFieldState(group, "neutral");
     return true;
+  }
+
+  if (!emailRegex.test(value)) {
+    setFieldState(group, "error");
+    return false;
+  }
+
+  setFieldState(group, "success");
+  return true;
 }
 
 function validateUsername(input) {
-    const value = input.value;
-    const group = input.closest('.form-group');
-    const usernamePattern = /^[a-zA-Z0-9._]+$/;
-    
-    if (value.length === 0) {
-        setFieldState(group, 'neutral');
-        return true;
-    }
-    
-    if (value.length < 4 || !usernamePattern.test(value)) {
-        setFieldState(group, 'error');
-        return false;
-    }
-    
-    setFieldState(group, 'success');
+  const value = input.value;
+  const group = input.closest(".form-group");
+  const usernamePattern = /^[a-zA-Z0-9._]+$/;
+
+  if (value.length === 0) {
+    setFieldState(group, "neutral");
     return true;
+  }
+
+  if (value.length < 4 || !usernamePattern.test(value)) {
+    setFieldState(group, "error");
+    return false;
+  }
+
+  setFieldState(group, "success");
+  return true;
 }
 
 function validatePasswordMatch(passwordInput, confirmPasswordInput) {
-    const group = confirmPasswordInput.closest('.form-group');
-    
-    if (confirmPasswordInput.value.length === 0) {
-        setFieldState(group, 'neutral');
-        return true;
-    }
-    
-    if (passwordInput.value !== confirmPasswordInput.value) {
-        setFieldState(group, 'error');
-        return false;
-    }
-    
-    setFieldState(group, 'success');
+  const group = confirmPasswordInput.closest(".form-group");
+
+  if (confirmPasswordInput.value.length === 0) {
+    setFieldState(group, "neutral");
     return true;
+  }
+
+  if (passwordInput.value !== confirmPasswordInput.value) {
+    setFieldState(group, "error");
+    return false;
+  }
+
+  setFieldState(group, "success");
+  return true;
 }
 
 function setFieldState(group, state) {
-    if (group) {
-        group.classList.remove('error', 'success');
-        if (state !== 'neutral') {
-            group.classList.add(state);
-        }
+  if (group) {
+    group.classList.remove("error", "success");
+    if (state !== "neutral") {
+      group.classList.add(state);
     }
+  }
 }
 
 // Main validation and submission function
 async function validateAndSubmit() {
-    
-    // Get all form values
-    const formData = {
-        firstName: document.getElementById('firstName').value.trim(),
-        lastName: document.getElementById('lastName').value.trim(),
-        username: document.getElementById('username').value.trim(),
-        email: document.getElementById('email').value.trim(),
-        phoneNumber: document.getElementById('phoneNumber').value.trim(),
-        nid: document.getElementById('nid').value.trim(),
-        dateOfBirth: document.getElementById('dateOfBirth').value,
-        houseNo: document.getElementById('houseNo').value.trim(),
-        roadNo: document.getElementById('roadNo').value.trim(),
-        area: document.getElementById('area').value.trim(),
-        district: document.getElementById('district').value,
-        division: document.getElementById('division').value,
-        zipCode: document.getElementById('zipCode').value.trim(),
-        bkashNumber: document.getElementById('bkashNumber').value.trim(),
-        bankAccount: document.getElementById('bankAccount').value.trim(),
-        password: document.getElementById('password').value,
-        confirmPassword: document.getElementById('confirmPassword').value
-    };
+  // Get all form values
+  const formData = {
+    firstName: document.getElementById("firstName").value.trim(),
+    lastName: document.getElementById("lastName").value.trim(),
+    username: document.getElementById("username").value.trim(),
+    email: document.getElementById("email").value.trim(),
+    phoneNumber: document.getElementById("phoneNumber").value.trim(),
+    nid: document.getElementById("nid").value.trim(),
+    dateOfBirth: document.getElementById("dateOfBirth").value,
+    houseNo: document.getElementById("houseNo").value.trim(),
+    roadNo: document.getElementById("roadNo").value.trim(),
+    area: document.getElementById("area").value.trim(),
+    district: document.getElementById("district").value,
+    division: document.getElementById("division").value,
+    zipCode: document.getElementById("zipCode").value.trim(),
+    bkashNumber: document.getElementById("bkashNumber").value.trim(),
+    bankAccount: document.getElementById("bankAccount").value.trim(),
+    password: document.getElementById("password").value,
+    confirmPassword: document.getElementById("confirmPassword").value,
+    // Include staff assistance data if available
+    assistedByStaffId:
+      document.getElementById("assistedByStaffId").value || null,
+    assistedByStaffUsername:
+      document.getElementById("assistedByStaffUsername").value || null,
+  };
 
-    console.log('📋 Form data collected:', formData);
+  console.log("📋 Form data collected:", formData);
 
-    // Basic required fields check
-    const requiredFields = ['firstName', 'lastName', 'username', 'email', 'phoneNumber', 'nid', 'dateOfBirth', 'houseNo', 'roadNo', 'area', 'district', 'division', 'zipCode', 'bkashNumber', 'bankAccount', 'password', 'confirmPassword'];
-    
-    for (let field of requiredFields) {
-        if (!formData[field]) {
-            showCustomAlert(`${field.replace(/([A-Z])/g, ' $1').toLowerCase()} is required`, 'error');
-            console.log(`❌ Missing field: ${field}`);
-            return;
-        }
+  // Basic required fields check
+  const requiredFields = [
+    "firstName",
+    "lastName",
+    "username",
+    "email",
+    "phoneNumber",
+    "nid",
+    "dateOfBirth",
+    "houseNo",
+    "roadNo",
+    "area",
+    "district",
+    "division",
+    "zipCode",
+    "bkashNumber",
+    "bankAccount",
+    "password",
+    "confirmPassword",
+  ];
+
+  for (let field of requiredFields) {
+    if (!formData[field]) {
+      showCustomAlert(
+        `${field.replace(/([A-Z])/g, " $1").toLowerCase()} is required`,
+        "error"
+      );
+      console.log(`❌ Missing field: ${field}`);
+      return;
     }
+  }
 
-    // Password match check
-    if (formData.password !== formData.confirmPassword) {
-        showCustomAlert('Passwords do not match', 'error');
-        console.log('❌ Password mismatch');
-        return;
-    }
+  // Password match check
+  if (formData.password !== formData.confirmPassword) {
+    showCustomAlert("Passwords do not match", "error");
+    console.log("❌ Password mismatch");
+    return;
+  }
 
-    // Username length validation (DB schema: INDIVIDUAL.username VARCHAR(15))
-    const USERNAME_MAX = 15;
-    if (formData.username && formData.username.length > USERNAME_MAX) {
-        showCustomAlert(`Username must be at most ${USERNAME_MAX} characters`, 'error');
-        console.log(`❌ Username too long: ${formData.username.length} chars`);
-        return;
-    }
+  // Username length validation (DB schema: INDIVIDUAL.username VARCHAR(15))
+  const USERNAME_MAX = 15;
+  if (formData.username && formData.username.length > USERNAME_MAX) {
+    showCustomAlert(
+      `Username must be at most ${USERNAME_MAX} characters`,
+      "error"
+    );
+    console.log(`❌ Username too long: ${formData.username.length} chars`);
+    return;
+  }
 
-    console.log('✅ Basic validation passed, submitting to backend...');
-    
-    // Submit to backend
-    await submitRegistration(formData);
+  console.log("✅ Basic validation passed, submitting to backend...");
+
+  // Submit to backend
+  await submitRegistration(formData);
 }
 
 // Submit registration to backend
 async function submitRegistration(formData) {
-    console.log('🚀 Starting backend submission...');
-    
-    const submitBtn = document.getElementById('submitBtn');
-    const btnText = submitBtn.querySelector('span');
-    const btnLoader = submitBtn.querySelector('.btn-loader');
-    
-    try {
-        console.log('🔄 Setting loading state...');
-        // Show loading state
-        submitBtn.disabled = true;
-        if (btnText) btnText.style.display = 'none';
-        if (btnLoader) btnLoader.style.display = 'block';
+  console.log("🚀 Starting backend submission...");
 
-        // Show loading alert
-        showCustomAlert('🔄 Registering your account... Please wait.', 'loading');
+  const submitBtn = document.getElementById("submitBtn");
+  const btnText = submitBtn.querySelector("span");
+  const btnLoader = submitBtn.querySelector(".btn-loader");
 
-        console.log('📤 Sending request to /api/individual/register...');
-        
-        // Use XMLHttpRequest instead of fetch and await the parsed JSON response
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', '/api/individual/register', true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
+  try {
+    console.log("🔄 Setting loading state...");
+    // Show loading state
+    submitBtn.disabled = true;
+    if (btnText) btnText.style.display = "none";
+    if (btnLoader) btnLoader.style.display = "block";
 
-        const xhrPromise = new Promise((resolve, reject) => {
-            xhr.onload = function() {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    try {
-                        resolve(JSON.parse(xhr.responseText));
-                    } catch (e) {
-                        reject(new Error('Invalid JSON response from server'));
-                    }
-                } else {
-                    // Try to parse error body if available
-                    try {
-                        const err = JSON.parse(xhr.responseText);
-                        reject(new Error(err.message || `Server responded with status ${xhr.status}`));
-                    } catch (e) {
-                        reject(new Error(`Server responded with status ${xhr.status}: ${xhr.statusText}`));
-                    }
-                }
-            };
+    // Show loading alert
+    showCustomAlert("🔄 Registering your account... Please wait.", "loading");
 
-            xhr.onerror = function() {
-                reject(new Error('Network error occurred'));
-            };
+    console.log("📤 Sending request to /api/individual/register...");
 
-            xhr.send(JSON.stringify({
-                firstName: formData.firstName,
-                lastName: formData.lastName,
-                username: formData.username,
-                email: formData.email,
-                mobile: formData.phoneNumber,    // server expects `mobile`
-                nid: formData.nid,
-                dob: formData.dateOfBirth,       // server expects `dob`
-                houseNo: formData.houseNo,
-                roadNo: formData.roadNo,
-                area: formData.area,
-                district: formData.district,
-                division: formData.division,
-                zipCode: formData.zipCode,
-                bkashNumber: formData.bkashNumber,
-                bankAccount: formData.bankAccount,
-                password: formData.password
-            }));
-        });
+    // Use XMLHttpRequest instead of fetch and await the parsed JSON response
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/individual/register", true);
+    xhr.setRequestHeader("Content-Type", "application/json");
 
-        // Await the parsed response JSON
-        const data = await xhrPromise;
-        console.log('📥 Response received:', data);
-
-        // Remove loading alert
-        removeLoadingAlert();
-
-        if (data && data.success) {
-            console.log('✅ Registration successful!');
-            showCustomAlert(
-                `🎉 <strong>Registration Successful!</strong><br><br>
-                Your Individual ID: <strong>${data.individualId}</strong><br><br>
-                <small>Redirecting to sign-in page...</small>`, 
-                'success', 
-                4000
-            );
-            
-            // Redirect to signin page after a delay
-            setTimeout(() => {
-                window.location.href = 'signin.html';
-            }, 4000);
+    const xhrPromise = new Promise((resolve, reject) => {
+      xhr.onload = function () {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            resolve(JSON.parse(xhr.responseText));
+          } catch (e) {
+            reject(new Error("Invalid JSON response from server"));
+          }
         } else {
-            console.log('❌ Registration failed:', data.message);
-            
-            // Handle specific error types with enhanced messaging
-            let errorMessage = data.message;
-            let alertType = 'error';
-            
-            if (data.code === 'USERNAME_EXISTS') {
-                errorMessage = `<strong>Username Already Taken!</strong><br><br>${data.message}<br><br><small>Please try a different username.</small>`;
-            } else if (data.code === 'EMAIL_EXISTS') {
-                errorMessage = `<strong>Email Already Registered!</strong><br><br>${data.message}<br><br><small>Try logging in instead or use a different email.</small>`;
-            } else if (data.code === 'MOBILE_EXISTS') {
-                errorMessage = `<strong>Mobile Number Already Registered!</strong><br><br>${data.message}<br><br><small>Please use a different mobile number.</small>`;
-            } else if (data.code === 'NID_EXISTS') {
-                errorMessage = `<strong>NID Already Registered!</strong><br><br>${data.message}<br><br><small>Each person can only have one account.</small>`;
-            } else {
-                errorMessage = `<strong>Registration Failed!</strong><br><br>${data.message}`;
-            }
-            
-            showCustomAlert(errorMessage, alertType, 6000);
-            
-            // Focus on the problematic field if specified
-            if (data.field) {
-                const fieldElement = document.getElementById(data.field);
-                if (fieldElement) {
-                    fieldElement.focus();
-                    fieldElement.style.borderColor = '#ff0000';
-                    setTimeout(() => {
-                        fieldElement.style.borderColor = '';
-                    }, 3000);
-                }
-            }
+          // Try to parse error body if available
+          try {
+            const err = JSON.parse(xhr.responseText);
+            reject(
+              new Error(
+                err.message || `Server responded with status ${xhr.status}`
+              )
+            );
+          } catch (e) {
+            reject(
+              new Error(
+                `Server responded with status ${xhr.status}: ${xhr.statusText}`
+              )
+            );
+          }
         }
-    } catch (error) {
-        console.error('💥 Registration error:', error);
-        removeLoadingAlert();
-        showCustomAlert(
-            `<strong>Network Error</strong><br><br>
-            ${error.message}<br><br>
-            <small>Please check your connection and try again.</small>`, 
-            'error', 
-            7000
-        );
-    } finally {
-        console.log('🔄 Resetting button state...');
-        // Reset button state
-        submitBtn.disabled = false;
-        if (btnText) btnText.style.display = 'inline';
-        if (btnLoader) btnLoader.style.display = 'none';
+      };
+
+      xhr.onerror = function () {
+        reject(new Error("Network error occurred"));
+      };
+
+      // Prepare the payload with staff assistance data if available
+      const payload = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        username: formData.username,
+        email: formData.email,
+        mobile: formData.phoneNumber, // server expects `mobile`
+        nid: formData.nid,
+        dob: formData.dateOfBirth, // server expects `dob`
+        houseNo: formData.houseNo,
+        roadNo: formData.roadNo,
+        area: formData.area,
+        district: formData.district,
+        division: formData.division,
+        zipCode: formData.zipCode,
+        bkashNumber: formData.bkashNumber,
+        bankAccount: formData.bankAccount,
+        password: formData.password,
+        // Include staff assistance data if available
+        assistedByStaffId: formData.assistedByStaffId || null,
+        assistedByStaffUsername: formData.assistedByStaffUsername || null,
+      };
+
+      // Log the payload for debugging
+      console.log(
+        "📤 Sending registration data with staff assistance:",
+        payload
+      );
+      console.log(
+        "Is this a staff-assisted registration:",
+        formData.assistedByStaffId ? "YES" : "NO"
+      );
+
+      xhr.send(JSON.stringify(payload));
+    });
+
+    // Await the parsed response JSON
+    const data = await xhrPromise;
+    console.log("📥 Response received:", data);
+
+    // Log raw response for debugging
+    console.log("📝 Raw xhr status:", xhr.status);
+    console.log("📝 Raw xhr responseText:", xhr.responseText);
+
+    // Remove loading alert
+    removeLoadingAlert();
+
+    if (data && data.success) {
+      console.log("✅ Registration successful!");
+      showCustomAlert(
+        `🎉 <strong>Registration Successful!</strong><br><br>
+                Your Individual ID: <strong>${data.individualId}</strong><br><br>
+                <small>Redirecting to sign-in page...</small>`,
+        "success",
+        4000
+      );
+
+      // Redirect to signin page after a delay
+      setTimeout(() => {
+        window.location.href = "signin.html";
+      }, 4000);
+    } else {
+      console.log("❌ Registration failed:", data.message);
+
+      // Handle specific error types with enhanced messaging
+      let errorMessage = data.message;
+      let alertType = "error";
+
+      if (data.code === "USERNAME_EXISTS") {
+        errorMessage = `<strong>Username Already Taken!</strong><br><br>${data.message}<br><br><small>Please try a different username.</small>`;
+      } else if (data.code === "EMAIL_EXISTS") {
+        errorMessage = `<strong>Email Already Registered!</strong><br><br>${data.message}<br><br><small>Try logging in instead or use a different email.</small>`;
+      } else if (data.code === "MOBILE_EXISTS") {
+        errorMessage = `<strong>Mobile Number Already Registered!</strong><br><br>${data.message}<br><br><small>Please use a different mobile number.</small>`;
+      } else if (data.code === "NID_EXISTS") {
+        errorMessage = `<strong>NID Already Registered!</strong><br><br>${data.message}<br><br><small>Each person can only have one account.</small>`;
+      } else {
+        errorMessage = `<strong>Registration Failed!</strong><br><br>${data.message}`;
+      }
+
+      showCustomAlert(errorMessage, alertType, 6000);
+
+      // Focus on the problematic field if specified
+      if (data.field) {
+        const fieldElement = document.getElementById(data.field);
+        if (fieldElement) {
+          fieldElement.focus();
+          fieldElement.style.borderColor = "#ff0000";
+          setTimeout(() => {
+            fieldElement.style.borderColor = "";
+          }, 3000);
+        }
+      }
     }
+  } catch (error) {
+    console.error("💥 Registration error:", error);
+    console.error("💥 Error stack:", error.stack);
+
+    // Attempt to get any xhr details if available
+    let errorDetails = "";
+    if (xhr && xhr.status) {
+      errorDetails = `Server responded with status ${xhr.status}`;
+      try {
+        if (xhr.responseText) {
+          errorDetails += `\nResponse: ${xhr.responseText}`;
+        }
+      } catch (e) {
+        // Ignore any errors when trying to access xhr properties
+      }
+    }
+
+    console.error("💥 Additional error details:", errorDetails);
+
+    removeLoadingAlert();
+    showCustomAlert(
+      `<strong>Registration Error</strong><br><br>
+            ${error.message}<br><br>
+            <small>Please try again or contact support.<br>Technical details: ${error.message}</small>`,
+      "error",
+      7000
+    );
+  } finally {
+    console.log("🔄 Resetting button state...");
+    // Reset button state
+    submitBtn.disabled = false;
+    if (btnText) btnText.style.display = "inline";
+    if (btnLoader) btnLoader.style.display = "none";
+  }
 }
 
 // Function to check username/email/mobile/nid availability
 function checkAvailability(field, value, inputElement) {
-    // Add cache-busting parameter
-    const cacheBuster = new Date().getTime();
-    // Make a direct XMLHttpRequest instead of fetch to bypass service worker
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', `/api/individual/check-availability?_cb=${cacheBuster}`, true);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                try {
-                    const data = JSON.parse(xhr.responseText);
-                    if (data.success) {
-                        if (data.available) {
-                            inputElement.style.borderColor = '#2ed573';
-                            inputElement.style.boxShadow = '0 0 10px rgba(46, 213, 115, 0.3)';
-                            inputElement.title = `✅ ${data.message}`;
-                        } else {
-                            inputElement.style.borderColor = '#ff4757';
-                            inputElement.style.boxShadow = '0 0 10px rgba(255, 71, 87, 0.3)';
-                            inputElement.title = `❌ ${data.message}`;
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error parsing response:', error);
-                }
+  // Add cache-busting parameter
+  const cacheBuster = new Date().getTime();
+  // Make a direct XMLHttpRequest instead of fetch to bypass service worker
+  const xhr = new XMLHttpRequest();
+  xhr.open(
+    "POST",
+    `/api/individual/check-availability?_cb=${cacheBuster}`,
+    true
+  );
+  xhr.setRequestHeader("Content-Type", "application/json");
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4) {
+      if (xhr.status === 200) {
+        try {
+          const data = JSON.parse(xhr.responseText);
+          if (data.success) {
+            if (data.available) {
+              inputElement.style.borderColor = "#2ed573";
+              inputElement.style.boxShadow = "0 0 10px rgba(46, 213, 115, 0.3)";
+              inputElement.title = `✅ ${data.message}`;
             } else {
-                console.error('Request failed with status:', xhr.status);
+              inputElement.style.borderColor = "#ff4757";
+              inputElement.style.boxShadow = "0 0 10px rgba(255, 71, 87, 0.3)";
+              inputElement.title = `❌ ${data.message}`;
             }
+          }
+        } catch (error) {
+          console.error("Error parsing response:", error);
         }
-    };
-    xhr.onerror = function() {
-        console.error('Error checking availability:', 'Network error');
-    };
-    xhr.send(JSON.stringify({ field: field, value: value }));
-    
-    /* Original fetch code - commented out
+      } else {
+        console.error("Request failed with status:", xhr.status);
+      }
+    }
+  };
+  xhr.onerror = function () {
+    console.error("Error checking availability:", "Network error");
+  };
+  xhr.send(JSON.stringify({ field: field, value: value }));
+
+  /* Original fetch code - commented out
     fetch(`/api/individual/check-availability?_cb=${cacheBuster}`, {
         method: 'POST',
         headers: {
@@ -546,37 +688,37 @@ function checkAvailability(field, value, inputElement) {
 }
 
 // Custom alert functions (same as signin and donor registration)
-function showCustomAlert(message, type = 'info', duration = 5000) {
-    // Remove any existing alerts
-    const existingAlerts = document.querySelectorAll('.custom-alert');
-    existingAlerts.forEach(alert => alert.remove());
+function showCustomAlert(message, type = "info", duration = 5000) {
+  // Remove any existing alerts
+  const existingAlerts = document.querySelectorAll(".custom-alert");
+  existingAlerts.forEach((alert) => alert.remove());
 
-    // Create alert container
-    const alertContainer = document.createElement('div');
-    alertContainer.className = `custom-alert ${type}`;
-    
-    // Set icon based on type
-    let icon;
-    switch(type) {
-        case 'success':
-            icon = '✅';
-            break;
-        case 'error':
-            icon = '❌';
-            break;
-        case 'warning':
-            icon = '⚠️';
-            break;
-        case 'loading':
-            icon = '⏳';
-            break;
-        case 'info':
-        default:
-            icon = 'ℹ️';
-            break;
-    }
+  // Create alert container
+  const alertContainer = document.createElement("div");
+  alertContainer.className = `custom-alert ${type}`;
 
-    alertContainer.innerHTML = `
+  // Set icon based on type
+  let icon;
+  switch (type) {
+    case "success":
+      icon = "✅";
+      break;
+    case "error":
+      icon = "❌";
+      break;
+    case "warning":
+      icon = "⚠️";
+      break;
+    case "loading":
+      icon = "⏳";
+      break;
+    case "info":
+    default:
+      icon = "ℹ️";
+      break;
+  }
+
+  alertContainer.innerHTML = `
         <div class="alert-content">
             <div class="alert-icon">${icon}</div>
             <div class="alert-message">${message}</div>
@@ -585,57 +727,57 @@ function showCustomAlert(message, type = 'info', duration = 5000) {
         <div class="alert-progress"></div>
     `;
 
-    // Add to page
-    document.body.appendChild(alertContainer);
+  // Add to page
+  document.body.appendChild(alertContainer);
 
-    // Animate in
+  // Animate in
+  setTimeout(() => {
+    alertContainer.classList.add("show");
+  }, 10);
+
+  // Auto remove after duration (except for loading alerts)
+  if (type !== "loading") {
     setTimeout(() => {
-        alertContainer.classList.add('show');
-    }, 10);
+      alertContainer.classList.add("hide");
+      setTimeout(() => {
+        if (alertContainer.parentNode) {
+          alertContainer.remove();
+        }
+      }, 300);
+    }, duration);
 
-    // Auto remove after duration (except for loading alerts)
-    if (type !== 'loading') {
-        setTimeout(() => {
-            alertContainer.classList.add('hide');
-            setTimeout(() => {
-                if (alertContainer.parentNode) {
-                    alertContainer.remove();
-                }
-            }, 300);
-        }, duration);
+    // Start progress bar animation
+    const progressBar = alertContainer.querySelector(".alert-progress");
+    progressBar.style.animation = `progress ${duration}ms linear`;
+  }
 
-        // Start progress bar animation
-        const progressBar = alertContainer.querySelector('.alert-progress');
-        progressBar.style.animation = `progress ${duration}ms linear`;
-    }
-
-    return alertContainer;
+  return alertContainer;
 }
 
 // Function to remove loading alerts manually
 function removeLoadingAlert() {
-    const loadingAlerts = document.querySelectorAll('.custom-alert.loading');
-    loadingAlerts.forEach(alert => {
-        alert.classList.add('hide');
-        setTimeout(() => {
-            if (alert.parentNode) {
-                alert.remove();
-            }
-        }, 300);
-    });
+  const loadingAlerts = document.querySelectorAll(".custom-alert.loading");
+  loadingAlerts.forEach((alert) => {
+    alert.classList.add("hide");
+    setTimeout(() => {
+      if (alert.parentNode) {
+        alert.remove();
+      }
+    }, 300);
+  });
 }
 
 // Legacy alert functions for compatibility
 function showSuccessAlert(message) {
-    showCustomAlert(message, 'success');
+  showCustomAlert(message, "success");
 }
 
 function showErrorAlert(message) {
-    showCustomAlert(message, 'error');
+  showCustomAlert(message, "error");
 }
 
 // Add CSS styles for custom alerts
-const customStyles = document.createElement('style');
+const customStyles = document.createElement("style");
 customStyles.textContent = `
     /* Custom Alert Styles */
     .custom-alert {

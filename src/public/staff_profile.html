@@ -236,9 +236,41 @@
             <button class="edit-profile-btn">
               <i class="fas fa-edit"></i> Edit Profile
             </button>
-            <button class="view-tasks-btn">
-              <i class="fas fa-tasks"></i> View Assigned Tasks
+            <button class="create-individual-btn">
+              <i class="fas fa-user-plus"></i> Help Create Individual Account
             </button>
+          </div>
+
+          <!-- Accounts Created Counter Section -->
+          <div class="accounts-created-section">
+            <h3>Individual Accounts Created</h3>
+            <div class="counter-display">
+              <p>
+                You have helped create
+                <span id="accounts-count">0</span> individual accounts
+              </p>
+            </div>
+            <div class="accounts-list">
+              <h4>Accounts Created:</h4>
+              <div id="created-accounts-list">
+                <!-- List of created accounts will be displayed here -->
+                <div class="no-accounts-message">No accounts created yet</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Events Verification Section -->
+          <div class="events-verification-section">
+            <h3>Verification of Events (sent by admin)</h3>
+            <div class="events-list">
+              <h4>Events Pending Verification:</h4>
+              <div id="events-verification-container">
+                <!-- List of events for verification will be displayed here -->
+                <div class="no-events-message">
+                  No events pending verification
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

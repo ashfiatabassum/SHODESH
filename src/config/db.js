@@ -2,7 +2,7 @@ require("dotenv").config({
   path: require("path").resolve(__dirname, "..", "..", ".env"),
 });
 
-const mysql = require("mysql2");
+const mysql = require("mysql2/promise");
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST, // 127.0.0.1
@@ -17,13 +17,16 @@ const pool = mysql.createPool({
 
 console.log("DB host:", process.env.DB_HOST, "port:", process.env.DB_PORT);
 
-pool.getConnection((err, connection) => {
-  if (err) {
+// Test the connection
+(async () => {
+  try {
+    await pool.getConnection();
+    console.log(
+      `✅ Connected to MySQL on port ${process.env.DB_PORT || 3307}!`
+    );
+  } catch (err) {
     console.error("❌ Error connecting to MySQL:", err);
-    return;
   }
-  console.log(`✅ Connected to MySQL on port ${process.env.DB_PORT || 3307}!`);
-  connection.release();
-});
+})();
 
-module.exports = pool.promise();
+module.exports = pool;
