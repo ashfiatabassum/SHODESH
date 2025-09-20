@@ -11,6 +11,7 @@ const individualRoutes = require('./routes/individual');
 const searchRoutes = require('./routes/search');
 const eventRoutes = require('./routes/event');
 const eventcreationroutes = require('./routes/eventcreationroutes');
+const autocompleteRoutes = require('./routes/autocomplete');
 
 const app = express();
 
@@ -57,6 +58,8 @@ app.use('/api/individual', individualRoutes);
 console.log('✅ Individual routes registered');
 app.use('/api/search', searchRoutes);
 console.log('✅ Search routes registered');
+app.use('/api/autocomplete', autocompleteRoutes);
+console.log('✅ Autocomplete routes registered');
 app.use('/api/events', eventRoutes);
 console.log('✅ Event routes registered');
 app.use('/api', eventcreationroutes);
