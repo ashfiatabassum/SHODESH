@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Staff Login | SHODESH</title>
+  <link rel="stylesheet" href="signinstyle.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="left">
+      <div class="welcome-box">
+        <h1>
+          <span class="word word-1">HELLO,</span><br/>
+          <span class="word word-2">STAFF</span> <span class="word word-3">MEMBER</span><br/>
+          <span class="word word-4">WELCOME</span> <span class="word word-5">TO</span> <span class="word word-6">SHODESH</span>
+        </h1>
+        <p class="subtitle">Sign in to manage and verify events, donations, and more.</p>
+      </div>
+    </div>
+    <div class="right">
+      <div class="login-card">
+        <h2>Staff Sign In</h2>
+        <form id="staffLoginForm">
+          <div class="input-wrapper">
+            <input type="text" id="staffUsername" placeholder="Username" required autocomplete="username" />
+            <div class="input-focus-border"></div>
+          </div>
+          <div class="input-wrapper">
+            <input type="password" id="staffPassword" placeholder="Password" required autocomplete="current-password" />
+            <div class="input-focus-border"></div>
+          </div>
+          <button id="staffSignin" type="submit">
+            <span class="button-text">Sign In</span>
+            <div class="button-ripple"></div>
+          </button>
+        </form>
+        <p class="signup-text">Not registered? <a href="staff_signup.html" class="signup-link">Sign up as staff.</a></p>
+      </div>
+    </div>
+  </div>
+  <script src="staffsigninscript.js"></script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Staff Profile | SHODESH</title>
+  <link rel="stylesheet" href="profile.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="profile-container">
+    <div class="profile-header">
+      <h1>👤 Staff Profile</h1>
+      <button id="logoutBtn" class="logout-btn">Logout</button>
+    </div>
+    <div class="profile-card">
+      <div class="profile-info">
+        <h2 id="staffName"></h2>
+        <p><strong>Staff ID:</strong> <span id="staffId"></span></p>
+        <p><strong>Username:</strong> <span id="staffUsername"></span></p>
+        <p><strong>Email:</strong> <span id="staffEmail"></span></p>
+        <p><strong>Mobile:</strong> <span id="staffMobile"></span></p>
+        <p><strong>NID:</strong> <span id="staffNid"></span></p>
+        <p><strong>Date of Birth:</strong> <span id="staffDob"></span></p>
+        <p><strong>Address:</strong>
+          <span id="staffAddress"></span>
+        </p>
+        <p><strong>Status:</strong> <span id="staffStatus"></span></p>
+      </div>
+    </div>
+  </div>
+  <!-- Add this inside .profile-container, after the profile-card -->
+<div class="create-individual-section">
+  <h3>Create Individual Account</h3>
+  <p>Help someone register as an individual donor/recipient. You’ll be recorded as the assisting staff.</p>
+  <button id="createIndividualBtn" class="create-individual-btn">Create Individual Account</button>
+</div>
+  <script src="staff_profile.js"></script>
+</body>
+</html>

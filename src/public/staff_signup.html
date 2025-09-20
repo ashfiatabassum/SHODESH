@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Registration - SHODESH</title>
+    <link rel="stylesheet" href="individual.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-heart"></i>
+                <h1>SHODESH</h1>
+            </div>
+            <div class="header-text">
+                <h2>Join as Staff</h2>
+                <p>Create your staff account to help manage SHODESH</p>
+            </div>
+        </div>
+
+        <!-- Main Form Container -->
+        <div class="form-container">
+            <div class="form-header">
+                <h3><i class="fas fa-user-plus"></i> Staff Registration</h3>
+                <p>Fill in your details to create your staff account</p>
+            </div>
+
+            <form id="staffSignupForm" class="registration-form" enctype="multipart/form-data" autocomplete="off">
+                <!-- Personal Information Section -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-user"></i>
+                        <span>Personal Information</span>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="first_name">First Name <span class="required">*</span></label>
+                            <input type="text" id="first_name" name="first_name" placeholder="Enter your first name" required>
+                            <i class="fas fa-user field-icon"></i>
+                        </div>
+                        <div class="form-group">
+                            <label for="last_name">Last Name <span class="required">*</span></label>
+                            <input type="text" id="last_name" name="last_name" placeholder="Enter your last name" required>
+                            <i class="fas fa-user field-icon"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="username">Username <span class="required">*</span></label>
+                            <input type="text" id="username" name="username" placeholder="Choose a unique username" required>
+                            <i class="fas fa-at field-icon"></i>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email Address <span class="required">*</span></label>
+                            <input type="email" id="email" name="email" placeholder="your.email@example.com" required>
+                            <i class="fas fa-envelope field-icon"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="mobile">Mobile Number <span class="required">*</span></label>
+                            <input type="tel" id="mobile" name="mobile" placeholder="01XXXXXXXXX" required>
+                            <i class="fas fa-phone field-icon"></i>
+                        </div>
+                        <div class="form-group">
+                            <label for="nid">National ID (NID) <span class="required">*</span></label>
+                            <input type="text" id="nid" name="nid" placeholder="Enter your NID number" required>
+                            <i class="fas fa-id-card field-icon"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dob">Date of Birth <span class="required">*</span></label>
+                        <input type="date" id="dob" name="dob" required>
+                        <i class="fas fa-calendar field-icon"></i>
+                    </div>
+                </div>
+
+                <!-- Address Information Section -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Address Information</span>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="house_no">House/Building No. <span class="required">*</span></label>
+                            <input type="text" id="house_no" name="house_no" placeholder="House/Building number" required>
+                            <i class="fas fa-home field-icon"></i>
+                        </div>
+                        <div class="form-group">
+                            <label for="road_no">Road/Street No. <span class="required">*</span></label>
+                            <input type="text" id="road_no" name="road_no" placeholder="Road/Street number" required>
+                            <i class="fas fa-road field-icon"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="area">Area/Locality <span class="required">*</span></label>
+                            <input type="text" id="area" name="area" placeholder="Area or locality name" required>
+                            <i class="fas fa-map field-icon"></i>
+                        </div>
+                        <div class="form-group">
+                            <label for="zip">ZIP Code <span class="required">*</span></label>
+                            <input type="text" id="zip" name="zip" placeholder="1000" maxlength="4" required>
+                            <i class="fas fa-mail-bulk field-icon"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="district">District <span class="required">*</span></label>
+                            <select id="district" name="district" required>
+                                <option value="">Select District</option>
+                            </select>
+                            <i class="fas fa-city field-icon"></i>
+                        </div>
+                        <div class="form-group">
+                            <label for="administrative_div">Division <span class="required">*</span></label>
+                            <select id="administrative_div" name="administrative_div" required>
+                                <option value="">Select Division</option>
+                                <option value="Barisal">Barisal</option>
+                                <option value="Chittagong">Chittagong</option>
+                                <option value="Dhaka">Dhaka</option>
+                                <option value="Khulna">Khulna</option>
+                                <option value="Mymensingh">Mymensingh</option>
+                                <option value="Rajshahi">Rajshahi</option>
+                                <option value="Rangpur">Rangpur</option>
+                                <option value="Sylhet">Sylhet</option>
+                            </select>
+                            <i class="fas fa-flag field-icon"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CV Upload Section -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-file-upload"></i>
+                        <span>Upload CV</span>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cv">Upload CV (PDF/DOC/DOCX/TXT, max 5MB) <span class="required">*</span></label>
+                            <input type="file" id="cv" name="cv" accept=".pdf,.doc,.docx,.txt" required>
+                            <i class="fas fa-file field-icon"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Section -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-lock"></i>
+                        <span>Account Security</span>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="password">Password <span class="required">*</span></label>
+                            <input type="password" id="password" name="password" placeholder="Minimum 6 characters" required>
+                            <i class="fas fa-key field-icon"></i>
+                            <button type="button" class="toggle-password" onclick="togglePassword('password')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm Password <span class="required">*</span></label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Re-enter your password" required>
+                            <i class="fas fa-key field-icon"></i>
+                            <button type="button" class="toggle-password" onclick="togglePassword('confirmPassword')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="form-actions">
+                    <button type="submit" id="submitBtn" class="submit-btn">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Create My Account</span>
+                        <div class="btn-loader" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Login Link -->
+                <div class="form-footer">
+                    <p>Already have an account? <a href="signin.html">Sign in here</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="messageContainer"></div>
+    <script src="staff_signup.js"></script>
+</body>
+</html>
