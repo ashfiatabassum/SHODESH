@@ -1,0 +1,199 @@
+Admin → Category Management
+
+Short description
+- Purpose: Allow admins to manage the taxonomy of campaigns by defining Categories, Event Types, and their pairs (EVENT_BASED_ON_CATEGORY). Provides list, create/link, and delete operations with safety checks and transactions.
+- Data model: CATEGORY (PK, UNIQUE), EVENT_TYPE (PK, UNIQUE), EVENT_BASED_ON_CATEGORY (PK, UNIQUE(category_id,event_type_id), FKs to CATEGORY and EVENT_TYPE), referenced by EVENT_CREATION via ebc_id.
+
+Used in (file:line)
+- Backend (Express)
+  1) src/routes/admin.js:1239-1262 → GET /api/admin/categories/events
+     - Lists categories along with aggregated event types.
+  2) src/routes/admin.js:1269-1287 → DELETE /api/admin/categories/:categoryId
+     - Safe delete of a category (checks EVENT_CREATION usage, then deletes links and the category).
+  3) src/routes/admin.js:1294-1344 → POST /api/admin/categories/full
+     - Transactional creation: insert CATEGORY, ensure EVENT_TYPE(s), link via EVENT_BASED_ON_CATEGORY.
+  4) src/routes/admin.js:1349-1410 → POST /api/admin/categories/:categoryId/add-event-type
+     - Transactional: ensure EVENT_TYPE exists, link to CATEGORY via EVENT_BASED_ON_CATEGORY.
+- Frontend (Admin UI stubs)
+  - src/public/admin/admin-frontend.js:380-434 → renderCategoriesSection() builds UI cards; currently renders from local array.
+  - src/public/admin/admin-frontend.js:600-660 → addCategory()/toggleCategory()/deleteCategory() stubs (commented or local-only). TODO: wire to the APIs above.
+
+Tables (exact SQL)
+- CATEGORY, EVENT_TYPE, EVENT_BASED_ON_CATEGORY (from sql/shodeshsqlscript.sql)
+
+CREATE TABLE CATEGORY (
+  category_id    VARCHAR(7)  NOT NULL,
+  category_name  VARCHAR(50) NOT NULL,
+  CONSTRAINT CATEGORY_PK PRIMARY KEY (category_id),
+  CONSTRAINT CATEGORY_NAME_U UNIQUE (category_name)
+);
+
+CREATE TABLE EVENT_TYPE (
+  event_type_id   VARCHAR(7)  NOT NULL,
+  event_type_name VARCHAR(50) NOT NULL,
+  CONSTRAINT EVENT_TYPE_PK PRIMARY KEY (event_type_id),
+  CONSTRAINT EVENT_TYPE_NAME_U UNIQUE (event_type_name)
+);
+
+/* Junction with its own ID (surrogate key) */
+CREATE TABLE EVENT_BASED_ON_CATEGORY (
+  ebc_id        VARCHAR(7) NOT NULL,
+  category_id   VARCHAR(7) NOT NULL,
+  event_type_id VARCHAR(7) NOT NULL,
+  CONSTRAINT EBC_PK PRIMARY KEY (ebc_id),
+  CONSTRAINT EBC_PAIR_U UNIQUE (category_id, event_type_id),
+  CONSTRAINT EBC_CATEGORY_FK   FOREIGN KEY (category_id)   REFERENCES CATEGORY(category_id)
+    ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT EBC_EVENT_TYPE_FK FOREIGN KEY (event_type_id) REFERENCES EVENT_TYPE(event_type_id)
+    ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+Views (exact SQL)
+- v_event_catalog (taxonomy join used by search/filters), v_event_catalog_open, v_event_filters_categories, v_event_filters_event_types
+
+CREATE VIEW v_event_catalog AS
+SELECT
+  ec.creation_id,
+  ec.title,
+  ec.description,
+  ec.division,
+  ec.verification_status,
+  ec.lifecycle_status,
+  ec.amount_needed,
+  ec.amount_received,
+  ec.cover_photo,
+  CAST(ROUND(IFNULL(ec.amount_received / NULLIF(ec.amount_needed,0) * 100, 0), 1) AS DECIMAL(5,1)) AS progress_pct,
+
+  -- taxonomy
+  ebc.ebc_id,
+  cat.category_id,  cat.category_name,
+  et.event_type_id, et.event_type_name,
+
+  -- creator
+  ec.creator_type,
+  CASE WHEN ec.creator_type='individual'
+       THEN CONCAT(i.first_name,' ',i.last_name)
+       ELSE f.foundation_name
+  END AS creator_name,
+  CASE WHEN ec.creator_type='individual'
+       THEN i.individual_id
+       ELSE f.foundation_id
+  END AS creator_id,
+
+  -- useful for details page
+  CASE WHEN ec.creator_type='individual' THEN i.mobile ELSE f.mobile END AS contact_phone,
+  CASE WHEN ec.creator_type='individual' THEN i.email  ELSE f.email  END AS contact_email,
+  LEFT(ec.description, 180) AS short_description
+
+FROM EVENT_CREATION ec
+JOIN EVENT_BASED_ON_CATEGORY ebc ON ebc.ebc_id = ec.ebc_id
+LEFT JOIN CATEGORY     cat ON cat.category_id     = ebc.category_id
+LEFT JOIN EVENT_TYPE   et  ON et.event_type_id    = ebc.event_type_id
+LEFT JOIN INDIVIDUAL   i   ON i.individual_id     = ec.individual_id
+LEFT JOIN FOUNDATION   f   ON f.foundation_id     = ec.foundation_id;
+
+CREATE VIEW v_event_catalog_open AS
+SELECT *
+FROM v_event_catalog
+WHERE verification_status = 'verified'
+  AND lifecycle_status    = 'active';
+
+CREATE VIEW v_event_filters_categories AS
+SELECT DISTINCT category_id, category_name
+FROM v_event_catalog_open
+WHERE category_id IS NOT NULL
+ORDER BY category_name;
+
+CREATE VIEW v_event_filters_event_types AS
+SELECT DISTINCT event_type_id, event_type_name, category_id
+FROM v_event_catalog_open
+WHERE event_type_id IS NOT NULL
+ORDER BY event_type_name;
+
+Stored procedure (exact SQL)
+- sp_get_event_types: returns event types, optionally filtered by category
+
+DROP PROCEDURE IF EXISTS sp_get_event_types $$
+CREATE PROCEDURE sp_get_event_types(IN p_category_id VARCHAR(7))
+BEGIN
+  SELECT event_type_id, event_type_name
+  FROM v_event_filters_event_types
+  WHERE (p_category_id IS NULL OR p_category_id = '' OR category_id = p_category_id);
+END $$
+
+Backend queries (exact code snippets)
+- GET /categories/events (src/routes/admin.js:1239-1262)
+SELECT 
+  c.category_id, c.category_name,
+  GROUP_CONCAT(et.event_type_name ORDER BY et.event_type_name) AS event_type_names,
+  GROUP_CONCAT(et.event_type_id ORDER BY et.event_type_name) AS event_type_ids
+FROM CATEGORY c
+LEFT JOIN EVENT_BASED_ON_CATEGORY ebc ON ebc.category_id = c.category_id
+LEFT JOIN EVENT_TYPE et ON et.event_type_id = ebc.event_type_id
+GROUP BY c.category_id, c.category_name
+ORDER BY c.category_name;
+
+- DELETE /categories/:categoryId (src/routes/admin.js:1269-1287)
+SELECT COUNT(*) AS cnt
+FROM EVENT_CREATION ec
+JOIN EVENT_BASED_ON_CATEGORY ebc ON ec.ebc_id = ebc.ebc_id
+WHERE ebc.category_id = ?;
+-- if cnt > 0: 400 Cannot delete category in use by events.
+DELETE FROM EVENT_BASED_ON_CATEGORY WHERE category_id = ?;
+DELETE FROM CATEGORY WHERE category_id = ?;
+
+- POST /categories/full (src/routes/admin.js:1294-1344)
+-- Transaction
+INSERT INTO CATEGORY (category_id, category_name) VALUES (?, ?);
+INSERT IGNORE INTO EVENT_TYPE (event_type_id, event_type_name) VALUES (?, ?);
+SELECT event_type_id FROM EVENT_TYPE WHERE event_type_name = ?; -- resolve id if exists
+INSERT IGNORE INTO EVENT_BASED_ON_CATEGORY (ebc_id, category_id, event_type_id) VALUES (?, ?, ?);
+-- Commit / Rollback on error
+
+- POST /categories/:categoryId/add-event-type (src/routes/admin.js:1349-1410)
+-- Transaction
+INSERT IGNORE INTO EVENT_TYPE (event_type_id, event_type_name) VALUES (?, ?);
+SELECT event_type_id FROM EVENT_TYPE WHERE event_type_name = ?;
+INSERT IGNORE INTO EVENT_BASED_ON_CATEGORY (ebc_id, category_id, event_type_id) VALUES (?, ?, ?);
+-- Commit / Rollback on error
+
+ID patterns (app-generated)
+- CATEGORY.category_id: 'CAT' + 4 digits (e.g., CAT1234)
+- EVENT_TYPE.event_type_id: 'EVT' + 4 digits (e.g., EVT5678)
+- EVENT_BASED_ON_CATEGORY.ebc_id: 'EBC' + 4 digits
+
+Mapping to grading criteria
+- Constraints
+  • Primary Keys: CATEGORY_PK (category_id), EVENT_TYPE_PK (event_type_id), EBC_PK (ebc_id)
+  • Unique: CATEGORY_NAME_U on CATEGORY(category_name), EVENT_TYPE_NAME_U on EVENT_TYPE(event_type_name), EBC_PAIR_U on (category_id, event_type_id)
+  • Foreign Keys: EBC_CATEGORY_FK → CATEGORY(category_id) ON DELETE RESTRICT ON UPDATE CASCADE; EBC_EVENT_TYPE_FK → EVENT_TYPE(event_type_id) ON DELETE RESTRICT ON UPDATE CASCADE
+  • Referential usage: EVENT_CREATION.ebc_id → EVENT_BASED_ON_CATEGORY.ebc_id (prevents deleting categories in-use; route checks and restricts)
+
+- Queries (DML/DDL as used by feature)
+  • Aggregation listing with GROUP_CONCAT to roll up event types per category
+  • Safe delete pattern: usage-count guard against EVENT_CREATION; then cascade-like manual cleanup of junction rows; final delete
+  • Transactional inserts linking CATEGORY ↔ EVENT_TYPE via EBC
+
+- Views
+  • v_event_catalog (+ open variant) joins EVENT_CREATION with taxonomy tables to expose category/event_type per event
+  • v_event_filters_categories, v_event_filters_event_types support UI filter dropdowns by distinct values from open events
+
+- Functions/Procedures
+  • sp_get_event_types(IN p_category_id VARCHAR(7)) → returns event types, optionally filtered by category via views
+
+- Grants
+  • shodeshsqlscript.sql: GRANT SELECT ON shodesh.* TO 'root'@'localhost';
+    - Used for read operations across CATEGORY/EVENT_TYPE/EVENT_BASED_ON_CATEGORY and views.
+
+- Exception handling (application)
+  • 400 when attempting to delete a category that is referenced by any EVENT_CREATION rows (via EBC join)
+  • Transactional integrity for create/link operations with BEGIN/COMMIT/ROLLBACK; 500 on failure
+  • Consistent JSON error responses with message + error when applicable
+
+Notes
+- Frontend admin UI stubs currently operate on a local array; to fully enable category management, wire the stubs to:
+  • GET /api/admin/categories/events (render list)
+  • POST /api/admin/categories/full (create category + event types)
+  • POST /api/admin/categories/:categoryId/add-event-type (extend)
+  • DELETE /api/admin/categories/:categoryId (remove if not in use)
+- ID generation uses simple random 4-digit suffixes; consider switching to deterministic sequences or database-generated IDs to avoid rare collisions.
