@@ -11,56 +11,140 @@
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="resources.css" />
   </head>
-  
+
   <body>
     <div class="top-bar">
       <div>MAIL: contact@shodesh.org</div>
       <div>PHONE: +880 1712 345 678</div>
     </div>
 
-   <div class="navbar">
-  <div class="logo"><strong>SHODESH</strong></div>
-  <div class="nav-links">
-    <a href="index.html">Home</a>
-    <a href="about.html" class="about-link">About</a>
-    <a href="#">Gallery</a>
-     <a href="contact.html" class="contact-link">Contact</a>
-    <a href="resources.html" class="resources-link">Resources</a>
-    <a href="search.html">Search</a>
-    <a href="browse.html">Categories</a>
-    <a href="signin.html">Sign In</a>
-    <a href="volunteer.html">Join Our Team</a>
-  </div>
-</div>
-<style>
-   .nav-links a.active {
-    color: #d32f2f !important; /* Red color for active */
-    text-decoration: underline;
-  }
-  .nav-links a, .nav-links button {
-    color: #176b3a;
-    text-decoration: none;
-    margin: 0 12px;
-    font-weight: 600;
-    font-size: 1.05rem;
-    background: none;
-    border: none;
-    cursor: pointer;
-    transition: color 0.2s;
-    border-radius: 0;
-    padding: 0;
-    box-shadow: none;
-    display: inline;
-  }
-  .nav-links a:hover, .nav-links button:hover {
-    color: #219150;
-    text-decoration: underline;
-    background: none;
-    box-shadow: none;
-  }
-</style>
+    <div class="navbar">
+      <div class="logo"><strong>SHODESH</strong></div>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="about.html" class="about-link">About</a>
+        <a href="#">Gallery</a>
+        <a href="contact.html" class="contact-link">Contact</a>
+        <a href="resources.html" class="resources-link">Resources</a>
+        <a href="search.html">Search</a>
+        <a href="browse.html">Categories</a>
+        <a href="signin.html">Sign In</a>
+        <a href="volunteer.html">Join Our Team</a>
+      </div>
+    </div>
+    <style>
+      .nav-links a.active {
+        color: #d32f2f !important; /* Red color for active */
+        text-decoration: underline;
+      }
+      .nav-links a,
+      .nav-links button {
+        color: #176b3a;
+        text-decoration: none;
+        margin: 0 12px;
+        font-weight: 600;
+        font-size: 1.05rem;
+        background: none;
+        border: none;
+        cursor: pointer;
+        transition: color 0.2s;
+        border-radius: 0;
+        padding: 0;
+        box-shadow: none;
+        display: inline;
+      }
+      .nav-links a:hover,
+      .nav-links button:hover {
+        color: #219150;
+        text-decoration: underline;
+        background: none;
+        box-shadow: none;
+      }
+    </style>
     <div class="resources-hero">
       <div class="container">
+        <div
+          style="
+            display: flex;
+            gap: 32px;
+            justify-content: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+          "
+        >
+          <!-- Hospital Directory Card -->
+          <div
+            class="resource-card"
+            style="
+              background: #f5f5f5;
+              border-radius: 12px;
+              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+              padding: 28px 32px;
+              min-width: 280px;
+              max-width: 400px;
+              flex: 1;
+            "
+          >
+            <h2 style="color: #1976d2; margin-top: 0">🏥 Hospital Directory</h2>
+            <p style="margin-bottom: 18px; color: #333">
+              Find hospitals across Bangladesh, organized by district, with
+              contact numbers and details.
+            </p>
+            <a
+              href="hospitallist.html"
+              style="
+                display: block;
+                margin: 0 auto;
+                color: #fff;
+                background: #1976d2;
+                padding: 10px 24px;
+                border-radius: 6px;
+                text-decoration: none;
+                font-weight: 500;
+                font-size: 1rem;
+                text-align: center;
+                width: fit-content;
+              "
+              >View Hospital List</a
+            >
+          </div>
+          <!-- Ambulance Service Card -->
+          <div
+            class="resource-card"
+            style="
+              background: #f5f5f5;
+              border-radius: 12px;
+              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+              padding: 28px 32px;
+              min-width: 280px;
+              max-width: 400px;
+              flex: 1;
+            "
+          >
+            <h2 style="color: #d32f2f; margin-top: 0">🚑 Ambulance Services</h2>
+            <p style="margin-bottom: 18px; color: #333">
+              Access ambulance service numbers for every district in Bangladesh,
+              available 24/7.
+            </p>
+            <a
+              href="ambulance.html"
+              style="
+                display: block;
+                margin: 0 auto;
+                color: #fff;
+                background: #d32f2f;
+                padding: 10px 24px;
+                border-radius: 6px;
+                text-decoration: none;
+                font-weight: 500;
+                font-size: 1rem;
+                text-align: center;
+                width: fit-content;
+              "
+              >View Ambulance List</a
+            >
+          </div>
+        </div>
         <h1>🇧🇩 Emergency Resources Bangladesh</h1>
         <p>
           Important emergency contacts and helplines available 24/7 across
@@ -210,48 +294,44 @@
       </div>
     </div>
 
+    <!-- ...existing code above... -->
+    <div class="emergency-section additional-resources-section">
+      <h2>Additional Resources</h2>
+      <div class="quick-save-card">
+        <p>
+          Find active blood banks and future vaccine provision timetables and
+          locations near you
+        </p>
+        <a href="blood.html">
+          <button class="save-all-btn" style="width: 100%; margin-bottom: 16px">
+            BLOOD BANK INFORMATION
+          </button>
+        </a>
+        <a href="vaccine.html">
+          <button class="save-all-btn" style="width: 100%">
+            VACCINE TIMETABLE
+          </button>
+        </a>
+      </div>
+    </div>
 
-  
-     <!-- ...existing code above... -->
-<div class="emergency-section additional-resources-section">
-  <h2>Additional Resources</h2>
-  <div class="quick-save-card">
-    <p>
-      Find active blood banks and future vaccine provision timetables and locations near you
-    </p>
-    <a href="blood.html">
-      <button class="save-all-btn" style="width:100%; margin-bottom:16px;">
-        BLOOD BANK INFORMATION
-      </button>
-    </a>
-    <a href="vaccine.html">
-      <button class="save-all-btn" style="width:100%;">
-        VACCINE TIMETABLE
-      </button>
-       </a>
-  </div>
-</div>
-
-<footer class="resources-footer">
-  <div class="container">
-    <p>&copy; 2025 Shodesh. Keeping Bangladesh safe and connected.</p>
-    <p>
-      <small
-        >Emergency numbers sourced from official Bangladesh government
-        resources</small
-      >
-    </p>
-  </div>
-</footer>
-<!-- ...existing code below... -->
-<script>
-   // Highlight Resources link only on resources page
-  if (
-    window.location.pathname.endsWith("resources.html")
-  ) {
-    document.querySelector('.resources-link').classList.add('active');
-  }
-  </script>
-
-</body>
+    <footer class="resources-footer">
+      <div class="container">
+        <p>&copy; 2025 Shodesh. Keeping Bangladesh safe and connected.</p>
+        <p>
+          <small
+            >Emergency numbers sourced from official Bangladesh government
+            resources</small
+          >
+        </p>
+      </div>
+    </footer>
+    <!-- ...existing code below... -->
+    <script>
+      // Highlight Resources link only on resources page
+      if (window.location.pathname.endsWith("resources.html")) {
+        document.querySelector(".resources-link").classList.add("active");
+      }
+    </script>
+  </body>
 </html>
