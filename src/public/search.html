@@ -7,6 +7,161 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="search.css">
+    <style>
+        /* Autocomplete Dropdown Styles */
+        .search-container {
+            position: relative;
+        }
+        
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        
+        .autocomplete-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .autocomplete-item:hover,
+        .autocomplete-item.selected {
+            background-color: #f8f9fa;
+        }
+        
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+        
+        .autocomplete-title {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        
+        .autocomplete-meta {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* Hero Stats Styling */
+        .hero-stats-section {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 30px;
+        }
+        
+        .hero-stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 20px 30px;
+            text-align: center;
+            color: #1a3c2f;
+            min-width: 180px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .hero-stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: #4a7c59;
+        }
+        
+        .hero-stat-label {
+            font-size: 0.9rem;
+            color: #1a3c2f;
+            font-weight: 500;
+        }
+        
+        .search-section {
+            margin-bottom: 15px;
+        }
+        
+        .search-section .search-container {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .search-section .search-box {
+            background: linear-gradient(135deg, #4a7c59 0%, #3b6347 100%);
+            border-radius: 25px;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(74, 124, 89, 0.3);
+            min-height: 60px;
+        }
+        
+        .search-section .search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 18px 20px;
+            font-size: 18px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #1a3c2f;
+            border-radius: 20px;
+            margin-right: 12px;
+            font-weight: 500;
+        }
+        
+        .search-section .search-input::placeholder {
+            color: #666;
+            font-weight: 400;
+        }
+        
+        .search-section .search-submit-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 20px;
+            padding: 18px 20px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            font-size: 16px;
+        }
+        
+        .search-section .search-submit-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+        
+        .search-section .search-icon {
+            color: white;
+            margin-left: 20px;
+            margin-right: 15px;
+            font-size: 18px;
+        }
+        
+        @media (max-width: 768px) {
+            .hero-stats-section {
+                flex-direction: column;
+                align-items: center;
+                gap: 20px;
+            }
+            
+            .hero-stat-card {
+                min-width: 150px;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Top Bar -->
@@ -34,17 +189,15 @@
         <div class="search-hero-content">
             <h1>Discover Campaigns That Matter</h1>
             <p class="hero-subtitle">Find and support causes that align with your values and make a real difference</p>
-            <div class="search-container">
-                <div class="search-box">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Search for campaigns (e.g., Education, Medical, Emergency)..." aria-label="Search for campaigns">
-                    <button class="search-submit-btn" title="Search" aria-label="Search">
-                        <i class="fas fa-arrow-right"></i>
-                        <span style="position:absolute;left:-9999px;">Search</span>
-                    </button>
+            <!-- Stats moved to hero section -->
+            <div class="hero-stats-section">
+                <div class="hero-stat-card">
+                    <div class="hero-stat-number" id="totalCampaigns">0</div>
+                    <div class="hero-stat-label">Active Campaigns</div>
                 </div>
-                <div class="quick-tags">
-                    <!-- Quick tags will be dynamically populated from backend in future -->
+                <div class="hero-stat-card">
+                    <div class="hero-stat-number" id="totalRaised">৳0</div>
+                    <div class="hero-stat-label">Raised This Month</div>
                 </div>
             </div>
         </div>
@@ -52,16 +205,7 @@
     <!-- Main Content -->
     <div class="main-content">
         <div class="container">
-            <div class="stats-section">
-                <div class="stat-card">
-                    <div class="stat-number" id="totalCampaigns">0</div>
-                    <div class="stat-label">Active Campaigns</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="totalRaised">৳0</div>
-                    <div class="stat-label">Raised This Month</div>
-                </div>
-            </div>
+            <!-- Explore Campaigns moved to stats location -->
             <div class="filter-section">
                 <div class="filter-header">
                     <h2>Explore Campaigns</h2>
@@ -76,6 +220,28 @@
                         </button>
                     </div>
                 </div>
+                
+                <!-- Search bar placed right under Explore Campaigns header -->
+                <div class="search-section">
+                    <div class="search-container">
+                        <div class="search-box">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" id="searchInput" class="search-input" placeholder="Search for campaigns (e.g., Education, Medical, Emergency)..." aria-label="Search for campaigns">
+                            <button class="search-submit-btn" title="Search" aria-label="Search">
+                                <i class="fas fa-arrow-right"></i>
+                                <span style="position:absolute;left:-9999px;">Search</span>
+                            </button>
+                            <!-- Autocomplete Dropdown -->
+                            <div id="autocompleteDropdown" class="autocomplete-dropdown" style="display: none;">
+                                <!-- Campaign suggestions will be populated here -->
+                            </div>
+                        </div>
+                        <div class="quick-tags">
+                            <!-- Quick tags will be dynamically populated from backend in future -->
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="filter-controls">
                     <div class="filter-group">
                         <label for="categoryFilter">Category:</label>
@@ -109,6 +275,7 @@
                     </button>
                 </div>
             </div>
+            
             <div class="loading-container" id="loadingContainer" style="display:none;">
                 <div class="loading-spinner">
                     <div class="spinner"></div>
@@ -124,6 +291,7 @@
             </div>
         </div>
     </div>
+    <script src="autocomplete.js"></script>
     <script src="search.js"></script>
 </body>
 </html>
