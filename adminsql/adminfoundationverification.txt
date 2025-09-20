@@ -1,0 +1,102 @@
+SHODESH — Admin Foundation Verification: DBMS Code Map
+=====================================================
+Format per item:
+Type: <JOIN|SUBQUERY|VIEW|TRIGGER|FUNCTION|PROCEDURE|TRANSACTION|EXCEPTION|DML>
+Purpose: <short purpose>
+Used in: <file path> : <line(s)>
+Definition: <exact SQL or summarized if long>
+
+Scope: Only the Foundation Verification feature under admin routes (list, details, certificate stream, verify approve/delete). Where relevant, related triggers that impact deletion are also included.
+
+1) SELECT list foundations (with certificate metadata)
+Type: JOIN (none) + Expressions (IS NOT NULL, LENGTH)
+Purpose: Admin list/filter foundations with lightweight certificate metadata for UI
+Used in: src/routes/admin.js : 498-536, 520-536 for projection; 524-531 IS NOT NULL/LENGTH
+Definition:
+SELECT foundation_id, foundation_name, foundation_license, email, mobile, house_no, road_no, area, district, administrative_div, zip, bkash, bank_account, description, status,
+       certificate IS NOT NULL AS has_certificate,
+       CASE WHEN certificate IS NULL THEN 0 ELSE LENGTH(certificate) END AS certificate_size
+FROM foundation
+[WHERE status = ?]
+ORDER BY foundation_id DESC;
+
+2) SELECT unverified foundations
+Type: DML SELECT (filter)
+Purpose: Fetch items pending verification
+Used in: src/routes/admin.js : 568-607
+Definition:
+SELECT foundation_id, foundation_name, foundation_license, certificate, email, mobile, house_no, road_no, area, district, administrative_div, zip, bkash, bank_account, description, status
+FROM foundation
+WHERE status = 'unverified'
+ORDER BY foundation_id ASC;
+
+3) Foundation details by id (with BLOB handling in app)
+Type: DML SELECT
+Purpose: Load one foundation for verification view
+Used in: src/routes/admin.js : 608-674
+Definition:
+SELECT foundation_id, foundation_name, foundation_license, certificate, email, mobile, house_no, road_no, area, district, administrative_div, zip, bkash, bank_account, description, status
+FROM foundation
+WHERE foundation_id = ?;
+
+4) Stream certificate BLOB
+Type: DML SELECT
+Purpose: Serve certificate file to the admin UI
+Used in: src/routes/admin.js : 674-737
+Definition:
+SELECT certificate FROM foundation WHERE foundation_id = ?;
+
+5) Verify foundation (approve) with transaction + row lock
+Type: TRANSACTION + DML UPDATE + EXCEPTION handling fallback
+Purpose: Approve a foundation (set status = 'verified') safely under concurrency
+Used in: src/routes/admin.js : 736-812 (primary), 748-792 (core statements)
+Definition (core SQL inside transaction):
+BEGIN;  -- via connection.beginTransaction()
+SELECT foundation_id, status FROM foundation WHERE foundation_id = ? FOR UPDATE;
+UPDATE foundation SET status = 'verified' WHERE foundation_id = ?;
+COMMIT;
+On errors: ROLLBACK; return error JSON.
+
+6) Verify foundation (delete) with transaction + row lock
+Type: TRANSACTION + DML DELETE + EXCEPTION handling fallback
+Purpose: Delete an unverified foundation (or any) if allowed by constraints
+Used in: src/routes/admin.js : 736-812
+Definition (core SQL inside transaction):
+BEGIN;
+SELECT foundation_id, status FROM foundation WHERE foundation_id = ? FOR UPDATE;
+DELETE FROM foundation WHERE foundation_id = ?;
+COMMIT;
+On errors: ROLLBACK; return error JSON.
+
+7) Trigger blocking deletion when events exist (relevant safeguard)
+Type: TRIGGER
+Purpose: Prevent deleting a foundation while events reference it (admin delete action may raise exception)
+Used in: sql/shodeshsqlscript.sql : 798-812
+Definition (excerpt):
+CREATE TRIGGER BD_FOUNDATION_BLOCK_IF_EVENTS
+BEFORE DELETE ON FOUNDATION
+FOR EACH ROW
+BEGIN
+  IF EXISTS (SELECT 1 FROM EVENT_CREATION WHERE creator_type='foundation' AND foundation_id = OLD.foundation_id LIMIT 1) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Cannot delete foundation: events still reference this account (reassign or deactivate first)';
+  END IF;
+END;
+
+8) Table definition (status enum, certificate BLOB)
+Type: TABLE (referential for verification logic)
+Purpose: Shows status states and certificate storage used by this feature
+Used in: sql/shodeshsqlscript.sql : 36-66
+Definition (excerpt):
+CREATE TABLE FOUNDATION(...,
+  certificate BLOB,
+  status ENUM('verified','unverified','suspended') DEFAULT 'unverified',
+  ...);
+
+9) Table definition (EVENT_CREATION FK referencing FOUNDATION)
+Type: TABLE + FOREIGN KEY
+Purpose: Explains dependency that powers the delete-block trigger
+Used in: sql/shodeshsqlscript.sql : 260-276
+Definition (excerpt):
+CONSTRAINT EC_FOUNDATION_FK FOREIGN KEY (foundation_id) REFERENCES FOUNDATION(foundation_id) ON DELETE SET NULL ON UPDATE CASCADE;
+
+

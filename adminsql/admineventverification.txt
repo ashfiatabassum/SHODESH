@@ -1,0 +1,283 @@
+SHODESH — Admin Event Details & Verification: DBMS Code Map
+===========================================================
+Short feature description: Admins can list events with filters, view a rich event details page (with donation subqueries and media flags), download cover/doc BLOBs, and approve/reject events. Verification writes to EVENT_VERIFICATION (procedure or manual), with triggers and/or procedure applying the state to EVENT_CREATION (verification_status, lifecycle_status). Frontend files: src/public/admin/event-verification.js, src/public/admin/event-details.js.
+
+Format per item:
+Type: <CONSTRAINT|SIMPLE QUERY|COMPLEX QUERY|JOIN|SUBQUERY|VIEW|FUNCTION|PROCEDURE|TRIGGER|TRANSACTION|SEQUENCE|GRANT/REVOKE|EXCEPTION|DML>
+Purpose: <short purpose>
+Used in: <file path> : <line(s)>
+Tables involved: <table names>
+Definition: <exact SQL or route snippet>
+
+A) Routes and Queries (Application Layer)
+----------------------------------------
+1) List events for admin verification with filters
+Type: JOIN + SIMPLE FILTERS
+Purpose: Admin listing including unverified/verified/rejected (non-closed), taxonomy joins, creator joins
+Used in: src/routes/admin.js : 87-156
+Tables involved: EVENT_CREATION, EVENT_BASED_ON_CATEGORY, CATEGORY, EVENT_TYPE, INDIVIDUAL, FOUNDATION
+Definition (route SQL):
+SELECT 
+  ec.creation_id,
+  ec.creator_type,
+  CASE 
+    WHEN ec.creator_type='individual' THEN CONCAT(COALESCE(i.first_name,''),' ',COALESCE(i.last_name,''))
+    WHEN ec.creator_type='foundation' THEN COALESCE(f.foundation_name,'')
+    ELSE 'Unknown Creator'
+  END AS creator_name,
+  ec.individual_id,
+  ec.foundation_id,
+  ec.title,
+  ec.description,
+  ec.amount_needed,
+  ec.amount_received,
+  ec.division,
+  ec.verification_status,
+  ec.lifecycle_status,
+  ec.second_verification_required,
+  ec.created_at,
+  ebc.ebc_id,
+  c.category_id, c.category_name,
+  et.event_type_id, et.event_type_name,
+  CASE WHEN ec.cover_photo IS NOT NULL THEN 1 ELSE 0 END AS has_cover_photo,
+  CASE WHEN ec.doc IS NOT NULL THEN 1 ELSE 0 END AS has_document
+FROM EVENT_CREATION ec
+JOIN EVENT_BASED_ON_CATEGORY ebc ON ebc.ebc_id = ec.ebc_id
+JOIN CATEGORY c ON c.category_id = ebc.category_id
+JOIN EVENT_TYPE et ON et.event_type_id = ebc.event_type_id
+LEFT JOIN INDIVIDUAL i ON i.individual_id = ec.individual_id
+LEFT JOIN FOUNDATION f ON f.foundation_id = ec.foundation_id
+WHERE 1=1
+  AND ec.verification_status IN ('unverified','verified','rejected')
+  AND ec.lifecycle_status != 'closed'
+[+ optional filters by c.category_id, et.event_type_id, ebc.ebc_id, ec.creator_type]
+ORDER BY ec.created_at DESC
+LIMIT ? OFFSET ?;
+
+2) Event details (with subqueries for donations)
+Type: JOIN + SUBQUERIES
+Purpose: Rich details for a single creation_id with donation counts, sums, and last donation time
+Used in: src/routes/admin.js : 261-306
+Tables involved: EVENT_CREATION, EVENT_BASED_ON_CATEGORY, CATEGORY, EVENT_TYPE, INDIVIDUAL, FOUNDATION, DONATION
+Definition (route SQL):
+SELECT
+  ec.creation_id,
+  ec.title,
+  ec.description,
+  ec.amount_needed,
+  ec.amount_received,
+  ec.division,
+  ec.verification_status,
+  ec.lifecycle_status,
+  ec.created_at,
+  ec.updated_at,
+  (ec.cover_photo IS NOT NULL) AS has_cover_photo,
+  (ec.doc IS NOT NULL) AS has_document,
+  ebc.ebc_id,
+  c.category_id, c.category_name,
+  et.event_type_id, et.event_type_name,
+  ec.creator_type,
+  CASE WHEN ec.creator_type='individual' THEN CONCAT(i.first_name,' ',i.last_name) ELSE f.foundation_name END AS creator_name,
+  CASE WHEN ec.creator_type='individual' THEN i.mobile ELSE f.mobile END AS contact_phone,
+  CASE WHEN ec.creator_type='individual' THEN i.email  ELSE f.email  END AS contact_email,
+  (SELECT COUNT(*) FROM DONATION d WHERE d.creation_id=ec.creation_id) AS total_donors,
+  (SELECT COALESCE(SUM(d.amount),0) FROM DONATION d WHERE d.creation_id=ec.creation_id) AS total_raised,
+  (SELECT MAX(d.paid_at) FROM DONATION d WHERE d.creation_id=ec.creation_id) AS last_donation_at
+FROM EVENT_CREATION ec
+JOIN EVENT_BASED_ON_CATEGORY ebc ON ebc.ebc_id = ec.ebc_id
+JOIN CATEGORY c ON c.category_id = ebc.category_id
+JOIN EVENT_TYPE et ON et.event_type_id = ebc.event_type_id
+LEFT JOIN INDIVIDUAL i ON i.individual_id = ec.individual_id
+LEFT JOIN FOUNDATION f ON f.foundation_id = ec.foundation_id
+WHERE ec.creation_id = ?;
+
+3) Verify event via stored procedure, with manual fallback
+Type: PROCEDURE call + DML updates + EXCEPTION handling
+Purpose: Approve/Reject an event, log verification, and apply state to EVENT_CREATION
+Used in: src/routes/admin.js : 194-258
+Tables involved: EVENT_VERIFICATION, EVENT_CREATION
+Definition (route snippet):
+CALL sp_admin_verify_event(?,?,?,?); -- (creation_id, decision, notes, staff_id)
+-- On failure, fallback:
+INSERT INTO EVENT_VERIFICATION (log_id, creation_id, round_no, staff_id, decision, request_staff_verification, notes, verified_at)
+VALUES (?, ?, 1, ?, ?, 0, ?, NOW());
+-- Then direct apply
+UPDATE EVENT_CREATION SET 
+  verification_status = 'verified', 
+  lifecycle_status = 'active',
+  updated_at = NOW()
+WHERE creation_id = ?; -- for approve
+UPDATE EVENT_CREATION SET 
+  verification_status = 'rejected',
+  lifecycle_status = 'inactive',
+  updated_at = NOW()
+WHERE creation_id = ?; -- for reject
+
+4) Media streaming (BLOBs)
+Type: SIMPLE QUERY (BLOB select)
+Purpose: Stream cover photo and document files for review
+Used in: src/routes/admin.js : 307-321 (cover), 323-337 (doc)
+Tables involved: EVENT_CREATION
+Definition:
+SELECT cover_photo FROM EVENT_CREATION WHERE creation_id = ?;
+SELECT doc FROM EVENT_CREATION WHERE creation_id = ?;
+
+B) DBMS Objects (Schema Layer)
+------------------------------
+1) Procedure: sp_admin_verify_event
+Type: PROCEDURE (+ EXCEPTION via SIGNAL)
+Purpose: Insert verification log and apply decision to EVENT_CREATION
+Used in: src/routes/admin.js : 194-212 (CALL)
+Tables involved: EVENT_VERIFICATION, EVENT_CREATION
+Definition (sql/admin_event_verification.sql : 1-47):
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_admin_verify_event $$
+CREATE PROCEDURE sp_admin_verify_event(
+    IN p_creation_id VARCHAR(7),
+    IN p_decision ENUM('verified','unverified','rejected'),
+    IN p_notes VARCHAR(1000),
+    IN p_staff_id VARCHAR(7)
+)
+BEGIN
+    DECLARE v_exists INT DEFAULT 0;
+    DECLARE v_round TINYINT DEFAULT 1;
+
+    SELECT COUNT(*) INTO v_exists FROM EVENT_CREATION WHERE creation_id = p_creation_id;
+    IF v_exists = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Event not found';
+    END IF;
+
+    SELECT IFNULL(MAX(round_no), 0) + 1 INTO v_round FROM EVENT_VERIFICATION WHERE creation_id = p_creation_id;
+
+    INSERT INTO EVENT_VERIFICATION(log_id, creation_id, round_no, staff_id, decision, request_staff_verification, notes, verified_at)
+    VALUES(CONCAT('EV', RIGHT(HEX(UNIX_TIMESTAMP(NOW())), 5)), p_creation_id, v_round, p_staff_id, p_decision, 0, p_notes, NOW());
+
+    CASE p_decision
+        WHEN 'verified' THEN
+            UPDATE EVENT_CREATION SET 
+                verification_status = 'verified', 
+                lifecycle_status = 'active',
+                updated_at = NOW()
+            WHERE creation_id = p_creation_id;
+        WHEN 'rejected' THEN
+            UPDATE EVENT_CREATION SET 
+                verification_status = 'rejected', 
+                lifecycle_status = 'inactive',
+                updated_at = NOW()
+            WHERE creation_id = p_creation_id;
+        ELSE
+            UPDATE EVENT_CREATION SET 
+                verification_status = 'unverified', 
+                lifecycle_status = 'inactive',
+                updated_at = NOW()
+            WHERE creation_id = p_creation_id;
+    END CASE;
+END $$
+DELIMITER ;
+
+2) Trigger: BI_EVENT_VERIFICATION_ENFORCE (BEFORE INSERT)
+Type: TRIGGER (+ EXCEPTION)
+Purpose: Validate decision enum and existence of referenced event
+Used in: Any insert into EVENT_VERIFICATION
+Tables involved: EVENT_VERIFICATION, EVENT_CREATION
+Definition (sql/admin_event_verification.sql : 49-64):
+DELIMITER $$
+DROP TRIGGER IF EXISTS BI_EVENT_VERIFICATION_ENFORCE $$
+CREATE TRIGGER BI_EVENT_VERIFICATION_ENFORCE BEFORE INSERT ON EVENT_VERIFICATION
+FOR EACH ROW
+BEGIN
+    DECLARE v_exists INT DEFAULT 0;
+    IF NEW.decision NOT IN ('verified','unverified','rejected') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid decision';
+    END IF;
+    SELECT COUNT(*) INTO v_exists FROM EVENT_CREATION WHERE creation_id = NEW.creation_id;
+    IF v_exists = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Referenced event missing';
+    END IF;
+END $$
+DELIMITER ;
+
+3) Trigger: AI_EVENT_VERIFICATION_APPLY (AFTER INSERT)
+Type: TRIGGER
+Purpose: Apply decision to EVENT_CREATION after a log row is inserted
+Used in: Any insert into EVENT_VERIFICATION
+Tables involved: EVENT_VERIFICATION, EVENT_CREATION
+Definition (sql/admin_event_verification.sql : 66-98):
+DELIMITER $$
+DROP TRIGGER IF EXISTS AI_EVENT_VERIFICATION_APPLY $$
+CREATE TRIGGER AI_EVENT_VERIFICATION_APPLY AFTER INSERT ON EVENT_VERIFICATION
+FOR EACH ROW
+BEGIN
+    CASE NEW.decision
+        WHEN 'verified' THEN
+            UPDATE EVENT_CREATION SET 
+                verification_status = 'verified', 
+                lifecycle_status = 'active',
+                updated_at = NOW()
+            WHERE creation_id = NEW.creation_id;
+        WHEN 'rejected' THEN
+            UPDATE EVENT_CREATION SET 
+                verification_status = 'rejected', 
+                lifecycle_status = 'inactive',
+                updated_at = NOW()
+            WHERE creation_id = NEW.creation_id;
+        ELSE
+            UPDATE EVENT_CREATION SET 
+                verification_status = 'unverified', 
+                lifecycle_status = 'inactive',
+                updated_at = NOW()
+            WHERE creation_id = NEW.creation_id;
+    END CASE;
+END $$
+DELIMITER ;
+
+4) Views used by filters and details
+Type: VIEW
+Purpose: Catalog views for search/filters and event details enrichment
+Used in: Indirectly by /api/search endpoints (referenced in frontend), and for potential admin analytics
+Tables involved: EVENT_CREATION, EVENT_BASED_ON_CATEGORY, CATEGORY, EVENT_TYPE, INDIVIDUAL, FOUNDATION, DONATION
+Definition (snippets from sql/shodeshsqlscript.sql):
+-- v_event_catalog
+CREATE VIEW v_event_catalog AS
+SELECT ...
+FROM EVENT_CREATION ec
+JOIN EVENT_BASED_ON_CATEGORY ebc ON ebc.ebc_id = ec.ebc_id
+LEFT JOIN CATEGORY cat ON cat.category_id = ebc.category_id
+LEFT JOIN EVENT_TYPE et ON et.event_type_id = ebc.event_type_id
+LEFT JOIN INDIVIDUAL i ON i.individual_id = ec.individual_id
+LEFT JOIN FOUNDATION f ON f.foundation_id = ec.foundation_id;
+
+-- v_event_catalog_open
+CREATE VIEW v_event_catalog_open AS
+SELECT * FROM v_event_catalog
+WHERE verification_status = 'verified'
+  AND lifecycle_status    = 'active';
+
+-- v_event_donation_stats
+CREATE VIEW v_event_donation_stats AS
+SELECT d.creation_id, COUNT(*) AS total_donations, COUNT(DISTINCT d.donor_id) AS total_donors,
+       SUM(d.amount) AS total_raised, MAX(d.paid_at) AS last_donation_at
+FROM DONATION d GROUP BY d.creation_id;
+
+C) Constraints and Data Types
+-----------------------------
+- EVENT_CREATION:
+  verification_status ENUM('unverified','verified','rejected') DEFAULT 'unverified'
+  lifecycle_status    ENUM('inactive','active','closed')      DEFAULT 'inactive'
+  cover_photo BLOB, doc BLOB (ADT: BLOB)
+- EVENT_VERIFICATION: decision ENUM('verified','unverified','rejected'); FK to EVENT_CREATION via creation_id (enforced in triggers and by application joins)
+
+D) Exception Handling
+---------------------
+- Stored procedure sp_admin_verify_event uses SIGNAL SQLSTATE '45000' for not-found event.
+- BI_EVENT_VERIFICATION_ENFORCE trigger uses SIGNAL '45000' for invalid decision or missing referenced event.
+- Route catches procedure errors; on failure, falls back to manual DML.
+
+E) Frontend References
+----------------------
+- src/public/admin/event-verification.js: loads categories (sp_get_categories), event types (sp_get_event_types), and admin events list (/api/admin/events). Navigates to event-details on click.
+- src/public/admin/event-details.js: loads /api/admin/events/:id/details and triggers PUT /api/admin/events/:id/verify with action approve/reject.
+
+F) Short Summary
+----------------
+Admin event verification enables admins to review campaigns, inspect details including donor stats, and change state to verified/active or rejected/inactive. Verification is logged in EVENT_VERIFICATION; triggers and/or procedure ensure EVENT_CREATION reflects the decision. Media assets are handled as BLOBs with streaming endpoints.

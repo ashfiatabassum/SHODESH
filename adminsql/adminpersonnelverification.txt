@@ -1,0 +1,216 @@
+SHODESH — Admin Personnel (Staff) Details & Verification: DBMS Code Map
+=====================================================================
+Short feature description: Admins can list staff (personnel) via a view, inspect individual staff details (with CV availability/size metadata), download CV BLOBs, and verify/suspend/unsuspend staff using a stored procedure with exception handling enforced by triggers and procedural checks.
+
+Format per item:
+Type: <CONSTRAINT|SIMPLE QUERY|COMPLEX QUERY|JOIN|SUBQUERY|VIEW|FUNCTION|PROCEDURE|TRIGGER|TRANSACTION|SEQUENCE|GRANT/REVOKE|EXCEPTION|DML>
+Purpose: <short purpose>
+Used in: <file path> : <line(s)>
+Tables involved: <table names>
+Definition: <exact SQL or summarized if long>
+
+A) Routes and Queries (Application Layer)
+----------------------------------------
+1) List personnel via view (filterable by status)
+Type: VIEW + SIMPLE QUERY
+Purpose: Admin listing of staff without BLOBs using a DB view
+Used in: src/routes/admin.js : 392-414
+Tables involved: STAFF (through view V_ADMIN_STAFF)
+Definition:
+SELECT * FROM V_ADMIN_STAFF [WHERE status = ?] ORDER BY staff_id DESC;
+
+2) Staff details by id (metadata only)
+Type: SIMPLE QUERY (projection with expressions)
+Purpose: Load one staff record metadata (has_cv, cv_size) without returning the BLOB
+Used in: src/routes/admin.js : 418-438
+Tables involved: STAFF
+Definition (excerpt):
+SELECT staff_id, username, first_name, last_name, email, mobile, nid, dob,
+       house_no, road_no, area, district, administrative_div, zip,
+       status,
+       (CV IS NOT NULL) AS has_cv,
+       CASE WHEN CV IS NULL THEN 0 ELSE OCTET_LENGTH(CV) END AS cv_size
+FROM STAFF
+WHERE staff_id = ?;
+
+3) Staff CV streaming (BLOB)
+Type: SIMPLE QUERY (BLOB select)
+Purpose: Download/stream staff CV document
+Used in: src/routes/admin.js : 441-457
+Tables involved: STAFF
+Definition:
+SELECT CV FROM STAFF WHERE staff_id = ?;
+
+4) Verify/Suspend/Unsuspend staff via stored procedure
+Type: PROCEDURE call + EXCEPTION handling
+Purpose: Update staff status with validation enforced by procedure/trigger
+Used in: src/routes/admin.js : 457-467 (call), 468-492 (error handling)
+Tables involved: STAFF
+Definition:
+CALL sp_admin_verify_staff(?, ?, ?, ?);
+If error.sqlState === '45000' then return 400 with message (user error from SIGNAL), else 500.
+
+5) Delete staff (direct delete)
+Type: DML DELETE
+Purpose: Remove a staff record permanently
+Used in: src/routes/admin.js : 492-510
+Tables involved: STAFF
+Definition:
+DELETE FROM STAFF WHERE staff_id = ?;
+
+B) DBMS Objects (Schema Layer)
+------------------------------
+1) View: V_ADMIN_STAFF
+Type: VIEW
+Purpose: Staff list without BLOBs; provides has_cv and cv_size metadata
+Used in: src/routes/admin.js : 392-414
+Tables involved: STAFF
+Definition (shodeshsqlscript.sql : 1448-1462 approx):
+DROP VIEW IF EXISTS V_ADMIN_STAFF;
+CREATE VIEW V_ADMIN_STAFF AS
+SELECT 
+  s.staff_id,
+  s.username,
+  CONCAT(s.first_name,' ',s.last_name) AS full_name,
+  s.email,
+  s.mobile,
+  s.district,
+  s.administrative_div,
+  s.status,
+  (s.CV IS NOT NULL) AS has_cv,
+  CASE WHEN s.CV IS NULL THEN 0 ELSE OCTET_LENGTH(s.CV) END AS cv_size
+FROM STAFF s;
+
+2) View: V_STAFF_STATS (optional)
+Type: VIEW
+Purpose: Aggregate counts for staff statuses
+Used in: Not directly referenced in routes; useful for dashboards
+Tables involved: STAFF
+Definition (shodeshsqlscript.sql : 1468-1476 approx):
+DROP VIEW IF EXISTS V_STAFF_STATS;
+CREATE VIEW V_STAFF_STATS AS
+SELECT 
+  COUNT(*) AS total,
+  SUM(CASE WHEN status='unverified' THEN 1 ELSE 0 END) AS pending,
+  SUM(CASE WHEN status='verified' THEN 1 ELSE 0 END) AS verified,
+  SUM(CASE WHEN status='suspended' THEN 1 ELSE 0 END) AS suspended
+FROM STAFF;
+
+3) Function: fn_staff_fullname
+Type: FUNCTION
+Purpose: Utility to derive full name from STAFF table
+Used in: Not directly in routes; available for SQL/reporting
+Tables involved: STAFF
+Definition (shodeshsqlscript.sql : 1439-1447 approx):
+DROP FUNCTION IF EXISTS fn_staff_fullname;
+DELIMITER $$
+CREATE FUNCTION fn_staff_fullname(p_id VARCHAR(7))
+RETURNS VARCHAR(70)
+DETERMINISTIC
+READS SQL DATA
+BEGIN
+  DECLARE v VARCHAR(70);
+  SELECT CONCAT(first_name,' ',last_name) INTO v FROM STAFF WHERE staff_id = p_id;
+  RETURN v;
+END$$
+DELIMITER ;
+
+4) Procedure: sp_admin_verify_staff
+Type: PROCEDURE (+ EXCEPTIONs via SIGNAL)
+Purpose: Validate state and apply status transitions: verify, suspend, unsuspend
+Used in: src/routes/admin.js : 457-467 (CALL)
+Tables involved: STAFF
+Definition (excerpt; shodeshsqlscript.sql : 1510-1550 approx):
+DROP PROCEDURE IF EXISTS sp_admin_verify_staff;
+DELIMITER $$
+CREATE PROCEDURE sp_admin_verify_staff(
+  IN p_staff_id VARCHAR(7),
+  IN p_action ENUM('verify','suspend','unsuspend'),
+  IN p_notes TEXT,
+  IN p_admin_user VARCHAR(100)
+)
+BEGIN
+  DECLARE v_exists INT DEFAULT 0;
+  DECLARE v_status ENUM('verified','suspended','unverified');
+
+  SELECT COUNT(*), MAX(status) INTO v_exists, v_status
+  FROM STAFF WHERE staff_id = p_staff_id;
+
+  IF v_exists = 0 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Staff not found';
+  END IF;
+
+  IF p_action = 'verify' THEN
+    IF v_status IN ('unverified','suspended') THEN
+      UPDATE STAFF SET status='verified' WHERE staff_id = p_staff_id;
+    ELSE
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Already verified';
+    END IF;
+  ELSEIF p_action = 'suspend' THEN
+    IF v_status <> 'suspended' THEN
+      UPDATE STAFF SET status='suspended' WHERE staff_id = p_staff_id;
+    ELSE
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Already suspended';
+    END IF;
+  ELSEIF p_action = 'unsuspend' THEN
+    IF v_status = 'suspended' THEN
+      UPDATE STAFF SET status='verified' WHERE staff_id = p_staff_id;
+    ELSE
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Not suspended';
+    END IF;
+  ELSE
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid action';
+  END IF;
+  -- No audit insert; direct update only per requirement
+END$$
+DELIMITER ;
+
+
+5) Trigger: staff_bu_status_guard
+Type: TRIGGER (BEFORE UPDATE) + EXCEPTION
+Purpose: Enforce valid status transitions and values; throws SQLSTATE '45000' on violations
+Used in: Any update to STAFF.status (including from procedure)
+Tables involved: STAFF
+Definition (excerpt; shodeshsqlscript.sql : 1494-1506 approx):
+DROP TRIGGER IF EXISTS staff_bu_status_guard;
+DELIMITER $$
+CREATE TRIGGER staff_bu_status_guard BEFORE UPDATE ON STAFF FOR EACH ROW
+BEGIN
+  IF NEW.status NOT IN ('unverified','verified','suspended') THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid STAFF.status';
+  END IF;
+  IF OLD.status IN ('verified','suspended') AND NEW.status = 'unverified' THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Cannot revert to unverified';
+  END IF;
+END$$
+DELIMITER ;
+
+6) Trigger: staff_bi_id (ID generation)
+Type: TRIGGER (BEFORE INSERT)
+Purpose: Generate STAFF IDs in the format STFdddd when missing/invalid
+Used in: Any insert into STAFF
+Tables involved: STAFF
+Definition (shodeshsqlscript.sql : 1483-1491 approx):
+DROP TRIGGER IF EXISTS staff_bi_id;
+DELIMITER $$
+CREATE TRIGGER staff_bi_id BEFORE INSERT ON STAFF FOR EACH ROW
+BEGIN
+  IF NEW.staff_id IS NULL OR NEW.staff_id NOT REGEXP '^STF[0-9]{4}$' THEN
+    SET NEW.staff_id = CONCAT('STF', LPAD(FLOOR(RAND()*9000)+1000, 4, '0'));
+  END IF;
+END$$
+DELIMITER ;
+
+C) Criteria Mapping (what’s present in this feature)
+---------------------------------------------------
+- Constraints: YES — STAFF.status enum and trigger-enforced transitions; column checks elsewhere.
+- Simple and complex queries: YES — simple SELECTs; filtering; ORDER BY; view-based selection. No complex GROUP BY in routes (but available via V_STAFF_STATS view).
+- View: YES — V_ADMIN_STAFF (used), V_STAFF_STATS (available).
+- Abstract data type: YES — BLOB (CV), ENUM for status.
+- Function/Procedure: YES — fn_staff_fullname (function), sp_admin_verify_staff (procedure).
+- Exception handling: YES — SIGNAL '45000' in triggers/procedure; caught in route (maps to 400).
+- Trigger, Sequence: YES — staff_bi_id acts as sequence; staff_bu_status_guard validates transitions.
+
+D) Short Summary
+----------------
+Personnel (Staff) verification lets admins manage staff accounts: list via a view, inspect details and CV presence/size, download CVs, and change verification status using a stored procedure that validates transitions. Triggers enforce ID generation and legal status changes, surfacing business-rule violations as SQL exceptions handled by the API.
