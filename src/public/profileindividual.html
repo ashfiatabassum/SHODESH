@@ -45,6 +45,46 @@
           <button class="btn-primary" onclick="editIndividual()">
             <i class="fas fa-edit"></i> Edit Profile
           </button>
+          <!-- Delete Profile Button -->
+<button id="deleteProfileBtn" class="btn btn-danger">
+    Delete Profile
+</button>
+<script>
+document.getElementById('deleteProfileBtn').addEventListener('click', async () => {
+    const confirmDelete = confirm('Are you sure you want to delete your profile?');
+    if (!confirmDelete) return;
+
+    try {
+        const individualId = localStorage.getItem('individualId'); // make sure you save this at login
+if (!individualId) {
+    alert('Error: Could not find your profile ID.');
+    return;
+}
+
+const response = await fetch('/api/individual/delete-profile', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ individualId })
+});
+
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            alert('Profile deleted successfully!');
+            // Redirect to home page
+            window.location.href = '/';
+        } else {
+            // If trigger prevented deletion
+            alert(data.message || 'Cannot delete profile at this time.');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('Network error. Please try again.');
+    }
+});
+</script>
+
          <button class="btn-primary" onclick="navigateToEventCreation('individual')">
   <i class="fas fa-hand-holding-heart"></i> Request Help
 </button>

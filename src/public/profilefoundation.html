@@ -9,12 +9,13 @@
 </head>
 <body>
   <div class="container">
-     <!-- Home Button -->
+    <!-- Home Button -->
     <div class="home-button-container">
       <button class="home-btn" onclick="goHome()" title="Go to Home">
         <i class="fas fa-home"></i>
       </button>
     </div>
+
     <!-- Header Section -->
     <header class="profile-header">
       <div class="header-content">
@@ -36,22 +37,64 @@
             </div>
           </div>
         </div>
+
         <div class="profile-actions">
           <button class="btn-primary" onclick="editFoundation()">
             <i class="fas fa-edit"></i> Edit Profile
           </button>
-           <button class="btn-primary" onclick="navigateToEventCreation('foundation')">
-  <i class="fas fa-plus-circle"></i> Add Project
-</button>
+
+          <button class="btn-primary" onclick="navigateToEventCreation('foundation')">
+            <i class="fas fa-plus-circle"></i> Add Project
+          </button>
+
+          <!-- Delete Profile Button -->
+          <button id="deleteProfileBtn" class="btn btn-danger">
+            Delete Profile
+          </button>
+
+          <script>
+            // Navigate to event creation page
+            function navigateToEventCreation(type) {
+              window.location.href = `eventcreation.html?creatorType=${type}`;
+            }
+
+            // Delete foundation profile logic
+            document.getElementById('deleteProfileBtn').addEventListener('click', async () => {
+              const confirmDelete = confirm('Are you sure you want to delete your profile?');
+              if (!confirmDelete) return;
+
+              try {
+                const foundationId = localStorage.getItem('foundationId'); // save at login
+                if (!foundationId) {
+                  alert('Error: Could not find your profile ID.');
+                  return;
+                }
+
+                const response = await fetch(`/api/foundation/delete/${foundationId}`, {
+  method: 'DELETE'
+});
 
 
-<script>
-  function navigateToEventCreation(type) {
-    // Navigate to the event creation page with the creator type
-    window.location.href = `eventcreation.html?creatorType=${type}`;
-  }
-</script>
+                const data = await response.json();
 
+                if (response.ok && data.success) {
+                  alert('Profile deleted successfully!');
+                  // Redirect to home page
+                  window.location.href = '/';
+                } else {
+                  // If trigger prevented deletion
+                  alert(data.message || 'Cannot delete profile at this time.');
+                }
+              } catch (err) {
+                console.error(err);
+                alert('Network error. Please try again.');
+              }
+            });
+
+            function editFoundation() {
+              window.location.href = "editfoundation.html";
+            }
+          </script>
         </div>
       </div>
     </header>
@@ -97,9 +140,7 @@
         </div>
       </section>
 
-     
-   
-            <!-- Address Information Card -->
+      <!-- Address Information Card -->
       <section class="info-card">
         <div class="card-header">
           <h2><i class="fas fa-map-marker-alt"></i> Address Information</h2>
@@ -117,8 +158,6 @@
         </div>
       </section>
 
-
-
       <!-- Active Projects -->
       <section class="info-card">
         <div class="card-header">
@@ -131,26 +170,18 @@
         </div>
       </section>
 
-
-       <!-- Received Donations Card (JS will fill this) -->
+      <!-- Received Donations Card -->
       <section class="info-card" id="receivedDonationsCard">
         <!-- Donations will be loaded here by JS -->
       </section>
 
-  
+      <div class="logout-section" style="text-align:center; margin: 32px 0 0 0;">
+        <button class="btn-secondary" onclick="logout()" style="padding: 12px 32px; border-radius: 24px; font-size: 1.1rem;">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </main>
 
-  <div class="logout-section" style="text-align:center; margin: 32px 0 0 0;">
-  <button class="btn-secondary" onclick="logout()" style="padding: 12px 32px; border-radius: 24px; font-size: 1.1rem;">
-    <i class="fas fa-sign-out-alt"></i> Logout
-  </button>
-</div>
-
-  <script src="profilefoundation.js"></script>
-
-    <script>
-  function editFoundation() {
-    window.location.href = "editfoundation.html";
-  }
-</script>
+    <script src="profilefoundation.js"></script>
 </body>
 </html>

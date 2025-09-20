@@ -605,3 +605,33 @@ router.post('/signout', (req, res) => {
     res.json({ success:true, message:'Signed out', donorId:id });
   });
 });
+// DELETE /api/donor/:donorId - Delete donor profile
+router.delete('/:donorId', async (req, res) => {
+  const { donorId } = req.params;
+
+  try {
+    // Delete donor (donations donor_id will be set NULL due to FK ON DELETE SET NULL)
+    const deleteQuery = `DELETE FROM donor WHERE donor_id = ?`;
+    
+    const result = await new Promise((resolve, reject) => {
+      db.query(deleteQuery, [donorId], (err, result) => {
+        if (err) reject(err);
+        else resolve(result);
+      });
+    });
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Donor not found' });
+    }
+
+    // Destroy session if exists
+    if (req.session) {
+      req.session.destroy(() => {});
+    }
+
+    res.json({ success: true, message: 'Donor profile deleted successfully' });
+  } catch (error) {
+    console.error('❌ Error deleting donor:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});

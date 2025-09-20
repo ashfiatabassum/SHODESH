@@ -3,6 +3,60 @@ let donorData = {};
 document.addEventListener('DOMContentLoaded', function() {
   initializeDonorData();
 });
+document.addEventListener('DOMContentLoaded', () => {
+  const deleteBtn = document.getElementById('deleteProfileBtn');
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to delete your donor profile? This action cannot be undone.')) {
+        const donorId = localStorage.getItem('donorId');
+        if (!donorId) return;
+
+        fetch(`/api/donor/${donorId}`, { method: 'DELETE' })
+          .then(res => res.json())
+          .then(result => {
+            if (result.success) {
+              localStorage.clear();
+              window.location.href = 'index.html';
+            } else {
+              alert(result.message || 'Failed to delete profile');
+            }
+          })
+          .catch(() => {
+            alert('Network error while deleting profile');
+          });
+      }
+    });
+  }
+});
+document.addEventListener('DOMContentLoaded', () => {
+  const deleteBtn = document.getElementById('deleteProfileBtn');
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', () => {
+      showCustomConfirm(
+        'Are you sure you want to delete your donor profile? This action cannot be undone.',
+        async () => {
+          const donorId = localStorage.getItem('donorId');
+          if (!donorId) return;
+
+          try {
+            const response = await fetch(`/api/donor/${donorId}`, {
+              method: 'DELETE'
+            });
+            const result = await response.json();
+            if (result.success) {
+              localStorage.clear();
+              window.location.href = 'index.html';
+            } else {
+              showCustomAlert(result.message || 'Failed to delete profile', 'error');
+            }
+          } catch (err) {
+            showCustomAlert('Network error while deleting profile', 'error');
+          }
+        }
+      );
+    });
+  }
+});
 
 
 
@@ -297,6 +351,20 @@ style.textContent = `
   .achievement-badge {
     font-size: 1.2rem;
     margin-left: auto;
+  }
+      .danger-btn {
+    margin-top: 10px;
+    padding: 10px 20px;
+    background: #c0392b;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+  .danger-btn:hover {
+    background: #a93226;
   }
 `;
 document.head.appendChild(style);

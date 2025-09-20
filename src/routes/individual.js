@@ -1,6 +1,9 @@
+// ================= Imports =================
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const { deleteIndividualProfile } = require('../config/individualController');
+//const authenticate = require('../middlewares/authenticate');
 
 // Generate individual ID (simple implementation)
 function generateIndividualId() {
@@ -834,4 +837,8 @@ router.get('/donations/:individualId', async (req, res) => {
 });
 
 
+// DELETE /api/individual/delete-profile
+router.delete('/delete-profile', deleteIndividualProfile);
+
+// Export router at the very end
 module.exports = router;

@@ -7,74 +7,107 @@
   <link rel="stylesheet" href="eventcreation.css">
 </head>
 <body>
-  <div class="container">
-    <h1>Create Event</h1>
 
-    <form id="eventForm" enctype="multipart/form-data">
-      <!-- Category Dropdown -->
-      <div class="form-group">
-        <label for="category">Category</label>
-        <select id="category" name="categoryId" required>
-          <option value="">Select Category</option>
-        </select>
-      </div>
-
-      <!-- Event Type Dropdown -->
-      <div class="form-group">
-        <label for="eventType">Event Type</label>
-        <select id="eventType" name="ebcId" required disabled>
-          <option value="">Select Event Type</option>
-        </select>
-      </div>
-
-      <!-- Title -->
-      <div class="form-group">
-        <label for="title">Title</label>
-        <input type="text" id="title" name="title" required>
-      </div>
-
-      <!-- Description -->
-      <div class="form-group">
-        <label for="description">Description</label>
-        <textarea id="description" name="description" rows="4" required></textarea>
-      </div>
-
-      <!-- Amount Needed -->
-      <div class="form-group">
-        <label for="amountNeeded">Amount Needed</label>
-        <input type="number" id="amountNeeded" name="amountNeeded" min="1" required>
-      </div>
-
-      <!-- Division Dropdown -->
-      <div class="form-group">
-        <label for="division">Division</label>
-        <select id="division" name="division" required>
-          <option value="">Select Division</option>
-          <option value="Barishal">Barishal</option>
-          <option value="Chattogram">Chattogram</option>
-          <option value="Dhaka">Dhaka</option>
-          <option value="Khulna">Khulna</option>
-          <option value="Rajshahi">Rajshahi</option>
-          <option value="Rangpur">Rangpur</option>
-          <option value="Mymensingh">Mymensingh</option>
-          <option value="Sylhet">Sylhet</option>
-        </select>
-      </div>
-
-      <!-- File Uploads -->
-      <div class="form-group">
-        <label for="doc">Documents</label>
-        <input type="file" id="doc" name="doc" accept=".pdf,.doc,.docx,.jpg,.png" required>
-      </div>
-
-      <div class="form-group">
-        <label for="coverPhoto">Cover Photo</label>
-        <input type="file" id="coverPhoto" name="coverPhoto" accept=".jpg,.png" required>
-      </div>
-
-      <button type="submit">Create Event</button>
-    </form>
+  <!-- ===== Top Bar ===== -->
+  <div class="top-bar">
+    <div>MAIL: contact@shodesh.org</div>
+    <div>PHONE: +880 1712 345 678</div>
   </div>
+
+  <!-- ===== Navbar ===== -->
+  <div class="navbar">
+    <div class="logo">SHODESH</div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="resources.html">Resources</a>
+      <a href="search.html">Search</a>
+      <a href="browse.html">Categories</a>
+      <a href="signin.html">Sign In</a>
+      <a href="volunteer.html">Join Our Team</a>
+    </div>
+  </div>
+
+  <!-- ===== Event Form Wrapper ===== -->
+  <div class="event-page-wrapper">
+    <!-- Left Side Animated Images -->
+    <img src="images/sanitation.jpg" alt="Left 1" class="side-img img-left left1">
+    <img src="images/dbms3.jpg" alt="Left 2" class="side-img img-left left2">
+    <img src="images/education.jpg" alt="Left 3" class="side-img img-left left3">
+
+    <!-- Main Form Container -->
+    <div class="container">
+      <h1>Create Event</h1>
+      <form id="eventForm" enctype="multipart/form-data">
+        <div class="form-group">
+          <label for="category">Category</label>
+          <select id="category" name="categoryId" required>
+            <option value="">Select Category</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="eventType">Event Type</label>
+          <select id="eventType" name="ebcId" required disabled>
+            <option value="">Select Event Type</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="title">Title</label>
+          <input type="text" id="title" name="title" required>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea id="description" name="description" rows="4" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="amountNeeded">Amount Needed</label>
+          <input type="number" id="amountNeeded" name="amountNeeded" min="1" required>
+        </div>
+
+        <div class="form-group">
+          <label for="division">Division</label>
+          <select id="division" name="division" required>
+            <option value="">Select Division</option>
+            <option value="Barishal">Barishal</option>
+            <option value="Chattogram">Chattogram</option>
+            <option value="Dhaka">Dhaka</option>
+            <option value="Khulna">Khulna</option>
+            <option value="Rajshahi">Rajshahi</option>
+            <option value="Rangpur">Rangpur</option>
+            <option value="Mymensingh">Mymensingh</option>
+            <option value="Sylhet">Sylhet</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="doc">Documents</label>
+          <input type="file" id="doc" name="doc" accept=".pdf,.doc,.docx,.jpg,.png" required>
+        </div>
+
+        <div class="form-group">
+          <label for="coverPhoto">Cover Photo</label>
+          <input type="file" id="coverPhoto" name="coverPhoto" accept=".jpg,.png" required>
+        </div>
+
+        <button type="submit">Create Event</button>
+      </form>
+    </div>
+
+    <!-- Right Side Animated Images -->
+    <img src="images/dbms2.jpg" alt="Right 1" class="side-img img-right right1">
+    <img src="images/donation.jpeg" alt="Right 2" class="side-img img-right right2">
+    <img src="images/dbms1.jpeg" alt="Right 3" class="side-img img-right right3">
+  </div>
+
+  <!-- ===== Footer ===== -->
+  <footer>
+    &copy; 2025 Shodesh. Building a better Bangladesh together.
+  </footer>
 
   <script src="eventcreation.js"></script>
 </body>
