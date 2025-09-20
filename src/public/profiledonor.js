@@ -227,7 +227,7 @@ function showNotification(message) {
 
 function findProjects() {
   showNotification('Redirecting to project listings...');
-  // window.location.href = 'projects.html';
+  window.location.href = 'search.html';
 }
 
 function logout() {

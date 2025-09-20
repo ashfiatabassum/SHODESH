@@ -302,6 +302,18 @@ function setFieldState(group, state) {
 // Main validation and submission function
 async function validateAndSubmit() {
     console.log('🔥 Form submission started');
+
+    // --- ADD THIS BLOCK ---
+    // Check if staff is assisting
+    let assistingStaffId = null;
+    if (sessionStorage.getItem('assistingStaff')) {
+        try {
+            const staffObj = JSON.parse(sessionStorage.getItem('assistingStaff'));
+            assistingStaffId = staffObj.staff_id;
+        } catch (e) { assistingStaffId = null; }
+    }
+    // --- END BLOCK ---
+
     
     // Get all form values
     const formData = {
@@ -347,11 +359,11 @@ async function validateAndSubmit() {
     console.log('✅ Basic validation passed, submitting to backend...');
     
     // Submit to backend
-    await submitRegistration(formData);
+    await submitRegistration(formData, assistingStaffId);
 }
 
 // Submit registration to backend
-async function submitRegistration(formData) {
+async function submitRegistration(formData, assistingStaffId) {
     console.log('🚀 Starting backend submission...');
     
     const submitBtn = document.getElementById('submitBtn');
@@ -369,6 +381,10 @@ async function submitRegistration(formData) {
         showCustomAlert('🔄 Registering your account... Please wait.', 'loading');
 
         console.log('📤 Sending request to /api/individual/register...');
+        console.log('🟢 Sending to backend:', {
+    ...formData,
+    assistingStaffId: assistingStaffId
+});
         const response = await fetch('/api/individual/register', {
             method: 'POST',
             headers: {
@@ -390,7 +406,8 @@ async function submitRegistration(formData) {
                 zipCode: formData.zipCode,
                 bkashNumber: formData.bkashNumber,
                 bankAccount: formData.bankAccount,
-                password: formData.password
+                password: formData.password,
+                assistingStaffId: assistingStaffId
             })
         });
 
@@ -408,6 +425,7 @@ async function submitRegistration(formData) {
         console.log('📋 Response data:', data);
 
         if (data.success) {
+            sessionStorage.removeItem('assistingStaff');
             console.log('✅ Registration successful!');
             showCustomAlert(
                 `🎉 <strong>Registration Successful!</strong><br><br>
@@ -592,6 +610,7 @@ function showSuccessAlert(message) {
 function showErrorAlert(message) {
     showCustomAlert(message, 'error');
 }
+
 
 // Add CSS styles for custom alerts
 const customStyles = document.createElement('style');

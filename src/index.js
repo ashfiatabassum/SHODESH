@@ -12,6 +12,8 @@ const searchRoutes = require('./routes/search');
 const eventRoutes = require('./routes/event');
 const eventcreationroutes = require('./routes/eventcreationroutes');
 const autocompleteRoutes = require('./routes/autocomplete');
+const staffRoutes = require('./routes/staff');
+
 
 const app = express();
 
@@ -64,6 +66,7 @@ app.use('/api/events', eventRoutes);
 console.log('✅ Event routes registered');
 app.use('/api', eventcreationroutes);
 console.log('✅ Event creation routes registered');
+app.use('/api/staff', staffRoutes);
 
 // 🔍 Debug route: list all registered routes (attempt to show parent prefix + child route)
 app.get('/api/debug/routes', (req, res) => {
@@ -105,6 +108,7 @@ app.get('/api/test', (req, res) => {
     availableRoutes: {
       admin: ['POST /api/admin/login', 'POST /api/admin/logout'],
       donor: [
+        'POST /api/staff/signin',
         'POST /api/donor/register',
         'POST /api/donor/signin',
         'GET /api/donor/profile/:donorId',

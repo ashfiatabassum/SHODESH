@@ -297,8 +297,7 @@ router.post('/register', async (req, res) => {
     }
 
     // Generate individual ID
-    const individualId = generateIndividualId();
-
+ const individualId = generateIndividualId();
     // Insert individual into database
     const insertQuery = `
       INSERT INTO individual (
@@ -330,24 +329,89 @@ router.post('/register', async (req, res) => {
 
     console.log('💾 Insert values:', insertValues);
 
-    await new Promise((resolve, reject) => {
-      db.query(insertQuery, insertValues, (err, result) => {
-        if (err) {
-          console.error('❌ Database insert error:', err);
-          reject(err);
-        } else {
-          console.log('✅ Individual inserted successfully:', result);
-          resolve(result);
-        }
-      });
-    });
+   await new Promise((resolve, reject) => {
+  db.query(insertQuery, insertValues, (err, result) => {
+    if (err) {
+      console.error('❌ Database insert error:', err);
+      reject(err);
+    } else {
+      console.log('✅ Individual inserted successfully:', result);
+      resolve(result);
+    }
+  });
+});
 
-    console.log('🎉 Registration successful for individual:', individualId);
-    res.status(201).json({
-      success: true,
-      message: 'Account created successfully! Welcome to SHODESH platform.',
-      individualId: individualId
-    });
+// --- Robust STAFF_ASSIST insert (async/await, debug, always attempts insert) ---
+if (req.body.assistingStaffId) {
+  const assistingStaffId = req.body.assistingStaffId;
+  console.log('🟡 Attempting STAFF_ASSIST insert for staff_id:', assistingStaffId);
+
+  try {
+    // 1. Check if staff exists
+    const [staffRows] = await db.promise().query(
+      "SELECT first_name, last_name, username FROM STAFF WHERE staff_id = ?",
+      [assistingStaffId]
+    );
+    let staffName = "Unknown Staff";
+    let staffUsername = "unknown";
+    if (staffRows.length > 0) {
+      staffName = staffRows[0].first_name + " " + staffRows[0].last_name;
+      staffUsername = staffRows[0].username;
+      console.log('✅ Staff found:', staffName, staffUsername);
+    } else {
+      console.warn('⚠️ No staff found with staff_id:', assistingStaffId);
+    }
+
+    // 2. Prepare values for insert
+    const staffAssistId = "SA" + Math.floor(10000 + Math.random() * 90000);
+    const individualName = req.body.firstName + " " + req.body.lastName;
+
+    const insertValues = [
+      staffAssistId,
+      assistingStaffId,
+      individualId,
+      staffName,
+      staffUsername,
+      individualName
+    ];
+
+    console.log('🟢 STAFF_ASSIST insert values:', insertValues);
+
+    // 3. Insert into STAFF_ASSIST
+    const [assistResult] = await db.promise().query(
+      `INSERT INTO STAFF_ASSIST (
+        staff_assist_id, staff_id, individual_id, 
+        staff_name_at_creation, staff_username_at_creation, 
+        individual_name_at_creation, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, NOW())`,
+      insertValues
+    );
+    console.log('✅ STAFF_ASSIST insert successful:', assistResult);
+
+    // 4. Double-check insertion
+    const [checkRows] = await db.promise().query(
+      "SELECT * FROM STAFF_ASSIST WHERE staff_assist_id = ?",
+      [staffAssistId]
+    );
+    if (checkRows.length > 0) {
+      console.log('🔎 STAFF_ASSIST row confirmed in DB:', checkRows[0]);
+    } else {
+      console.error('❌ STAFF_ASSIST row NOT found after insert!');
+    }
+
+  } catch (err) {
+    console.error('❌ STAFF_ASSIST insert error:', err);
+  }
+} else {
+  console.log('ℹ️ No assistingStaffId provided, skipping STAFF_ASSIST insert.');
+}
+
+console.log('🎉 Registration successful for individual:', individualId);
+res.status(201).json({
+  success: true,
+  message: 'Account created successfully! Welcome to SHODESH platform.',
+  individualId: individualId
+});
 
   } catch (error) {
     console.error('❌ Error registering individual:', error);

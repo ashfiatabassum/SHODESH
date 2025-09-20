@@ -19,52 +19,62 @@
     </div>
 
     <!-- Navbar -->
-   <div class="navbar">
-  <div class="logo"><strong>SHODESH</strong></div>
-  <div class="nav-links">
-    <a href="index.html">Home</a>
-    <a href="about.html" class="about-link">About</a>
-    <a href="#">Gallery</a>
-    <a href="contact.html" class="contact-link">Contact</a>
-    <a href="resources.html">Resources</a>
-    <a href="search.html">Search</a>
-    <a href="browse.html">Categories</a>
-    <a href="signin.html">Sign In</a>
-    <a href="volunteer.html" class="volunteer-link">Join Our Team</a>
-  </div>
-</div>
-<style>
-    .nav-links a.active {
-    color: #d32f2f !important; /* Red color for active */
-    text-decoration: underline;
-  }
-  .nav-links a, .nav-links button {
-    color: #176b3a;
-    text-decoration: none;
-    margin: 0 12px;
-    font-weight: 600;
-    font-size: 1.05rem;
-    background: none;
-    border: none;
-    cursor: pointer;
-    transition: color 0.2s;
-    border-radius: 0;
-    padding: 0;
-    box-shadow: none;
-    display: inline;
-  }
-  .nav-links a:hover, .nav-links button:hover {
-    color: #219150;
-    text-decoration: underline;
-    background: none;
-    box-shadow: none;
-  }
-</style>
+    <div class="navbar">
+      <div class="logo"><strong>SHODESH</strong></div>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="about.html" class="about-link">About</a>
+        <a href="#">Gallery</a>
+        <a href="contact.html" class="contact-link">Contact</a>
+        <a href="resources.html">Resources</a>
+        <a href="search.html">Search</a>
+        <a href="browse.html">Categories</a>
+        <a href="signin.html">Sign In</a>
+        <a href="volunteer.html" class="volunteer-link">Join Our Team</a>
+      </div>
+    </div>
+    <style>
+      .nav-links a.active {
+        color: #d32f2f !important; /* Red color for active */
+        text-decoration: underline;
+      }
+      .nav-links a,
+      .nav-links button {
+        color: #176b3a;
+        text-decoration: none;
+        margin: 0 12px;
+        font-weight: 600;
+        font-size: 1.05rem;
+        background: none;
+        border: none;
+        cursor: pointer;
+        transition: color 0.2s;
+        border-radius: 0;
+        padding: 0;
+        box-shadow: none;
+        display: inline;
+      }
+      .nav-links a:hover,
+      .nav-links button:hover {
+        color: #219150;
+        text-decoration: underline;
+        background: none;
+        box-shadow: none;
+      }
+    </style>
     <!-- Volunteer Hero Section -->
     <div class="volunteer-hero">
       <div class="volunteer-content">
         <h1>Join Our Team</h1>
         <p>Be part of the change you want to see in Bangladesh</p>
+        <p style="margin-top: 18px; font-size: 16px; font-weight: 500">
+          Already joined?
+          <a
+            href="staffsignin.html"
+            style="color: #ffe8d6; text-decoration: underline; font-weight: 600"
+            >Sign in</a
+          >
+        </p>
       </div>
     </div>
 
@@ -184,9 +194,12 @@
             across Bangladesh. Your time and dedication can help transform
             lives.
           </p>
-          <button class="apply-btn" onclick="applyAsVolunteer()">
-            Apply Now as a Staff
-          </button>
+          <a
+            href="staffsignin.html"
+            class="apply-btn"
+            style="text-decoration: none"
+            >Apply Now as a Staff</a
+          >
         </div>
       </div>
     </div>
@@ -200,11 +213,9 @@
 
     <script src="volunteer.js"></script>
     <script>
-      if (
-    window.location.pathname.endsWith("volunteer.html")
-  ) {
-    document.querySelector('.volunteer-link').classList.add('active');
-  }
+      if (window.location.pathname.endsWith("volunteer.html")) {
+        document.querySelector(".volunteer-link").classList.add("active");
+      }
     </script>
   </body>
 </html>
