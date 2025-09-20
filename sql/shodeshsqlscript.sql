@@ -3261,3 +3261,47 @@ SELECT
     '✅ Advanced Subqueries and Analytics' as feature_6,
     '✅ Uses ONLY your existing database tables!' as important_note,
     NOW() as deployment_completed;
+
+
+
+    DROP PROCEDURE IF EXISTS sp_admin_verify_staff;
+    DELIMITER $$
+CREATE DEFINER=root@localhost PROCEDURE sp_admin_verify_staff(
+  IN p_staff_id VARCHAR(7),
+  IN p_action ENUM('verify','suspend','unsuspend'),
+  IN p_notes TEXT,
+  IN p_admin_user VARCHAR(100)
+)
+BEGIN
+  DECLARE v_exists INT DEFAULT 0;
+  DECLARE v_status ENUM('verified','suspended','unverified');
+
+  SELECT COUNT(*), MAX(status) INTO v_exists, v_status
+  FROM STAFF WHERE staff_id = p_staff_id;
+
+  IF v_exists = 0 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Staff not found';
+  END IF;
+
+  IF p_action = 'verify' THEN
+    IF v_status IN ('unverified','suspended') THEN
+      UPDATE STAFF SET status='verified' WHERE staff_id = p_staff_id;
+    ELSE
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Already verified';
+    END IF;
+  ELSEIF p_action = 'suspend' THEN
+    IF v_status <> 'suspended' THEN
+      UPDATE STAFF SET status='suspended' WHERE staff_id = p_staff_id;
+    ELSE
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Already suspended';
+    END IF;
+  ELSEIF p_action = 'unsuspend' THEN
+    IF v_status = 'suspended' THEN
+      UPDATE STAFF SET status='verified' WHERE staff_id = p_staff_id;
+    ELSE
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Not suspended';
+    END IF;
+  ELSE
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid action';
+  END IF;
+
