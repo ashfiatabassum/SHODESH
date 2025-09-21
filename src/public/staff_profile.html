@@ -3,8 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <title>Staff Profile | SHODESH</title>
-  <link rel="stylesheet" href="profile.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="profile.css" />
+  <style>
+    body { font-family: 'Poppins', sans-serif; background:#f7f7f8; margin:0; }
+    .profile-container { max-width:960px; margin:24px auto; padding:0 16px; }
+    .profile-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+    .logout-btn { background:#ef4444; color:#fff; border:none; padding:8px 14px; border-radius:8px; cursor:pointer; }
+    .profile-card { background:#fff; border-radius:12px; box-shadow:0 6px 16px rgba(0,0,0,.06); padding:20px; margin-bottom:20px; }
+    .profile-info h2 { margin:0 0 8px 0; }
+    .create-individual-section, .verification-section {
+      background:#fff; border-radius:12px; box-shadow:0 6px 16px rgba(0,0,0,.06); padding:20px; margin-bottom:20px;
+    }
+    .create-individual-btn { background:#10b981; color:#fff; border:none; padding:10px 16px; border-radius:8px; cursor:pointer; }
+    #pendingEventsContainer .event-card { border:1px solid #e5e7eb; border-radius:10px; padding:12px; margin:10px 0; background:#fafafa; cursor:pointer; }
+    #pendingEventsContainer .event-card:hover { background:#f3f4f6; }
+    .event-card h4 { margin:0 0 8px 0; }
+    .event-meta { display:flex; gap:12px; flex-wrap:wrap; color:#374151; font-size:14px; }
+    .loading, .no-events { color:#374151; padding:12px; }
+  </style>
 </head>
 <body>
   <div class="profile-container">
@@ -12,6 +30,7 @@
       <h1>👤 Staff Profile</h1>
       <button id="logoutBtn" class="logout-btn">Logout</button>
     </div>
+
     <div class="profile-card">
       <div class="profile-info">
         <h2 id="staffName"></h2>
@@ -21,19 +40,28 @@
         <p><strong>Mobile:</strong> <span id="staffMobile"></span></p>
         <p><strong>NID:</strong> <span id="staffNid"></span></p>
         <p><strong>Date of Birth:</strong> <span id="staffDob"></span></p>
-        <p><strong>Address:</strong>
-          <span id="staffAddress"></span>
-        </p>
+        <p><strong>Address:</strong> <span id="staffAddress"></span></p>
         <p><strong>Status:</strong> <span id="staffStatus"></span></p>
       </div>
     </div>
+
+    <div class="create-individual-section">
+      <h3>Create Individual Account</h3>
+      <p>Help someone register as an individual donor/recipient. You'll be recorded as the assisting staff.</p>
+      <button id="createIndividualBtn" class="create-individual-btn">Create Individual Account</button>
+    </div>
+
+    <div class="verification-section">
+      <h3>📋 Pending Event Verifications</h3>
+      <p>Events assigned to you for verification review</p>
+      <div id="pendingEventsContainer">
+        <div class="loading">Loading pending events...</div>
+      </div>
+    </div>
   </div>
-  <!-- Add this inside .profile-container, after the profile-card -->
-<div class="create-individual-section">
-  <h3>Create Individual Account</h3>
-  <p>Help someone register as an individual donor/recipient. You’ll be recorded as the assisting staff.</p>
-  <button id="createIndividualBtn" class="create-individual-btn">Create Individual Account</button>
-</div>
+
+  <!-- If staff_profile.js is in the same folder as this HTML: -->
   <script src="staff_profile.js"></script>
+  <!-- If you keep JS under /js/, use: <script src="js/staff_profile.js"></script> -->
 </body>
 </html>
