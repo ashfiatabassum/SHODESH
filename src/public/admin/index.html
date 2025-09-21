@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="admin.css">
 </head>
 <body>
-    <!-- Admin Her -->
+    <!-- Admin Header -->
     <header class="admin-header">
         <div class="header-left">
             <div class="logo">
@@ -62,23 +62,10 @@
                 <i class="fas fa-tags"></i>
                 <span>Manage Categories</span>
             </div>
-            <div class="menu-item" onclick="showSection('trending')">
-                <i class="fas fa-fire"></i>
-                <span>Trending Management</span>
-            </div>
             <div class="menu-item" onclick="window.location.href='foundation-verification.html'">
                 <i class="fas fa-building"></i>
                 <span>Foundation Verification</span>
                 <span class="badge">2</span>
-            </div>
-
-            <div class="menu-item" onclick="showSection('reports')">
-                <i class="fas fa-file-alt"></i>
-                <span>Reports</span>
-            </div>
-            <div class="menu-item" onclick="showSection('settings')">
-                <i class="fas fa-cog"></i>
-                <span>Settings</span>
             </div>
         </div>
     </nav>
@@ -89,12 +76,6 @@
         <section id="dashboard" class="admin-section active">
             <div class="section-header">
                 <h2>Dashboard Overview</h2>
-                <div class="header-actions">
-                    <button class="btn-primary" title="Export report" aria-label="Export report">
-                        <i class="fas fa-download"></i>
-                        Export Report
-                    </button>
-                </div>
             </div>
 
             <!-- Statistics Cards -->
@@ -104,7 +85,7 @@
                         <i class="fas fa-calendar-check"></i>
                     </div>
                     <div class="stat-content">
-                        <h3>245</h3>
+                        <h3>24</h3>
                         <p>Pending Verifications</p>
                         <span class="stat-change positive">+12% from last week</span>
                     </div>
@@ -114,7 +95,7 @@
                         <i class="fas fa-donate"></i>
                     </div>
                     <div class="stat-content">
-                        <h3>৳2.3M</h3>
+                        <h3>৳1M</h3>
                         <p>Total Donations</p>
                         <span class="stat-change positive">+8% from last month</span>
                     </div>
@@ -124,7 +105,7 @@
                         <i class="fas fa-users"></i>
                     </div>
                     <div class="stat-content">
-                        <h3>1,247</h3>
+                        <h3>32</h3>
                         <p>Active Volunteers</p>
                         <span class="stat-change positive">+15% from last month</span>
                     </div>
@@ -134,137 +115,58 @@
                         <i class="fas fa-building"></i>
                     </div>
                     <div class="stat-content">
-                        <h3>89</h3>
+                        <h3>21</h3>
                         <p>Verified Foundations</p>
                         <span class="stat-change neutral">Same as last month</span>
                     </div>
                 </div>
             </div>
-
-            <!-- Quick Actions -->
-            <div class="quick-actions">
-                <h3>Quick Actions</h3>
-                <div class="action-grid">
-                    <button class="action-card" onclick="showSection('events')">
-                        <i class="fas fa-calendar-check"></i>
-                        <span>Verify Events</span>
-                        <small>12 pending</small>
-                    </button>
-                    <button class="action-card" onclick="window.location.href='foundation-verification.html'">
-                        <i class="fas fa-building"></i>
-                        <span>Review Foundations</span>
-                        <small>2 total</small>
-                    </button>
-                    <button class="action-card" onclick="showSection('volunteers')">
-                        <i class="fas fa-users"></i>
-                        <span>Approve Volunteers</span>
-                        <small>8 pending</small>
-                    </button>
-                    <button class="action-card" onclick="showSection('trending')">
-                        <i class="fas fa-fire"></i>
-                        <span>Manage Trending</span>
-                        <small>Update now</small>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Recent Activity -->
-            <div class="recent-activity">
-                <h3>Recent Activity</h3>
-                <div class="activity-list">
-                    <div class="activity-item">
-                        <div class="activity-icon">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <div class="activity-content">
-                            <p><strong>Medical Aid Campaign</strong> verified by Admin</p>
-                            <span class="activity-time">2 hours ago</span>
-                        </div>
-                    </div>
-                    <div class="activity-item">
-                        <div class="activity-icon">
-                            <i class="fas fa-user-plus"></i>
-                        </div>
-                        <div class="activity-content">
-                            <p><strong>Dhaka Foundation</strong> registration approved</p>
-                            <span class="activity-time">4 hours ago</span>
-                        </div>
-                    </div>
-                    <div class="activity-item">
-                        <div class="activity-icon">
-                            <i class="fas fa-fire"></i>
-                        </div>
-                        <div class="activity-content">
-                            <p><strong>Education for All</strong> added to trending</p>
-                            <span class="activity-time">6 hours ago</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </section>
 
-        <!-- Trending Management Section -->
-        <section id="trending" class="admin-section" aria-label="Trending Management">
-            <div class="section-header">
-                <h2>Trending Management</h2>
-                <div class="header-actions">
-                    <button class="btn-primary" title="Add to trending" aria-label="Add to trending">
-                        <i class="fas fa-plus"></i>
-                        Add to Trending
-                    </button>
-                </div>
-            </div>
-            <div class="trending-content">
-                <p>No trending items yet.</p>
-            </div>
-        </section>
-
-    <!-- Event Verification Section -->
-    <section id="events" class="admin-section" aria-label="Event Verification">
+        <!-- Event Verification Section -->
+        <section id="events" class="admin-section" aria-label="Event Verification">
             <div class="section-header">
                 <h2>Event Verification</h2>
                 <div class="header-actions">
-            <label class="sr-only" for="eventCategoryFilter">Filter by category</label>
-            <select id="eventCategoryFilter" class="filter-select" aria-label="Filter events by category">
+                    <label class="sr-only" for="eventCategoryFilter">Filter by category</label>
+                    <select id="eventCategoryFilter" class="filter-select" aria-label="Filter events by category">
                         <option value="all">All Categories</option>
                         <option value="medical">Medical</option>
                         <option value="education">Education</option>
                         <option value="emergency">Emergency</option>
                         <option value="food">Food Aid</option>
                     </select>
-            <label class="sr-only" for="eventStatusFilter">Filter by status</label>
-            <select id="eventStatusFilter" class="filter-select" aria-label="Filter events by status">
+                    <label class="sr-only" for="eventStatusFilter">Filter by status</label>
+                    <select id="eventStatusFilter" class="filter-select" aria-label="Filter events by status">
                         <option value="pending">Pending</option>
                         <option value="verified">Verified</option>
                         <option value="rejected">Rejected</option>
                     </select>
                 </div>
             </div>
-
             <div class="events-grid">
                 <!-- Event verification cards will be populated by JavaScript -->
             </div>
         </section>
 
         <!-- Donation Analytics Section -->
-    <section id="donations" class="admin-section" aria-label="Donation Analytics">
+        <section id="donations" class="admin-section" aria-label="Donation Analytics">
             <div class="section-header">
                 <h2>Donation Analytics</h2>
                 <div class="header-actions">
-            <label class="sr-only" for="donationTimeFilter">Time range</label>
-            <select class="filter-select" id="donationTimeFilter" aria-label="Filter donations by time range">
+                    <label class="sr-only" for="donationTimeFilter">Time range</label>
+                    <select class="filter-select" id="donationTimeFilter" aria-label="Filter donations by time range">
                         <option value="daily">Daily</option>
                         <option value="weekly">Weekly</option>
                         <option value="monthly">Monthly</option>
                         <option value="yearly">Yearly</option>
                     </select>
-            <button class="btn-secondary" title="Export donation data" aria-label="Export donation data">
+                    <button class="btn-secondary" title="Export donation data" aria-label="Export donation data">
                         <i class="fas fa-download"></i>
                         Export Data
                     </button>
                 </div>
             </div>
-
             <div class="analytics-content">
                 <div class="chart-container">
                     <canvas id="donationChart"></canvas>
@@ -300,17 +202,16 @@
         </section>
 
         <!-- Categories Management Section -->
-    <section id="categories" class="admin-section" aria-label="Manage Categories">
+        <section id="categories" class="admin-section" aria-label="Manage Categories">
             <div class="section-header">
                 <h2>Manage Categories</h2>
                 <div class="header-actions">
-            <button class="btn-primary" onclick="showAddCategoryModal()" title="Add a new category" aria-label="Add a new category">
+                    <button class="btn-primary" onclick="showAddCategoryModal()" title="Add a new category" aria-label="Add a new category">
                         <i class="fas fa-plus"></i>
                         Add Category
                     </button>
                 </div>
             </div>
-
             <div class="categories-grid">
                 <!-- Categories will be populated by JavaScript -->
             </div>
@@ -327,7 +228,6 @@
                     </a>
                 </div>
             </div>
-
             <div class="quick-stats-grid">
                 <div class="quick-stat">
                     <div class="stat-icon">
@@ -360,7 +260,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="info-card">
                 <div class="info-icon">
                     <i class="fas fa-info-circle"></i>
@@ -383,22 +282,7 @@
                     </div>
                 </div>
             </div>
-            </div>
         </section>
-
-        <!-- Reports Section -->
-        <section id="reports" class="admin-section" aria-label="Reports">
-            <div class="section-header"><h2>Reports</h2></div>
-            <div class="reports-content"><p>No reports yet.</p></div>
-        </section>
-
-        <!-- Settings Section -->
-        <section id="settings" class="admin-section" aria-label="Settings">
-            <div class="section-header"><h2>Settings</h2></div>
-            <div class="settings-content"><p>Configure admin settings here.</p></div>
-        </section>
-
-        <!-- Other sections will be added here -->
     </main>
 
     <!-- Foundation Details Modal -->
@@ -429,55 +313,55 @@
     </div>
 
     <!-- Add Category Modal -->
-   <div id="addCategoryModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Add New Category</h3>
-            <button class="close-btn" onclick="closeModal('addCategoryModal')" aria-label="Close add category" title="Close">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <form id="addCategoryForm">
-                <div class="form-group">
-                    <label for="categoryName">Category Name</label>
-                    <input type="text" id="categoryName" name="categoryName" required aria-required="true" placeholder="Enter category name">
-                </div>
-                <div class="form-group">
-                    <label for="categoryIcon">Category Icon</label>
-                    <select id="categoryIcon" name="categoryIcon" aria-label="Choose category icon">
-                        <option value="fas fa-heartbeat">Medical</option>
-                        <option value="fas fa-graduation-cap">Education</option>
-                        <option value="fas fa-exclamation-triangle">Emergency</option>
-                        <option value="fas fa-utensils">Food</option>
-                        <option value="fas fa-leaf">Environment</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Event Types Under This Category</label>
-                    <div id="eventTypesList"></div>
-                    <div class="add-event-row">
-                        <input type="text" id="newEventType" placeholder="Add event type name">
-                        <button type="button" class="btn-primary" onclick="addEventType()">
-                            <i class="fas fa-plus"></i> Add Event Type
-                        </button>
+    <div id="addCategoryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Category</h3>
+                <button class="close-btn" onclick="closeModal('addCategoryModal')" aria-label="Close add category" title="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addCategoryForm">
+                    <div class="form-group">
+                        <label for="categoryName">Category Name</label>
+                        <input type="text" id="categoryName" name="categoryName" required aria-required="true" placeholder="Enter category name">
                     </div>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary" onclick="closeModal('addCategoryModal')">Cancel</button>
-                    <button type="submit" class="btn-primary">Add Category</button>
-                </div>
-            </form>
+                    <div class="form-group">
+                        <label for="categoryIcon">Category Icon</label>
+                        <select id="categoryIcon" name="categoryIcon" aria-label="Choose category icon">
+                            <option value="fas fa-heartbeat">Medical</option>
+                            <option value="fas fa-graduation-cap">Education</option>
+                            <option value="fas fa-exclamation-triangle">Emergency</option>
+                            <option value="fas fa-utensils">Food</option>
+                            <option value="fas fa-leaf">Environment</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Event Types Under This Category</label>
+                        <div id="eventTypesList"></div>
+                        <div class="add-event-row">
+                            <input type="text" id="newEventType" placeholder="Add event type name">
+                            <button type="button" class="btn-primary" onclick="addEventType()">
+                                <i class="fas fa-plus"></i> Add Event Type
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="closeModal('addCategoryModal')">Cancel</button>
+                        <button type="submit" class="btn-primary">Add Category</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Navigation Footer -->
-<div style="text-align: center; padding: 20px; border-top: 1px solid #e5e7eb; margin-top: 40px; background: #f9fafb;">
-    <a href="../index.html" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; margin: 0 10px; transition: all 0.3s;">
-        <i class="fas fa-home" style="margin-right: 8px;"></i>Back to Homepage
-    </a>
-</div>
+    <!-- Navigation Footer -->
+    <div style="text-align: center; padding: 20px; border-top: 1px solid #e5e7eb; margin-top: 40px; background: #f9fafb;">
+        <a href="../index.html" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; margin: 0 10px; transition: all 0.3s;">
+            <i class="fas fa-home" style="margin-right: 8px;"></i>Back to Homepage
+        </a>
+    </div>
 
     <script src="admin.js"></script>
 </body>

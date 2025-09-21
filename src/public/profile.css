@@ -1,72 +1,79 @@
 body {
   font-family: 'Poppins', Arial, sans-serif;
-  background: linear-gradient(135deg, #e0ebd5 0%, #c2efb8 100%);
+  background: linear-gradient(135deg, #e0ebd5 0%, #b2d8b2 100%);
   margin: 0;
   padding: 0;
   min-height: 100vh;
+  color: #176b3a;
 }
 
 .profile-container {
-  max-width: 900px;
-  margin: 40px auto;
+  max-width: 950px;
+  margin: 48px auto 0 auto;
   background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 6px 24px rgba(23, 107, 58, 0.10);
-  padding: 32px 28px;
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(33, 145, 80, 0.13);
+  padding: 40px 36px 32px 36px;
+  position: relative;
 }
 
 .profile-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
+  border-bottom: 1.5px solid #c2efb8;
+  padding-bottom: 18px;
 }
 
 .profile-header h1 {
-  font-size: 2rem;
-  font-weight: 700;
+  font-size: 2.3rem;
+  font-weight: 800;
   color: #176b3a;
   margin: 0;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
+  text-shadow: 0 2px 8px #176b3a22;
 }
 
 .logout-btn {
   background: linear-gradient(90deg, #176b3a 0%, #219150 100%);
   color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 8px 18px;
-  font-size: 1rem;
+  border-radius: 12px;
+  padding: 12px 28px;
+  font-size: 1.08rem;
   cursor: pointer;
-  font-weight: 600;
-  transition: background 0.2s, transform 0.2s;
+  font-weight: 700;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
   box-shadow: 0 2px 8px rgba(33, 145, 80, 0.10);
 }
 .logout-btn:hover {
   background: linear-gradient(90deg, #219150 0%, #176b3a 100%);
   transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 4px 16px rgba(33, 145, 80, 0.16);
 }
 
 .profile-card {
-  background: #f4f7f5;
-  border-radius: 14px;
-  padding: 28px 22px;
-  box-shadow: 0 2px 12px rgba(33, 145, 80, 0.07);
+  background: #f8fff8;
+  border-radius: 18px;
+  padding: 32px 28px;
+  box-shadow: 0 4px 18px rgba(33, 145, 80, 0.10);
+  margin-bottom: 28px;
 }
 
 .profile-info h2 {
   margin-top: 0;
   color: #176b3a;
-  font-size: 1.4rem;
-  margin-bottom: 10px;
+  font-size: 1.5rem;
+  margin-bottom: 12px;
   font-weight: 700;
   letter-spacing: 0.5px;
 }
 
 .profile-info p {
-  margin: 8px 0;
+  margin: 10px 0;
   color: #219150;
-  font-size: 1rem;
+  font-size: 1.08rem;
 }
 
 .profile-info strong {
@@ -75,114 +82,123 @@ body {
 }
 
 .create-individual-section {
-  margin-top: 32px;
-  background: #f4f7f5;
-  border-radius: 14px;
-  padding: 22px 18px;
+  margin-top: 36px;
+  background: #f8fff8;
+  border-radius: 18px;
+  padding: 28px 22px;
   text-align: center;
-  box-shadow: 0 2px 12px rgba(33, 145, 80, 0.07);
+  box-shadow: 0 4px 18px rgba(33, 145, 80, 0.10);
 }
 
 .create-individual-section h3 {
   color: #176b3a;
-  font-size: 1.18rem;
-  margin-bottom: 8px;
+  font-size: 1.22rem;
+  margin-bottom: 10px;
   font-weight: 700;
 }
 
 .create-individual-section p {
   color: #219150;
-  font-size: 1rem;
-  margin-bottom: 14px;
+  font-size: 1.08rem;
+  margin-bottom: 18px;
 }
 
 .create-individual-btn {
   background: linear-gradient(90deg, #176b3a 0%, #219150 100%);
   color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 10px 24px;
-  font-size: 1rem;
+  border-radius: 12px;
+  padding: 12px 28px;
+  font-size: 1.08rem;
   font-weight: 700;
   cursor: pointer;
   margin-top: 10px;
-  transition: background 0.2s, transform 0.2s;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
   box-shadow: 0 2px 8px rgba(33, 145, 80, 0.10);
 }
 .create-individual-btn:hover {
   background: linear-gradient(90deg, #219150 0%, #176b3a 100%);
   transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 4px 16px rgba(33, 145, 80, 0.16);
 }
 
 /* Verification Section Styles */
 .verification-section {
-  margin-top: 32px;
-  padding: 24px;
-  border: 2px solid #e0ebd5;
-  border-radius: 12px;
-  background: #f8fdf5;
+  margin-top: 36px;
+  padding: 28px;
+  border: 2px solid #c2efb8;
+  border-radius: 16px;
+  background: #f4f7f5;
+  box-shadow: 0 2px 12px rgba(33, 145, 80, 0.07);
 }
 
 .verification-section h3 {
   color: #176b3a;
-  margin: 0 0 8px 0;
-  font-size: 1.3rem;
+  margin: 0 0 10px 0;
+  font-size: 1.22rem;
+  font-weight: 700;
 }
 
 .verification-section p {
   color: #4a5568;
-  margin: 0 0 16px 0;
-  font-size: 14px;
+  margin: 0 0 18px 0;
+  font-size: 1rem;
 }
 
 .event-card {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 12px;
+  background: #fff;
+  border: 1.5px solid #c2efb8;
+  border-radius: 12px;
+  padding: 18px 18px 14px 18px;
+  margin-bottom: 16px;
   cursor: pointer;
   transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(33, 145, 80, 0.07);
 }
 
 .event-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 18px rgba(33, 145, 80, 0.13);
   border-color: #176b3a;
 }
 
 .event-card h4 {
-  margin: 0 0 8px 0;
-  color: #2d3748;
-  font-size: 16px;
+  margin: 0 0 10px 0;
+  color: #176b3a;
+  font-size: 1.08rem;
+  font-weight: 700;
 }
 
 .event-card .event-meta {
   display: flex;
-  gap: 16px;
-  font-size: 13px;
-  color: #718096;
+  gap: 18px;
+  font-size: 0.98rem;
+  color: #219150;
+  margin-top: 4px;
 }
 
 .event-meta span {
   display: flex;
   align-items: center;
+  gap: 4px;
 }
 
 .loading {
   text-align: center;
-  padding: 32px;
+  padding: 36px;
   color: #718096;
   font-style: italic;
+  font-size: 1.08rem;
 }
 
 .no-events {
   text-align: center;
-  padding: 32px;
+  padding: 36px;
   color: #718096;
-  background: white;
-  border: 1px dashed #e2e8f0;
-  border-radius: 8px;
+  background: #fff;
+  border: 1.5px dashed #c2efb8;
+  border-radius: 12px;
+  font-size: 1.08rem;
 }
 
 /* Responsive */
@@ -195,5 +211,20 @@ body {
   }
   .profile-header h1 {
     font-size: 1.3rem;
+  }
+  .logout-btn, .create-individual-btn {
+    padding: 10px 16px;
+    font-size: 1rem;
+    border-radius: 8px;
+  }
+  .profile-card, .create-individual-section {
+    border-radius: 12px;
+  }
+  .verification-section {
+    border-radius: 10px;
+  }
+  .event-card {
+    border-radius: 8px;
+    padding: 12px 8px 10px 8px;
   }
 }

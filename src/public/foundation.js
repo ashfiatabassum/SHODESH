@@ -24,26 +24,37 @@ function showError(message) {
 
 function showAlert(message, type) {
     const container = document.getElementById('messageContainer');
-    
     const alert = document.createElement('div');
-    alert.className = 'message ${type}';
-    
-    const icon = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
-    
+    alert.className = `message ${type}`;
+
+    // Choose icon based on type
+    let icon;
+    if (type === 'success') {
+        icon = '<i class="fas fa-check-circle"></i>';
+    } else {
+        icon = '<i class="fas fa-exclamation-circle"></i>';
+    }
+
     alert.innerHTML = `
-        <i class="${icon}"></i>
-        <span>${message}</span>
-        <button class="alert-close" onclick="closeAlert(this)" style="background: none; border: none; color: inherit; margin-left: 10px; cursor: pointer;">
+        ${icon}
+        <span>${message.replace(/\n/g, '<br>')}</span>
+        <button class="alert-close" onclick="closeAlert(this)">
             <i class="fas fa-times"></i>
         </button>
     `;
-    
+
     container.appendChild(alert);
-    
+
+    // Animate in
+    setTimeout(() => {
+        alert.classList.add('show');
+    }, 10);
+
     // Auto remove after 5 seconds
     setTimeout(() => {
         if (alert.parentElement) {
-            alert.remove();
+            alert.classList.remove('show');
+            setTimeout(() => alert.remove(), 400);
         }
     }, 5000);
 }

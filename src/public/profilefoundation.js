@@ -54,6 +54,20 @@ async function loadProjects(foundationId) {
   }
 }
 
+// ...existing code...
+
+function showMap() {
+  // Get address from the page
+  const address = document.getElementById('fullAddress')?.textContent?.trim();
+  if (!address) {
+    alert("Address not available.");
+    return;
+  }
+  // Open Google Maps with the address
+  const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+  window.open(url, '_blank');
+}
+
 function renderProjects(projects) {
   const projectsList = document.getElementById('projectsList');
   projectsList.innerHTML = '';

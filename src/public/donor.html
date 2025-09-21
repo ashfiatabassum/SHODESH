@@ -1,171 +1,182 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Donor Registration</title>
-<link rel="stylesheet" href="donor.css" />
-<style>
-  .division-field {
-    display: none;
-    margin-top: 0;
-  }
-  
-  .division-field.show {
-    display: block;
-  }
-  
-  .division-field select {
-    width: 100%;
-    height: 65px;
-    background: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 20px;
-    font-weight: 400;
-    text-align: center;
-    outline-offset: 0;
-    outline-color: transparent;
-    transition: outline-color 0.3s;
-    padding: 0 15px;
-  }
-</style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Donor Registration - SHODESH</title>
+    <link rel="stylesheet" href="donor.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-<div class="container">
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-heart"></i>
+                <h1>SHODESH</h1>
+            </div>
+            <div class="header-text">
+                <h2>Join Our Community</h2>
+                <p>Create your donor account to start making a difference</p>
+            </div>
+        </div>
 
-  <div class="background-pattern" aria-hidden="true"></div>
+        <!-- Main Form Container -->
+        <div class="form-container">
+            <div class="form-header">
+                <h3><i class="fas fa-user-plus"></i> Donor Registration</h3>
+                <p>Fill in your details to create your account</p>
+            </div>
 
-  <h1 id="headingText"></h1>
+            <form id="signupForm" class="registration-form" onsubmit="return validateForm()">
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-user"></i>
+                        <span>Personal Information</span>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">First Name <span class="required">*</span></label>
+                            <input type="text" id="firstName" name="firstName" placeholder="Enter your first name" required>
+                            <i class="fas fa-user field-icon"></i>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name <span class="required">*</span></label>
+                            <input type="text" id="lastName" name="lastName" placeholder="Enter your last name" required>
+                            <i class="fas fa-user field-icon"></i>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="username">Username <span class="required">*</span></label>
+                        <input type="text" id="username" name="username" placeholder="Must be at least 4 characters long, no space allowed." required>
+                        <i class="fas fa-at field-icon"></i>
+                    </div>
+                    <div class="form-group">
+                        <label for="dateOfBirth">Date of Birth <span class="required">*</span></label>
+                        <input type="date" id="dateOfBirth" name="dateOfBirth" required>
+                        <i class="fas fa-calendar field-icon"></i>
+                    </div>
+                </div>
 
-  <form id="signupForm" class="form-card" onsubmit="return validateForm();">
-    <div class="row">
-      <div class="input-container half-width">
-        <label for="firstName" class="field-label">First Name <span class="required">*</span></label>
-        <input type="text" id="firstName" placeholder="" required class="half-width" />
-      </div>
-      <div class="input-container half-width">
-        <label for="lastName" class="field-label">Last Name <span class="required">*</span></label>
-        <input type="text" id="lastName" placeholder="" required class="half-width" />
-      </div>
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-envelope"></i>
+                        <span>Contact Information</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email <span class="required">*</span></label>
+                        <input type="email" id="email" name="email" placeholder="xxx@yyy.com" required>
+                        <i class="fas fa-envelope field-icon"></i>
+                    </div>
+                    <div class="form-group">
+                        <label for="country">Country <span class="required">*</span></label>
+                        <select id="country" name="country" required>
+                            <option value="" disabled selected>Select Country</option>
+                            <option>Afghanistan</option>
+                            <option>Albania</option>
+                            <option>Algeria</option>
+                            <option>Australia</option>
+                            <option>Bangladesh</option>
+                            <option>Brazil</option>
+                            <option>Canada</option>
+                            <option>China</option>
+                            <option>Egypt</option>
+                            <option>France</option>
+                            <option>Germany</option>
+                            <option>India</option>
+                            <option>Italy</option>
+                            <option>Japan</option>
+                            <option>Nepal</option>
+                            <option>Netherlands</option>
+                            <option>Pakistan</option>
+                            <option>Portugal</option>
+                            <option>Russia</option>
+                            <option>South Africa</option>
+                            <option>South Korea</option>
+                            <option>Spain</option>
+                            <option>Sri Lanka</option>
+                            <option>Sweden</option>
+                            <option>United Arab Emirates</option>
+                            <option>United Kingdom</option>
+                            <option>United States</option>
+                            <option>Others</option>
+                        </select>
+                        <i class="fas fa-globe field-icon"></i>
+                    </div>
+                    <div class="form-group division-field" id="divisionField">
+                        <label for="division">Division <span class="required">*</span></label>
+                        <select id="division" name="division">
+                            <option value="" disabled selected>Select Division</option>
+                            <option value="Barisal">Barisal</option>
+                            <option value="Chittagong">Chittagong</option>
+                            <option value="Dhaka">Dhaka</option>
+                            <option value="Khulna">Khulna</option>
+                            <option value="Mymensingh">Mymensingh</option>
+                            <option value="Rajshahi">Rajshahi</option>
+                            <option value="Rangpur">Rangpur</option>
+                            <option value="Sylhet">Sylhet</option>
+                        </select>
+                        <i class="fas fa-flag field-icon"></i>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-lock"></i>
+                        <span>Account Security</span>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="password">Password <span class="required">*</span></label>
+                            <input type="password" id="password" name="password" placeholder="Must be at least 6 characters long" required minlength="6">
+                            <i class="fas fa-key field-icon"></i>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm Password <span class="required">*</span></label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Re-enter your password" required minlength="6">
+                            <i class="fas fa-key field-icon"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" id="createAccountBtn" class="submit-btn">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Create My Account</span>
+                        <div class="btn-loader" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </div>
+                    </button>
+                </div>
+
+                <div class="form-footer">
+                    <p>Already have an account? <a href="signin.html">Sign in here</a></p>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <div class="input-container">
-      <label for="username" class="field-label">Username <span class="required">*</span></label>
-      <input type="text" id="username" placeholder="Must be at least 4 characters long, no space allowed." required />
-    </div>
+    <div id="messageContainer"></div>
 
-    <div class="date-input-wrapper">
-      <label for="dateOfBirth" class="field-label">Date of Birth <span class="required">*</span></label>
-      <input type="date" id="dateOfBirth" required />
-      <label for="dateOfBirth" class="date-placeholder">Date of Birth</label>
-    </div>
-
-    <div class="input-container">
-      <label for="email" class="field-label">Email <span class="required">*</span></label>
-      <input type="email" id="email" placeholder="xxx@yyy.com" required />
-    </div>
-
-    <div class="input-container">
-      <label for="country" class="field-label">Country <span class="required">*</span></label>
-      <select id="country" required>
-        <option value="" disabled selected>Select Country</option>
-        <option>Afghanistan</option>
-        <option>Albania</option>
-        <option>Algeria</option>
-        <option>Australia</option>
-        <option>Bangladesh</option>
-        <option>Brazil</option>
-        <option>Canada</option>
-        <option>China</option>
-        <option>Egypt</option>
-        <option>France</option>
-        <option>Germany</option>
-        <option>India</option>
-        <option>Italy</option>
-        <option>Japan</option>
-        <option>Nepal</option>
-        <option>Netherlands</option>
-        <option>Pakistan</option>
-        <option>Portugal</option>
-        <option>Russia</option>
-        <option>South Africa</option>
-        <option>South Korea</option>
-        <option>Spain</option>
-        <option>Sri Lanka</option>
-        <option>Sweden</option>
-        <option>United Arab Emirates</option>
-        <option>United Kingdom</option>
-        <option>United States</option>
-        <option>Others</option>
-      </select>
-    </div>
-
-    <!-- Division field for Bangladesh -->
-    <div class="division-field" id="divisionField">
-      <label for="division" class="field-label">Division <span class="required">*</span></label>
-      <select id="division" name="division">
-        <option value="" disabled selected>Select Division</option>
-        <option value="Barisal">Barisal</option>
-        <option value="Chittagong">Chittagong</option>
-        <option value="Dhaka">Dhaka</option>
-        <option value="Khulna">Khulna</option>
-        <option value="Mymensingh">Mymensingh</option>
-        <option value="Rajshahi">Rajshahi</option>
-        <option value="Rangpur">Rangpur</option>
-        <option value="Sylhet">Sylhet</option>
-      </select>
-    </div>
-
-    <div class="input-container">
-      <label for="password" class="field-label">Password <span class="required">*</span></label>
-      <input type="password" id="password" placeholder="Must be at least 6 characters long" required minlength="6" />
-    </div>
-
-    <div class="input-container">
-      <label for="confirmPassword" class="field-label">Confirm Password <span class="required">*</span></label>
-      <input type="password" id="confirmPassword" placeholder="" required minlength="6" />
-    </div>
-
-    <button type="submit" id="createAccountBtn">Create my Account</button>
-  </form>
-
-
-  <!-- ✅ NEW: Sign In Section Below Form -->
-  <div class="signin-section">
-    <p class="signin-text">Already have a donor account?</p>
-    <a href="signin.html" class="signin-btn">
-      <i class="fas fa-sign-in-alt"></i>
-      Sign In
-    </a>
-  </div>
-
-  
-</div>
-
-<script src="donor.js"></script>
-
-<script>
-// JavaScript to show/hide division field based on country selection
-document.addEventListener('DOMContentLoaded', function() {
-    const countrySelect = document.getElementById('country');
-    const divisionField = document.getElementById('divisionField');
-    const divisionSelect = document.getElementById('division');
-    
-    countrySelect.addEventListener('change', function() {
-        const selectedCountry = this.value;
-        
-        if (selectedCountry === 'Bangladesh') {
-            divisionField.classList.add('show');
-            divisionSelect.setAttribute('required', 'required');
-        } else {
-            divisionField.classList.remove('show');
-            divisionSelect.removeAttribute('required');
-            divisionSelect.value = ''; // Clear selection when hidden
-        }
+    <script src="donor.js"></script>
+    <script>
+    // Show/hide division field based on country selection
+    document.addEventListener('DOMContentLoaded', function() {
+        const countrySelect = document.getElementById('country');
+        const divisionField = document.getElementById('divisionField');
+        const divisionSelect = document.getElementById('division');
+        countrySelect.addEventListener('change', function() {
+            if (this.value === 'Bangladesh') {
+                divisionField.classList.add('show');
+                divisionSelect.setAttribute('required', 'required');
+            } else {
+                divisionField.classList.remove('show');
+                divisionSelect.removeAttribute('required');
+                divisionSelect.value = '';
+            }
+        });
     });
-});
-</script>
+    </script>
 </body>
 </html>

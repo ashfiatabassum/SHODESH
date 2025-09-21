@@ -1,16 +1,4 @@
-// Letter-by-letter animation for heading
-const headingText = "TOGETHER, WE CREATE THE COMMUNITY WE WANT TO SEE.";
-let i = 0;
-const headingEl = document.getElementById("headingText");
 
-function typeWriter() {
-  if (i < headingText.length) {
-    headingEl.innerHTML += headingText.charAt(i);
-    i++;
-    setTimeout(typeWriter, 80);
-  }
-}
-window.onload = typeWriter;
 
 // Custom aesthetic alert function
 function showCustomAlert(message, type = 'info', duration = 5000) {

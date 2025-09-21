@@ -6,12 +6,15 @@
   <title>Donor Profile - SHODESH</title>
   <link rel="stylesheet" href="profiledonor.css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <!-- Leaflet for Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 <body>
   <div class="container">
     <!-- Background Pattern -->
     <div class="background-pattern"></div>
-      <!-- Home Button -->
+    <!-- Home Button -->
     <div class="home-button-container">
       <button class="home-btn" onclick="goHome()" title="Go to Home">
         <i class="fas fa-home"></i>
@@ -43,20 +46,17 @@
             </div>
           </div>
         </div>
-       <div class="profile-actions">
-  <button class="btn-primary" onclick="goToEditProfile()">
-    <i class="fas fa-edit"></i> Edit Profile
-  </button>
-
-  <button id="deleteProfileBtn" class="danger-btn">
-    <i class="fas fa-user-slash"></i> Delete Profile
-  </button>
-
-  <button class="btn-secondary" onclick="shareProfile()">
-    <i class="fas fa-share"></i> Share
-  </button>
-</div>
-
+        <div class="profile-actions">
+          <button class="btn-primary" onclick="goToEditProfile()">
+            <i class="fas fa-edit"></i> Edit Profile
+          </button>
+          <button id="deleteProfileBtn" class="danger-btn">
+            <i class="fas fa-user-slash"></i> Delete Profile
+          </button>
+          <button class="btn-secondary" onclick="shareProfile()">
+            <i class="fas fa-share"></i> Share
+          </button>
+        </div>
       </div>
     </header>
 
@@ -139,21 +139,15 @@
           </div>
         </div>
         <div class="card-content" id="donation-history">
-       
-            <div class="stat-card">
-              <i class="fas fa-trophy"></i>
-              <div>
-                <span class="stat-number" id="largestDonation">৳0</span>
-                <span class="stat-text">Largest Donation</span>
-              </div>
+          <div class="stat-card">
+            <i class="fas fa-trophy"></i>
+            <div>
+              <span class="stat-number" id="largestDonation">৳0</span>
+              <span class="stat-text">Largest Donation</span>
             </div>
           </div>
-          
           <div class="donations-list" id="donationsList">
             <!-- Donations will be loaded here -->
-          </div>
-          
-          
           </div>
         </div>
       </section>
@@ -214,24 +208,31 @@
     </div>
   </div>
 
-  <!-- Add this before the footer section -->
-<div class="logout-section" style="text-align:center; margin: 32px 0 0 0;">
-  <button class="btn-secondary" onclick="logout()" style="padding: 12px 32px; border-radius: 24px; font-size: 1.1rem;">
-    <i class="fas fa-sign-out-alt"></i> Logout
-  </button>
-</div>
+  <!-- Map Modal for Country Location -->
+  <div class="modal" id="mapModal">
+    <div class="modal-content" style="min-width:320px;max-width:98vw;">
+      <div class="modal-header">
+        <h3>Country Location</h3>
+        <button class="close-btn" onclick="closeMapModal()">&times;</button>
+      </div>
+      <div class="modal-body" style="padding:0;">
+        <div id="countryMap" style="height:350px;width:100%;border-radius:12px;"></div>
+      </div>
+    </div>
+  </div>
 
+  <!-- Logout Section -->
+  <div class="logout-section" style="text-align:center; margin: 32px 0 0 0;">
+    <button class="btn-secondary" onclick="logout()" style="padding: 12px 32px; border-radius: 24px; font-size: 1.1rem;">
+      <i class="fas fa-sign-out-alt"></i> Logout
+    </button>
+  </div>
 
   <script src="profiledonor.js"></script>
-
   <script>
-  function goToEditProfile() {
-    window.location.href = "editdonor.html";
-  }
-</script>
-
-
-
-
+    function goToEditProfile() {
+      window.location.href = "editdonor.html";
+    }
+  </script>
 </body>
-</html> 
+</html>

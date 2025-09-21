@@ -304,6 +304,78 @@ function animateCards() {
   });
 }
 
+// ...existing code...
+
+function shareProfile() {
+  const url = window.location.href;
+  if (navigator.share) {
+    navigator.share({
+      title: document.title,
+      url: url
+    }).catch(() => {});
+  } else {
+    // Fallback: copy to clipboard
+    navigator.clipboard.writeText(url).then(() => {
+      alert("Profile link copied to clipboard!");
+    }, () => {
+      alert("Could not copy link. Please copy manually.");
+    });
+  }
+}
+
+
+
+// Add this function to your profiledonor.js
+
+function showCountryOnMap() {
+  // Get country name from profile
+  const country = document.getElementById('locationCountry')?.textContent?.trim() || "Bangladesh";
+  // Show modal
+  document.getElementById('mapModal').style.display = 'flex';
+
+  // Use Nominatim API to get country coordinates
+  fetch(`https://nominatim.openstreetmap.org/search?country=${encodeURIComponent(country)}&format=json&limit=1`)
+    .then(res => res.json())
+    .then(data => {
+      if (data && data.length > 0) {
+        const lat = parseFloat(data[0].lat);
+        const lon = parseFloat(data[0].lon);
+
+        // Remove previous map if exists
+        if (window.countryMapInstance) {
+          window.countryMapInstance.remove();
+        }
+
+        // Initialize Leaflet map
+        window.countryMapInstance = L.map('countryMap').setView([lat, lon], 5);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(window.countryMapInstance);
+
+        L.marker([lat, lon]).addTo(window.countryMapInstance)
+          .bindPopup(country)
+          .openPopup();
+      } else {
+        document.getElementById('countryMap').innerHTML = '<p style="padding:20px;">Map not available for this country.</p>';
+      }
+    })
+    .catch(() => {
+      document.getElementById('countryMap').innerHTML = '<p style="padding:20px;">Map could not be loaded.</p>';
+    });
+}
+
+// Close map modal
+function closeMapModal() {
+  document.getElementById('mapModal').style.display = 'none';
+  if (window.countryMapInstance) {
+    window.countryMapInstance.remove();
+    window.countryMapInstance = null;
+  }
+}
+
+
+
+
 // Add CSS for animations and styling
 const style = document.createElement('style');
 style.textContent = `

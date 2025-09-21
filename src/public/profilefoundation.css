@@ -709,9 +709,8 @@ body {
   margin-bottom: 6px;
   border-bottom: 1px solid #e9ecef;
 }
-/* ...rest of your code... */
 .btn-danger {
-  background: linear-gradient(135deg, #e63946, #d62828);
+  background: linear-gradient(135deg, #4a7c59, #5a8c69);
   color: white;
   border: none;
   font-weight: 600;
@@ -722,9 +721,7 @@ body {
 }
 
 .btn-danger:hover {
-  background: linear-gradient(135deg, #d62828, #b71c1c);
-  box-shadow: 0 6px 18px rgba(214, 40, 40, 0.4);
+  background: linear-gradient(135deg, #2d5a3d, #4a7c59);
+  box-shadow: 0 6px 18px rgba(74, 124, 89, 0.4);
   transform: translateY(-2px);
 }
-
-
