@@ -67,6 +67,7 @@ console.log('✅ Event routes registered');
 app.use('/api', eventcreationroutes);
 console.log('✅ Event creation routes registered');
 app.use('/api/staff', staffRoutes);
+console.log('✅ Staff routes registered');
 
 // 🔍 Debug route: list all registered routes (attempt to show parent prefix + child route)
 app.get('/api/debug/routes', (req, res) => {

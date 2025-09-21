@@ -56,6 +56,13 @@
             margin-top: 30px;
         }
         
+        .creator-type {
+            font-size: 11px;
+            color: #6b7280;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        
         /* Override search.css background for admin */
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
@@ -583,6 +590,7 @@
                     <select id="statusFilter">
                         <option value="">All Campaigns</option>
                         <option value="unverified">Pending Verification</option>
+                        <option value="pending">Pending Staff/Final</option>
                         <option value="verified">Verified</option>
                         <option value="rejected">Rejected</option>
                     </select>

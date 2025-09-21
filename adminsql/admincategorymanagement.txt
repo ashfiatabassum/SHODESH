@@ -68,32 +68,7 @@ B) DBMS Objects (Schema Layer)
 Type: CONSTRAINT
 Purpose: Define taxonomy and junction with PK/UK/FK
 Tables involved: CATEGORY, EVENT_TYPE, EVENT_BASED_ON_CATEGORY
-Definition (full):
-CREATE TABLE CATEGORY (
-  category_id    VARCHAR(7)  NOT NULL,
-  category_name  VARCHAR(50) NOT NULL,
-  CONSTRAINT CATEGORY_PK PRIMARY KEY (category_id),
-  CONSTRAINT CATEGORY_NAME_U UNIQUE (category_name)
-);
 
-CREATE TABLE EVENT_TYPE (
-  event_type_id   VARCHAR(7)  NOT NULL,
-  event_type_name VARCHAR(50) NOT NULL,
-  CONSTRAINT EVENT_TYPE_PK PRIMARY KEY (event_type_id),
-  CONSTRAINT EVENT_TYPE_NAME_U UNIQUE (event_type_name)
-);
-
-CREATE TABLE EVENT_BASED_ON_CATEGORY (
-  ebc_id        VARCHAR(7) NOT NULL,
-  category_id   VARCHAR(7) NOT NULL,
-  event_type_id VARCHAR(7) NOT NULL,
-  CONSTRAINT EBC_PK PRIMARY KEY (ebc_id),
-  CONSTRAINT EBC_PAIR_U UNIQUE (category_id, event_type_id),
-  CONSTRAINT EBC_CATEGORY_FK   FOREIGN KEY (category_id)   REFERENCES CATEGORY(category_id)
-    ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT EBC_EVENT_TYPE_FK FOREIGN KEY (event_type_id) REFERENCES EVENT_TYPE(event_type_id)
-    ON DELETE RESTRICT ON UPDATE CASCADE
-);
 
 2) Views (exact SQL) — sql/shodeshsqlscript.sql : 985–1056
 Type: VIEW

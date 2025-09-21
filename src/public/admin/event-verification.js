@@ -141,7 +141,27 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const html = list.map(ev => {
       const status = (ev.verification_status || 'unverified').toLowerCase();
-      const badge = status === 'verified' ? 'verified' : status === 'unverified' ? 'pending' : 'rejected';
+      const secondVerification = ev.second_verification_required === 1;
+      
+      // Determine badge and display status
+      let badge, displayStatus;
+      if (status === 'verified') {
+        badge = 'verified';
+        displayStatus = 'VERIFIED';
+      } else if (status === 'pending' && secondVerification) {
+        badge = 'pending';
+        displayStatus = 'PENDING STAFF';
+      } else if (status === 'pending' && !secondVerification) {
+        badge = 'pending';
+        displayStatus = 'PENDING FINAL';
+      } else if (status === 'rejected') {
+        badge = 'rejected';
+        displayStatus = 'REJECTED';
+      } else {
+        badge = 'pending';
+        displayStatus = 'UNVERIFIED';
+      }
+      
       const created = ev.created_at ? new Date(ev.created_at).toLocaleDateString() : '';
       const coverHtml = ev.has_cover_photo
         ? `<img src="/api/admin/events/${ev.creation_id}/cover-photo" alt="cover" onerror="this.replaceWith(document.createTextNode('No cover'))"/>`
@@ -150,18 +170,19 @@ document.addEventListener('DOMContentLoaded', () => {
         ? `<a class="btn secondary" href="/api/admin/events/${ev.creation_id}/document" target="_blank" rel="noopener">Download DOC</a>`
         : '<span class="muted">No document</span>';
       
-      // Use search.css campaign-card structure
+      // Use search.css campaign-card structure - clickable to go to details
       return `
         <div class="campaign-card" data-id="${ev.creation_id}" onclick="window.location.href='/admin/event-details.html?creation_id=${encodeURIComponent(ev.creation_id)}'">
           <div class="card-image">
             ${coverHtml}
-            <div class="urgency-badge ${badge}">${status.toUpperCase()}</div>
+            <div class="urgency-badge ${badge}">${displayStatus}</div>
           </div>
           <div class="card-content">
             <h3 class="campaign-title">${escapeHtml(ev.title || '')}</h3>
             <p class="campaign-organizer">
               <i class="fas fa-user"></i>
               ${escapeHtml(ev.creator_name || ev.creator_type || '')}
+              <span class="creator-type">(${ev.creator_type})</span>
             </p>
             <p class="campaign-category">
               <i class="fas fa-tag"></i>

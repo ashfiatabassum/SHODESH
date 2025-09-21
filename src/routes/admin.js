@@ -1,3 +1,4 @@
+
 // Admin Routes for SHODESH Platform
 const express = require('express');
 const router = express.Router();
@@ -7,10 +8,8 @@ const adminDb = require('../config/db-admin'); // Use promise-based DB for admin
 // Admin authentication middleware
 const authenticateAdmin = (req, res, next) => {
     console.log('🔐 Admin auth check - Headers:', req.headers.authorization ? 'Present' : 'Missing');
-    
     // Check for admin session/token
     const adminToken = req.headers.authorization || req.session?.adminToken;
-    
     if (!adminToken) {
         console.log('❌ Admin auth failed - No token');
         return res.status(401).json({ 
@@ -18,12 +17,29 @@ const authenticateAdmin = (req, res, next) => {
             message: 'Admin authentication required' 
         });
     }
-    
     console.log('✅ Admin auth passed');
     // Verify admin token (implement your authentication logic)
     // For now, we'll assume the token is valid
     next();
 };
+
+// Assign a staff member to an event for second verification (admin action)
+router.post('/events/:id/assign-staff', authenticateAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { staff_id } = req.body;
+        if (!staff_id) {
+            return res.status(400).json({ success: false, message: 'Staff ID is required' });
+        }
+
+        // Call the new procedure to assign staff for second verification
+        await adminDb.execute('CALL sp_admin_assign_staff_verifier(?, ?)', [id, staff_id]);
+        return res.json({ success: true, message: 'Staff assigned successfully for second verification.' });
+    } catch (error) {
+        console.error('Assign staff error:', error);
+        res.status(500).json({ success: false, message: 'Failed to assign staff', error: error.message });
+    }
+});
 
 // ...existing code... (no allowPublicRead in production)
 
@@ -143,9 +159,10 @@ router.get('/events', authenticateAdmin, async (req, res) => {
             sql += ' AND ec.verification_status = ?';
             params.push(status);
         } else {
-            // Show all three verification statuses: unverified, verified, and rejected
-            sql += " AND ec.verification_status IN (?,?,?)";
+            // Show all four verification statuses: unverified, pending, verified, and rejected
+            sql += " AND ec.verification_status IN (?,?,?,?)";
             params.push('unverified');
+            params.push('pending'); // Add pending status
             params.push('verified');
             params.push('rejected');
         }
@@ -190,70 +207,207 @@ router.get('/events/unverified', authenticateAdmin, async (req, res) => {
     }, res);
 });
 
-// Approve/Reject an event (insert into EVENT_VERIFICATION; triggers should apply to EVENT_CREATION)
+// Approve/Reject an event (using new stored procedures)
 router.put('/events/:id/verify', authenticateAdmin, async (req, res) => {
     const conn = adminDb; // promise pool
     try {
         const { id } = req.params; // creation_id like ECxxxxx
-        const { action, notes } = req.body; // 'approve' or 'reject'
-        const decision = action === 'approve' ? 'verified' : 'rejected';
-        const staffId = req.headers['x-admin-staff-id'] || null; // optional
-
-        // Try stored procedure first if available
-        try {
-            console.log(`🔍 Attempting stored procedure for ${id} with decision: ${decision}`);
-            await conn.execute('CALL sp_admin_verify_event(?,?,?,?)', [id, decision, notes || null, staffId]);
-            console.log(`✅ Stored procedure succeeded for ${id}: ${decision}`);
-            return res.json({ success: true, message: `Event ${decision} via procedure` });
-        } catch (spErr) {
-            // Fallback to manual insert + direct status update (if trigger not present)
-            console.log(`⚠️  Stored procedure failed for ${id}, falling back to manual update. Error:`, spErr.message);
-            if (spErr && spErr.code !== 'ER_SP_DOES_NOT_EXIST') {
-                console.warn('sp_admin_verify_event failed, falling back. Cause:', spErr.message);
-            }
-        }
-
-        // Generate a simple log_id (7-char): EV + timestamp base36 last 5
-        const logId = 'EV' + (Date.now().toString(36).slice(-5)).toUpperCase();
-        // Insert verification log
-        await conn.execute(
-            `INSERT INTO EVENT_VERIFICATION (log_id, creation_id, round_no, staff_id, decision, request_staff_verification, notes, verified_at)
-             VALUES (?, ?, 1, ?, ?, 0, ?, NOW())`,
-            [logId, id, staffId, decision, notes || null]
-        );
-        // Apply to EVENT_CREATION directly in case trigger not present
-        // When approving: set verification_status='verified' AND lifecycle_status='active'
-        // When rejecting: set verification_status='rejected' and lifecycle_status='inactive'
-        // Note: Unverified events remain 'unverified' unless explicitly rejected
-        console.log(`🔄 Manual update for ${id}: action=${action}, decision=${decision}`);
+        const { action, request_staff_verification } = req.body; // 'approve', 'reject', or 'request_staff'
         
+        // Map frontend action to procedure decision
+        let decision;
         if (action === 'approve') {
-            console.log(`✅ Approving event ${id}: verified/active`);
-            await conn.execute(
-                `UPDATE EVENT_CREATION SET 
-                    verification_status = 'verified', 
-                    lifecycle_status = 'active',
-                    updated_at = NOW() 
-                WHERE creation_id = ?`,
-                [id]
-            );
+            decision = 'approved';
         } else if (action === 'reject') {
-            console.log(`❌ Rejecting event ${id}: rejected/inactive`);
-            await conn.execute(
-                `UPDATE EVENT_CREATION SET 
-                    verification_status = 'rejected',
-                    lifecycle_status = 'inactive',
-                    updated_at = NOW()
-                WHERE creation_id = ?`,
-                [id]
-            );
+            decision = 'rejected';
+        } else if (action === 'request_staff' || request_staff_verification) {
+            decision = 'request_staff_verification';
+        } else {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid action. Use approve, reject, or request_staff' 
+            });
+        }
+
+        // Use our new stored procedure
+        console.log(`🔍 Calling sp_admin_verify_event for ${id} with decision: ${decision}`);
+        await conn.execute('CALL sp_admin_verify_event(?, ?)', [id, decision]);
+        console.log(`✅ Event verification completed for ${id}: ${decision}`);
+        
+        // Get updated event status for response
+        const [rows] = await conn.execute(
+            'SELECT verification_status, second_verification_required FROM EVENT_CREATION WHERE creation_id = ?', 
+            [id]
+        );
+        
+        const event = rows[0];
+        let message;
+        if (decision === 'approved') {
+            message = 'Event approved and activated';
+        } else if (decision === 'rejected') {
+            message = 'Event rejected';
+        } else if (decision === 'request_staff_verification') {
+            message = 'Staff verification requested';
         }
         
-        console.log(`✅ Manual update completed for ${id}`);
-        return res.json({ success: true, message: `Event ${decision} successfully` });
+        return res.json({ 
+            success: true, 
+            message, 
+            verification_status: event?.verification_status,
+            second_verification_required: event?.second_verification_required 
+        });
+        
     } catch (error) {
         console.error('Event verification error:', error);
-        res.status(500).json({ success: false, message: 'Failed to verify event', error: error.message });
+        
+        // Handle specific database errors
+        if (error.message.includes('Staff verification only allowed for individual events')) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Staff verification is only available for individual-created events' 
+            });
+        }
+        
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to verify event', 
+            error: error.message 
+        });
+    }
+});
+
+// Staff verification endpoint - for staff to verify events
+router.put('/events/:id/staff-verify', authenticateAdmin, async (req, res) => {
+    const conn = adminDb;
+    try {
+        const { id } = req.params; // creation_id
+        const { action, staff_id } = req.body; // 'approve' or 'reject', staff_id required
+        
+        if (!staff_id) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Staff ID is required for staff verification' 
+            });
+        }
+        
+        const decision = action === 'approve' ? 'approved' : 'rejected';
+        
+        console.log(`🔍 Staff verification: ${staff_id} verifying ${id} with decision: ${decision}`);
+        await conn.execute('CALL sp_staff_verify_event(?, ?, ?)', [staff_id, id, decision]);
+        console.log(`✅ Staff verification completed for ${id}: ${decision}`);
+        
+        // Get updated event status
+        const [rows] = await conn.execute(
+            'SELECT verification_status, second_verification_required FROM EVENT_CREATION WHERE creation_id = ?', 
+            [id]
+        );
+        
+        const event = rows[0];
+        let message;
+        if (decision === 'approved') {
+            message = 'Event approved by staff, pending final admin approval';
+        } else {
+            message = 'Event rejected by staff';
+        }
+        
+        return res.json({ 
+            success: true, 
+            message,
+            verification_status: event?.verification_status,
+            second_verification_required: event?.second_verification_required 
+        });
+        
+    } catch (error) {
+        console.error('Staff verification error:', error);
+        
+        // Handle specific database errors
+        if (error.message.includes('Staff cannot verify events for individuals they assisted')) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'You cannot verify events for individuals you helped register' 
+            });
+        } else if (error.message.includes('Staff can only verify events from their own division')) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'You can only verify events from your division' 
+            });
+        } else if (error.message.includes('Event is not pending staff verification')) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'This event is not pending staff verification' 
+            });
+        }
+        
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to complete staff verification', 
+            error: error.message 
+        });
+    }
+});
+
+// Get events pending staff verification (for staff dashboard)
+router.get('/events/pending-staff', authenticateAdmin, async (req, res) => {
+    try {
+        const { division } = req.query;
+        
+        let sql = 'SELECT * FROM v_events_pending_staff_verification';
+        const params = [];
+        
+        if (division) {
+            sql += ' WHERE target_division = ?';
+            params.push(division);
+        }
+        
+        sql += ' ORDER BY created_at DESC';
+        
+        const [rows] = await adminDb.execute(sql, params);
+        return res.json({ success: true, data: rows });
+        
+    } catch (error) {
+        console.error('Error fetching pending staff events:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to fetch events pending staff verification' 
+        });
+    }
+});
+
+// Get events pending final admin approval (after staff approval)
+router.get('/events/pending-admin-final', authenticateAdmin, async (req, res) => {
+    try {
+        const [rows] = await adminDb.execute(
+            'SELECT * FROM v_events_pending_admin_final ORDER BY staff_approval_at DESC'
+        );
+        return res.json({ success: true, data: rows });
+        
+    } catch (error) {
+        console.error('Error fetching events pending final admin approval:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to fetch events pending final admin approval' 
+        });
+    }
+});
+
+// Get available staff for event verification
+router.get('/events/:id/available-staff', authenticateAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const [rows] = await adminDb.execute(
+            'SELECT * FROM v_available_staff_for_verification WHERE creation_id = ?',
+            [id]
+        );
+        
+        return res.json({ success: true, data: rows });
+        
+    } catch (error) {
+        console.error('Error fetching available staff:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to fetch available staff for verification' 
+        });
     }
 });
 

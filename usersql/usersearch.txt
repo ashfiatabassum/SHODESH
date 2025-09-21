@@ -1,0 +1,367 @@
+SHODESH — User Search (Explore Campaigns): DBMS Code Map
+=========================================================
+Short feature description: Public users can search and browse active, verified campaigns. Backend routes use stored procedures and views for filters and results. Advanced search adds similarity/popularity scoring. Autocomplete provides quick title suggestions.
+
+Format per item:
+Type: <CONSTRAINT|SIMPLE QUERY|COMPLEX QUERY|JOIN|SUBQUERY|VIEW|FUNCTION|PROCEDURE|TRIGGER|TRANSACTION|SEQUENCE|GRANT/REVOKE|EXCEPTION|DML>
+Purpose: <short purpose>
+Used in: <file path> : <line(s)>
+Tables involved: <table names>
+Definition: <exact SQL or route snippet>
+
+A) Routes and Queries (Application Layer)
+----------------------------------------
+1) Categories list (uses stored procedure)
+Type: PROCEDURE call
+Purpose: Populate Category filter with categories that have open events
+Used in: src/routes/search.js : 7–17
+Tables involved: v_event_filters_categories (derived from EVENT_CREATION, EVENT_BASED_ON_CATEGORY, CATEGORY)
+Definition (route snippet):
+CALL sp_get_categories();
+
+2) Event types list (optional category filter)
+Type: PROCEDURE call
+Purpose: Populate Event Type filter; optionally filter by category
+Used in: src/routes/search.js : 19–33
+Tables involved: v_event_filters_event_types (derived from EVENT_CREATION, EVENT_BASED_ON_CATEGORY, EVENT_TYPE, CATEGORY)
+Definition (route snippet):
+CALL sp_get_event_types(?);
+
+3) Divisions list (with ebc_id fallback)
+Type: PROCEDURE call + GROUP BY fallback
+Purpose: Populate Division filter; handle direct ebc_id selection with counts
+Used in: src/routes/search.js : 34–62
+Tables involved: v_event_filters_divisions; EVENT_CREATION, EVENT_BASED_ON_CATEGORY
+Definition (route snippets):
+-- Fallback when ebc_id provided
+SELECT ec.division, COUNT(*) AS campaign_count
+FROM EVENT_CREATION ec
+JOIN EVENT_BASED_ON_CATEGORY ebc ON ec.ebc_id = ebc.ebc_id
+WHERE ec.lifecycle_status='active' AND ec.verification_status='verified' AND ebc.ebc_id = ?
+GROUP BY ec.division HAVING COUNT(*)>0 ORDER BY ec.division;
+-- Else stored procedure
+CALL sp_get_divisions(?, ?);
+
+4) Events search (filters + q)
+Type: PROCEDURE call + JOIN/SUBQUERY fallback
+Purpose: Fetch filtered events with donation stats; supports free-text q
+Used in: src/routes/search.js : 64–150
+Tables involved: v_event_catalog_open_with_stats; fallback joins EVENT_CREATION, EVENT_BASED_ON_CATEGORY, CATEGORY, EVENT_TYPE, DONATION
+Definition (route snippets):
+-- Fallback when ebc_id provided (excerpt)
+SELECT 
+  ec.creation_id AS id, ec.title, ec.description,
+  ec.amount_needed AS goal, ec.amount_received AS raised,
+  ec.division AS location, ec.created_at, ec.cover_photo,
+  ebc.ebc_id, c.category_id, c.category_name, et.event_type_id, et.event_type_name,
+  IFNULL((SELECT COUNT(DISTINCT d.donor_id) FROM DONATION d WHERE d.creation_id=ec.creation_id),0) AS donors,
+  IFNULL((SELECT SUM(d.amount) FROM DONATION d WHERE d.creation_id=ec.creation_id),0) AS total_raised
+FROM EVENT_CREATION ec
+JOIN EVENT_BASED_ON_CATEGORY ebc ON ec.ebc_id = ebc.ebc_id
+JOIN CATEGORY c ON ebc.category_id = c.category_id
+JOIN EVENT_TYPE et ON ebc.event_type_id = et.event_type_id
+WHERE ec.lifecycle_status='active' AND ec.verification_status='verified' AND ebc.ebc_id = ?
+ORDER BY ec.created_at DESC;
+-- Else stored procedure
+CALL sp_search_events_stats(?,?,?,?);
+
+5) Single event detail (with stats)
+Type: PROCEDURE call
+Purpose: Fetch one event with donation stats; enforce active+verified
+Used in: src/routes/search.js : 151–191
+Tables involved: v_event_catalog_with_stats
+Definition (route snippet):
+CALL sp_get_event_detail_stats(?);
+
+6) Advanced search (cursor + JSON result)
+Type: PROCEDURE call (cursor + JSON)
+Purpose: Search with similarity/popularity scoring and typed modes
+Used in: src/routes/advanced-search.js : 7–53
+Tables involved: v_advanced_searchable_events; FUNCTIONS fn_calculate_text_similarity, fn_calculate_popularity_score
+Definition (route snippet):
+CALL sp_advanced_search_with_cursor(?, ?, ?, @result_count, @status, @message);
+
+7) Search suggestions (similarity and popularity)
+Type: COMPLEX QUERY (view + functions)
+Purpose: Suggest titles/categories based on prefix and similarity
+Used in: src/routes/advanced-search.js : 59–113
+Tables involved: v_advanced_searchable_events; DONATION (via function), EVENT_CREATION
+Definition (route SQL excerpt):
+SELECT 
+  creation_id,
+  title,
+  creator_name,
+  category_name,
+  funding_percentage,
+  donation_count,
+  fn_calculate_text_similarity(?, title) as similarity_score,
+  fn_calculate_popularity_score(creation_id) as popularity_score
+FROM v_advanced_searchable_events
+WHERE verification_status='verified' AND lifecycle_status='active'
+  AND (LOWER(title) LIKE CONCAT(?, '%') OR LOWER(category_name) LIKE CONCAT(?, '%') OR fn_calculate_text_similarity(?, title) > 40)
+ORDER BY similarity_score DESC, popularity_score DESC, donation_count DESC
+LIMIT ?;
+
+8) Autocomplete campaigns
+Type: SIMPLE QUERY + JOINs
+Purpose: Provide up to 100 campaign titles for autocomplete
+Used in: src/routes/autocomplete.js : 6–33
+Tables involved: EVENT_CREATION, EVENT_BASED_ON_CATEGORY, CATEGORY
+Definition (route SQL excerpt):
+SELECT 
+  ec.creation_id,
+  ec.campaign_title as title,
+  ec.division,
+  c.category_name as category
+FROM EVENT_CREATION ec
+LEFT JOIN EVENT_BASED_ON_CATEGORY ebc ON ec.ebc_id = ebc.ebc_id
+LEFT JOIN CATEGORY c ON ebc.category_id = c.category_id
+WHERE ec.lifecycle_status = 'active' AND ec.verification_status = 'verified'
+ORDER BY ec.campaign_title
+LIMIT 100;
+
+B) Views and Procedures (Schema Layer — from shodeshsqlscript.sql)
+-----------------------------------------------------------------
+1) v_event_filters_categories
+Type: VIEW
+Purpose: Distinct categories from open events
+Used in: sp_get_categories (search categories)
+Tables involved: v_event_catalog_open
+Line (start): sql/shodeshsqlscript.sql : 1038
+Definition (full):
+DROP VIEW IF EXISTS v_event_filters_categories;
+CREATE VIEW v_event_filters_categories AS
+SELECT DISTINCT category_id, category_name
+FROM v_event_catalog_open
+WHERE category_id IS NOT NULL
+ORDER BY category_name;
+
+2) v_event_filters_event_types
+Type: VIEW
+Purpose: Distinct event types from open events, with category_id for filtering
+Used in: sp_get_event_types (search event-types)
+Tables involved: v_event_catalog_open
+Line (start): sql/shodeshsqlscript.sql : 1046
+Definition (full):
+DROP VIEW IF EXISTS v_event_filters_event_types;
+CREATE VIEW v_event_filters_event_types AS
+SELECT DISTINCT event_type_id, event_type_name, category_id
+FROM v_event_catalog_open
+WHERE event_type_id IS NOT NULL
+ORDER BY event_type_name;
+
+3) v_event_filters_divisions
+Type: VIEW
+Purpose: Distinct divisions from open events (optionally filtered)
+Used in: sp_get_divisions (search divisions)
+Tables involved: v_event_catalog_open
+Line (start): sql/shodeshsqlscript.sql : 1054
+Definition (full):
+DROP VIEW IF EXISTS v_event_filters_divisions;
+CREATE VIEW v_event_filters_divisions AS
+SELECT DISTINCT
+  category_id,
+  event_type_id,
+  division
+FROM v_event_catalog_open
+WHERE division IS NOT NULL
+ORDER BY division;
+
+4) sp_get_categories (exact)
+Type: PROCEDURE
+Purpose: Return categories for search filter
+Used in: src/routes/search.js : 7–17
+Tables involved: v_event_filters_categories
+Line (start): sql/shodeshsqlscript.sql : 1068
+Definition (full):
+DROP PROCEDURE IF EXISTS sp_get_categories $$
+CREATE PROCEDURE sp_get_categories()
+BEGIN
+  SELECT category_id, category_name
+  FROM v_event_filters_categories;
+END $$
+
+5) sp_get_event_types (exact)
+Type: PROCEDURE
+Purpose: Return event types; optionally filter by category
+Used in: src/routes/search.js : 19–33
+Tables involved: v_event_filters_event_types
+Line (start): sql/shodeshsqlscript.sql : 1076
+Definition (full):
+DROP PROCEDURE IF EXISTS sp_get_event_types $$
+CREATE PROCEDURE sp_get_event_types(IN p_category_id VARCHAR(7))
+BEGIN
+  SELECT event_type_id, event_type_name
+  FROM v_event_filters_event_types
+  WHERE (p_category_id IS NULL OR p_category_id = '' OR category_id = p_category_id);
+END $$
+
+6) sp_get_divisions (exact)
+Type: PROCEDURE
+Purpose: Return divisions; optionally filter by category/event type
+Used in: src/routes/search.js : 34–62
+Tables involved: v_event_filters_divisions
+Line (start): sql/shodeshsqlscript.sql : 1085
+Definition (full):
+DROP PROCEDURE IF EXISTS sp_get_divisions $$
+CREATE PROCEDURE sp_get_divisions(
+  IN p_category_id   VARCHAR(7),
+  IN p_event_type_id VARCHAR(7)
+)
+BEGIN
+  SELECT division
+  FROM v_event_filters_divisions
+  WHERE (p_category_id   IS NULL OR p_category_id   = '' OR category_id   = p_category_id)
+    AND (p_event_type_id IS NULL OR p_event_type_id = '' OR event_type_id = p_event_type_id)
+  ORDER BY division;
+END $$
+
+7) v_event_donation_stats, v_event_catalog_with_stats, v_event_catalog_open_with_stats
+Type: VIEWs (aggregates + join)
+Purpose: Provide donation stats per event and open-event catalog with stats
+Used in: sp_search_events_stats, sp_get_event_detail_stats
+Tables involved: DONATION, v_event_catalog
+Line (starts):
+- v_event_donation_stats — sql/shodeshsqlscript.sql : 1147
+- v_event_catalog_with_stats — sql/shodeshsqlscript.sql : 1167
+- v_event_catalog_open_with_stats — sql/shodeshsqlscript.sql : 1182
+Definition (key parts):
+DROP VIEW IF EXISTS v_event_donation_stats;
+CREATE VIEW v_event_donation_stats AS
+SELECT
+  d.creation_id,
+  COUNT(*)                           AS total_donations,
+  COUNT(DISTINCT d.donor_id)         AS total_donors,
+  SUM(d.amount)                      AS total_raised,
+  SUM(CASE WHEN YEAR(d.paid_at)=YEAR(CURRENT_DATE) AND MONTH(d.paid_at)=MONTH(CURRENT_DATE) THEN d.amount END)            AS raised_this_month,
+  COUNT(DISTINCT CASE WHEN YEAR(d.paid_at)=YEAR(CURRENT_DATE) AND MONTH(d.paid_at)=MONTH(CURRENT_DATE) THEN d.donor_id END) AS donors_this_month,
+  MAX(d.paid_at)                     AS last_donation_at
+FROM DONATION d
+GROUP BY d.creation_id;
+
+DROP VIEW IF EXISTS v_event_catalog_with_stats;
+CREATE VIEW v_event_catalog_with_stats AS
+SELECT c.*, s.total_donors, s.total_donations, s.total_raised, s.raised_this_month, s.donors_this_month, s.last_donation_at
+FROM v_event_catalog c
+LEFT JOIN v_event_donation_stats s ON s.creation_id = c.creation_id;
+
+DROP VIEW IF EXISTS v_event_catalog_open_with_stats;
+CREATE VIEW v_event_catalog_open_with_stats AS
+SELECT *
+FROM v_event_catalog_with_stats
+WHERE verification_status='verified' AND lifecycle_status='active';
+
+8) sp_search_events_stats (exact)
+Type: PROCEDURE
+Purpose: Search open events by filters and q, returning donation stats
+Used in: src/routes/search.js : 64–150
+Tables involved: v_event_catalog_open_with_stats
+Line (start): sql/shodeshsqlscript.sql : 1191 (redefined at 1829)
+Definition (full):
+DROP PROCEDURE IF EXISTS sp_search_events_stats;
+DELIMITER $$
+CREATE PROCEDURE sp_search_events_stats(
+  IN p_category_id   VARCHAR(7),
+  IN p_event_type_id VARCHAR(7),
+  IN p_division      VARCHAR(30),
+  IN p_q             VARCHAR(200)
+)
+BEGIN
+  SELECT
+    creation_id, title, description, short_description, division,
+    amount_needed, amount_received, progress_pct, cover_photo,
+    category_id, category_name, event_type_id, event_type_name,
+    creator_type, creator_name, creator_id,
+    total_donors, total_donations, total_raised,
+    raised_this_month, donors_this_month, last_donation_at
+  FROM v_event_catalog_open_with_stats
+  WHERE (p_category_id   IS NULL OR p_category_id   = '' OR category_id   = p_category_id)
+    AND (p_event_type_id IS NULL OR p_event_type_id = '' OR event_type_id = p_event_type_id)
+    AND (p_division      IS NULL OR p_division      = '' OR division      = p_division)
+    AND (p_q IS NULL OR p_q = '' OR title LIKE CONCAT('%', p_q, '%') OR description LIKE CONCAT('%', p_q, '%'))
+  ORDER BY progress_pct DESC, (amount_needed - amount_received) DESC, title ASC;
+END $$
+DELIMITER ;
+
+9) sp_get_event_detail_stats (exact)
+Type: PROCEDURE
+Purpose: Get single event with donation stats
+Used in: src/routes/search.js : 151–191
+Tables involved: v_event_catalog_with_stats
+Line (start): sql/shodeshsqlscript.sql : 1224
+Definition (full):
+DROP PROCEDURE IF EXISTS sp_get_event_detail_stats;
+DELIMITER $$
+CREATE PROCEDURE sp_get_event_detail_stats(IN p_creation_id VARCHAR(7))
+BEGIN
+  SELECT
+    creation_id, title, description, short_description, division,
+    amount_needed, amount_received, progress_pct,
+    category_id, category_name, event_type_id, event_type_name,
+    creator_type, creator_name, creator_id,
+    contact_phone, contact_email,
+    total_donors, total_donations, total_raised,
+    raised_this_month, donors_this_month, last_donation_at
+  FROM v_event_catalog_with_stats
+  WHERE creation_id = p_creation_id
+  LIMIT 1;
+END $$
+DELIMITER ;
+
+C) Advanced Search Objects (from sql/final-advanced-search.sql)
+---------------------------------------------------------------
+1) fn_calculate_text_similarity
+Type: FUNCTION
+Purpose: Score similarity between search term and target text (0–100)
+Used in: advanced-search suggestions and procedure
+Tables involved: N/A
+Definition (full available in file):
+CREATE FUNCTION fn_calculate_text_similarity(search_term VARCHAR(255), target_text VARCHAR(255)) RETURNS DECIMAL(5,2) ...
+
+2) fn_calculate_popularity_score
+Type: FUNCTION
+Purpose: Compute popularity from donation count, total amount, and recency
+Used in: advanced-search suggestions and procedure
+Tables involved: DONATION, EVENT_CREATION
+Definition (full available in file):
+CREATE FUNCTION fn_calculate_popularity_score(creation_id_param VARCHAR(7)) RETURNS INT ...
+
+3) v_advanced_searchable_events
+Type: VIEW
+Purpose: Rich event view with creator name, funding %, donation counts, statuses
+Used in: advanced-search routes
+Tables involved: EVENT_CREATION, INDIVIDUAL, FOUNDATION, EVENT_BASED_ON_CATEGORY, CATEGORY, EVENT_TYPE, DONATION (via subqueries)
+Definition: CREATE VIEW v_advanced_searchable_events AS SELECT ... WHERE ec.verification_status IN (...) AND ec.lifecycle_status IN (...);
+
+4) sp_advanced_search_with_cursor
+Type: PROCEDURE (cursor + JSON)
+Purpose: Return JSON array of results with similarity/popularity per mode
+Used in: src/routes/advanced-search.js : 7–53
+Tables involved: v_advanced_searchable_events; FUNCTIONS above
+Definition: CREATE PROCEDURE sp_advanced_search_with_cursor(IN p_search_term VARCHAR(255), IN p_limit INT, IN p_search_type ENUM('basic','exact','fuzzy','popular'), OUT p_result_count INT, OUT p_status VARCHAR(20), OUT p_message TEXT) ...
+
+5) Triggers (search-affecting side effects)
+Type: TRIGGER
+Purpose: Keep amount_received updated and mark search index refresh on updates
+Used in: N/A (indirectly improves search freshness)
+Tables involved: DONATION, EVENT_CREATION
+Definition (names): trg_update_search_data_on_donation; trg_search_optimization_on_event_update
+
+D) Grants and Exceptions
+------------------------
+- Grant: GRANT SELECT ON shodesh.* TO 'root'@'localhost' (read-only for search paths)
+- Exceptions (application): 404 on inactive/unverified single event; 500 on procedure/query failure
+
+E) Acceptance Criteria Mapping
+------------------------------
+- Simple queries: sp_get_categories, sp_get_event_types, sp_get_divisions
+- Complex queries: sp_search_events_stats; advanced suggestions query (functions + ordering)
+- Views: v_event_catalog_open*, v_event_filters_*; v_event_catalog_with_stats; v_advanced_searchable_events
+- Procedures/Functions: sp_get_*, sp_search_events_stats, sp_advanced_search_with_cursor; fn_calculate_*
+- Triggers: donation/update triggers keeping stats and caches fresh
+- Dynamic search: q param (LIKE), similarity scoring, popularity scoring
+
+File Pointers
+-------------
+- Routes: src/routes/search.js; src/routes/advanced-search.js; src/routes/autocomplete.js
+- SQL: sql/shodeshsqlscript.sql; sql/final-advanced-search.sql

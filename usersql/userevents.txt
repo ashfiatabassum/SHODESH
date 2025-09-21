@@ -1,0 +1,113 @@
+SHODESH — User Events (Campaign List & Detail): DBMS Code Map
+============================================================
+Short feature description: Public users can browse active, verified campaigns and open a single campaign detail page. The list endpoint supports filters; the detail endpoint returns organizer/contact info and exposes document/cover downloads.
+
+Format per item:
+Type: <CONSTRAINT|SIMPLE QUERY|COMPLEX QUERY|JOIN|SUBQUERY|VIEW|FUNCTION|PROCEDURE|TRIGGER|TRANSACTION|SEQUENCE|GRANT/REVOKE|EXCEPTION|DML>
+Purpose: <short purpose>
+Used in: <file path> : <line(s)>
+Tables involved: <table names>
+Definition: <exact SQL or route snippet>
+
+A) Routes and Queries (Application Layer — only what is actually used)
+---------------------------------------------------------------------
+1) Events list (filters: category_id, event_type_id, ebc_id, division, q)
+Type: SIMPLE QUERY + JOINs
+Purpose: Return active+verified campaigns with taxonomy fields; optional free-text q
+Used in: src/routes/event.js : 8–46
+Tables involved: EVENT_CREATION, EVENT_BASED_ON_CATEGORY, CATEGORY, EVENT_TYPE
+Definition (route SQL excerpt):
+SELECT 
+  ec.creation_id AS id,
+  ec.title,
+  ec.description,
+  ec.amount_needed AS goal,
+  ec.amount_received AS raised,
+  ec.division AS location,
+  ec.created_at,
+  ebc.ebc_id,
+  c.category_id,
+  c.category_name,
+  et.event_type_id,
+  et.event_type_name
+FROM EVENT_CREATION ec
+JOIN EVENT_BASED_ON_CATEGORY ebc ON ec.ebc_id = ebc.ebc_id
+JOIN CATEGORY c ON ebc.category_id = c.category_id
+JOIN EVENT_TYPE et ON ebc.event_type_id = et.event_type_id
+WHERE ec.lifecycle_status = 'active' AND ec.verification_status = 'verified'
+[AND filters by ebc_id/category_id/event_type_id/division/q]
+ORDER BY ec.created_at DESC;
+
+2) Single event detail
+Type: SIMPLE QUERY + JOINs
+Purpose: Fetch one campaign with category/type and organizer contact; enforce active+verified
+Used in: src/routes/event.js : 49–141
+Tables involved: EVENT_CREATION, EVENT_BASED_ON_CATEGORY, CATEGORY, EVENT_TYPE, FOUNDATION, INDIVIDUAL
+Definition (route SQL excerpt):
+SELECT 
+  ec.creation_id,
+  ec.title,
+  ec.description,
+  ec.amount_needed,
+  ec.amount_received,
+  ec.division,
+  ec.verification_status,
+  ec.lifecycle_status,
+  ec.created_at,
+  ec.updated_at,
+  c.category_name,
+  et.event_type_name,
+  ec.cover_photo,
+  ec.doc,
+  f.foundation_name,
+  f.email AS foundation_email,
+  f.mobile AS foundation_phone,
+  f.bkash AS foundation_bkash,
+  f.bank_account AS foundation_bank_account,
+  i.first_name AS individual_first_name,
+  i.mobile AS individual_phone,
+  i.bkash AS individual_bkash,
+  i.bank_account AS individual_bank_account
+FROM EVENT_CREATION ec
+JOIN EVENT_BASED_ON_CATEGORY ebc ON ec.ebc_id = ebc.ebc_id
+JOIN CATEGORY c ON ebc.category_id = c.category_id
+JOIN EVENT_TYPE et ON ebc.event_type_id = et.event_type_id
+LEFT JOIN FOUNDATION f ON ec.foundation_id = f.foundation_id
+LEFT JOIN INDIVIDUAL i ON ec.individual_id = i.individual_id
+WHERE ec.creation_id = ?
+  AND ec.verification_status = 'verified'
+  AND ec.lifecycle_status = 'active'
+LIMIT 1;
+
+3) Event file download (doc or cover)
+Type: SIMPLE QUERY
+Purpose: Download LONGBLOB document or cover photo by creation_id
+Used in: src/routes/eventcreationroutes.js : 23–56
+Tables involved: EVENT_CREATION
+Definition (route snippet):
+GET /api/events/:id/file/:type →
+SELECT CASE WHEN :type='doc' THEN doc ELSE cover_photo END AS file_blob
+FROM EVENT_CREATION WHERE creation_id = ?;
+// Actual code sets proper Content-Type and filename per :type
+
+B) Schema references (exact locations in sql/shodeshsqlscript.sql)
+------------------------------------------------------------------
+- INDIVIDUAL — table definition start: line 12
+- FOUNDATION — table definition start: line 40
+- CATEGORY — table definition start: line 202
+- EVENT_TYPE — table definition start: line 209
+- EVENT_BASED_ON_CATEGORY — table definition start: line 217
+- EVENT_CREATION — table definition start: line 230
+  • Columns used here: doc (line 250), cover_photo (line 251),
+    verification_status (line 254), lifecycle_status (line 255)
+
+Notes and error modes
+---------------------
+- 404 when the event id doesn’t exist, or exists but is not active+verified (src/routes/event.js : ~76–104)
+- 500 on DB errors (list, detail, and file download routes)
+
+File Pointers
+-------------
+- Routes: src/routes/event.js; src/routes/eventcreationroutes.js
+- Frontend: src/public/event.js (uses /api/events/:id and /api/events/:id/file/doc)
+- SQL: sql/shodeshsqlscript.sql (see line references above)

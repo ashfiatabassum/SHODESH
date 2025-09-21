@@ -35,7 +35,96 @@ Purpose: Periodic trend analysis (daily/weekly/monthly)
 Used in: src/routes/admin.js : 1516-1538
 Tables involved: DONATION (through SP)
 Definition (route snippet):
-CALL sp_get_trend_analysis(?, ?, ?);
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_get_trend_analysis`(
+    IN p_period ENUM('daily', 'weekly', 'monthly'),
+    IN p_months_back INT
+)
+BEGIN
+    DECLARE v_start_date DATE;
+    DECLARE v_date_format VARCHAR(20);
+    DECLARE v_interval_type VARCHAR(10);
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1
+            @sql_state = RETURNED_SQLSTATE,
+            @error_message = MESSAGE_TEXT;
+        SELECT 
+            'error' as status,
+            @sql_state as sql_state,
+            @error_message as message,
+            'sp_get_trend_analysis' as procedure_name;
+    END;
+    IF p_months_back IS NULL OR p_months_back <= 0 OR p_months_back > 24 THEN
+        SET p_months_back = 6;
+    END IF;
+    IF p_period IS NULL THEN
+        SET p_period = 'daily';
+    END IF;
+    SET v_start_date = DATE_SUB(CURDATE(), INTERVAL p_months_back MONTH);
+    CASE p_period
+        WHEN 'daily' THEN 
+            SET v_date_format = '%Y-%m-%d';
+            SET v_interval_type = 'DAY';
+        WHEN 'weekly' THEN 
+            SET v_date_format = '%Y-W%u';
+            SET v_interval_type = 'WEEK';
+        WHEN 'monthly' THEN 
+            SET v_date_format = '%Y-%m';
+            SET v_interval_type = 'MONTH';
+        ELSE
+            SET v_date_format = '%Y-%m-%d';
+            SET v_interval_type = 'DAY';
+    END CASE;
+    
+    SELECT 'success' as status, CONCAT('Trend analysis (', p_period, ') retrieved successfully') as message;
+    
+    
+    SET @sql = CONCAT('
+        WITH trend_data AS (
+            SELECT 
+                DATE_FORMAT(d.paid_at, ''', v_date_format, ''') as period,
+                MIN(DATE(d.paid_at)) as period_start,
+                MAX(DATE(d.paid_at)) as period_end,
+                COUNT(d.donation_id) as donation_count,
+                COUNT(DISTINCT d.donor_id) as unique_donors,
+                SUM(d.amount) as total_amount,
+                AVG(d.amount) as avg_donation,
+                COUNT(DISTINCT d.creation_id) as campaigns_count
+            FROM DONATION d
+            WHERE d.paid_at >= ''', v_start_date, '''
+            GROUP BY DATE_FORMAT(d.paid_at, ''', v_date_format, ''')
+        ),
+        trend_with_growth AS (
+            SELECT 
+                *,
+                LAG(total_amount, 1) OVER (ORDER BY period_start) as prev_period_amount,
+                LAG(donation_count, 1) OVER (ORDER BY period_start) as prev_period_count,
+                SUM(total_amount) OVER (ORDER BY period_start) as cumulative_amount,
+                AVG(total_amount) OVER (ORDER BY period_start ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) as moving_avg
+            FROM trend_data
+        )
+        SELECT 
+            period,
+            period_start,
+            period_end,
+            donation_count,
+            unique_donors,
+            total_amount,
+            avg_donation,
+            campaigns_count,
+            cumulative_amount,
+            moving_avg,
+            fn_calculate_growth_rate(total_amount, prev_period_amount) as amount_growth_rate,
+            fn_calculate_growth_rate(donation_count, prev_period_count) as count_growth_rate
+        FROM trend_with_growth
+        ORDER BY period_start'
+    );
+    
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+    
+END
 
 3) Donor segmentation and top donors
 Type: VIEW + JOIN + GROUP BY + FUNCTION
