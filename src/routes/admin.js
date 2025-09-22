@@ -1,2115 +1,1073 @@
-
 // Admin Routes for SHODESH Platform
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const adminDb = require('../config/db-admin'); // Use promise-based DB for admin functionality
 
+// Make sure your main server enables JSON body parsing:
+// app.use(express.json());
+
 // Admin authentication middleware
 const authenticateAdmin = (req, res, next) => {
-    console.log('🔐 Admin auth check - Headers:', req.headers.authorization ? 'Present' : 'Missing');
-    // Check for admin session/token
-    const adminToken = req.headers.authorization || req.session?.adminToken;
-    if (!adminToken) {
-        console.log('❌ Admin auth failed - No token');
-        return res.status(401).json({ 
-            success: false, 
-            message: 'Admin authentication required' 
-        });
-    }
-    console.log('✅ Admin auth passed');
-    // Verify admin token (implement your authentication logic)
-    // For now, we'll assume the token is valid
-    next();
+  console.log('🔐 Admin auth check - Headers:', req.headers.authorization ? 'Present' : 'Missing');
+  const adminToken = req.headers.authorization || req.session?.adminToken;
+  if (!adminToken) {
+    console.log('❌ Admin auth failed - No token');
+    return res.status(401).json({ success: false, message: 'Admin authentication required' });
+  }
+  console.log('✅ Admin auth passed');
+  next();
 };
 
-// Assign a staff member to an event for second verification (admin action)
-router.post('/events/:id/assign-staff', authenticateAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { staff_id } = req.body;
-        if (!staff_id) {
-            return res.status(400).json({ success: false, message: 'Staff ID is required' });
-        }
-
-        // Call the new procedure to assign staff for second verification
-        await adminDb.execute('CALL sp_admin_assign_staff_verifier(?, ?)', [id, staff_id]);
-        return res.json({ success: true, message: 'Staff assigned successfully for second verification.' });
-    } catch (error) {
-        console.error('Assign staff error:', error);
-        res.status(500).json({ success: false, message: 'Failed to assign staff', error: error.message });
-    }
-});
-
-// ...existing code... (no allowPublicRead in production)
-
-// Dashboard Overview
+// =============================
+// DASHBOARD
+// =============================
 router.get('/dashboard/stats', authenticateAdmin, async (req, res) => {
+  try {
+    const [eventStatsRows] = await adminDb.execute(`
+      SELECT 
+        COUNT(*) AS total_events,
+        SUM(CASE WHEN verification_status = 'unverified' THEN 1 ELSE 0 END) AS pending_events,
+        SUM(CASE WHEN verification_status = 'verified' THEN 1 ELSE 0 END) AS verified_events,
+        SUM(CASE WHEN verification_status = 'rejected' THEN 1 ELSE 0 END) AS rejected_events
+      FROM EVENT_CREATION 
+      WHERE lifecycle_status != 'closed'`);
+    const [donationStatsRows] = await adminDb.execute(`
+      SELECT 
+        COUNT(*) AS total_donations,
+        COALESCE(SUM(amount),0) AS total_amount,
+        COALESCE(AVG(amount),0) AS average_amount
+      FROM DONATION`);
+    const [foundationStatsRows] = await adminDb.execute(`
+      SELECT 
+        COUNT(*) AS total_foundations,
+        SUM(CASE WHEN status = 'unverified' THEN 1 ELSE 0 END) AS pending_foundations,
+        SUM(CASE WHEN status = 'verified'   THEN 1 ELSE 0 END) AS approved_foundations
+      FROM FOUNDATION`);
+
+    let volunteerStats = { total_volunteers: 0, pending_volunteers: 0, approved_volunteers: 0 };
     try {
-        // Use actual schema tables (uppercase) from DBMS.txt
-        const [eventStatsRows] = await adminDb.execute(`
-            SELECT 
-                COUNT(*) AS total_events,
-                SUM(CASE WHEN verification_status = 'unverified' THEN 1 ELSE 0 END) AS pending_events,
-                SUM(CASE WHEN verification_status = 'verified' THEN 1 ELSE 0 END) AS verified_events,
-                SUM(CASE WHEN verification_status = 'rejected' THEN 1 ELSE 0 END) AS rejected_events
-            FROM EVENT_CREATION 
-            WHERE lifecycle_status != 'closed'`);
-
-        const [donationStatsRows] = await adminDb.execute(`
-            SELECT 
-                COUNT(*) AS total_donations,
-                COALESCE(SUM(amount),0) AS total_amount,
-                COALESCE(AVG(amount),0) AS average_amount
-            FROM DONATION`);
-
-        const [foundationStatsRows] = await adminDb.execute(`
-            SELECT 
-                COUNT(*) AS total_foundations,
-                SUM(CASE WHEN status = 'unverified' THEN 1 ELSE 0 END) AS pending_foundations,
-                SUM(CASE WHEN status = 'verified'   THEN 1 ELSE 0 END) AS approved_foundations
-            FROM FOUNDATION`);
-
-        let volunteerStats = { total_volunteers: 0, pending_volunteers: 0, approved_volunteers: 0 };
-        try {
-            const [volRows] = await adminDb.execute(`
-                SELECT 
-                    COUNT(*) AS total_volunteers,
-                    SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending_volunteers,
-                    SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) AS approved_volunteers
-                FROM VOLUNTEER`);
-            volunteerStats = volRows[0] || volunteerStats;
-        } catch (e) {
-            // VOLUNTEER table may not exist in current schema; default zeros
-            console.warn('VOLUNTEER stats skipped:', e.message);
-        }
-
-        res.json({
-            success: true,
-            data: {
-                events: eventStatsRows[0] || {},
-                donations: donationStatsRows[0] || {},
-                foundations: foundationStatsRows[0] || {},
-                volunteers: volunteerStats
-            }
-        });
-    } catch (error) {
-        console.error('Dashboard stats error:', error);
-        res.status(500).json({ success: false, message: 'Failed to fetch dashboard statistics', error: error.message });
+      const [volRows] = await adminDb.execute(`
+        SELECT 
+          COUNT(*) AS total_volunteers,
+          SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending_volunteers,
+          SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) AS approved_volunteers
+        FROM VOLUNTEER`);
+      volunteerStats = volRows[0] || volunteerStats;
+    } catch (e) {
+      console.warn('VOLUNTEER stats skipped:', e.message);
     }
+
+    res.json({
+      success: true,
+      data: {
+        events: eventStatsRows[0] || {},
+        donations: donationStatsRows[0] || {},
+        foundations: foundationStatsRows[0] || {},
+        volunteers: volunteerStats
+      }
+    });
+  } catch (error) {
+    console.error('Dashboard stats error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch dashboard statistics', error: error.message });
+  }
 });
 
-// Event Management Routes — list campaigns (mirrors verification list behavior)
+// =============================
+// EVENTS LISTING (ADMIN VIEW)
+// =============================
 router.get('/events', authenticateAdmin, async (req, res) => {
-    try {
-        const {
-            status = '',
-            category_id = '',
-            event_type_id = '',
-            ebc_id = '',
-            creator_type = '',
-            sort_by = 'recent',
-            limit = 100,
-            offset = 0,
-            include_inactive = 'false'
-        } = req.query;
+  try {
+    const {
+      status = '',
+      category_id = '',
+      event_type_id = '',
+      ebc_id = '',
+      creator_type = '',
+      sort_by = 'recent',
+      limit = 100,
+      offset = 0,
+    } = req.query;
 
-        // Use raw JOIN mirroring search.js fallback, but include unverified as well and keep lifecycle active
-        let sql = `
-            SELECT 
-                ec.creation_id,
-                ec.creator_type,
-                CASE 
-                  WHEN ec.creator_type='individual' THEN CONCAT(COALESCE(i.first_name,''),' ',COALESCE(i.last_name,''))
-                  WHEN ec.creator_type='foundation' THEN COALESCE(f.foundation_name,'')
-                  ELSE 'Unknown Creator'
-                END AS creator_name,
-                ec.individual_id,
-                ec.foundation_id,
-                ec.title,
-                ec.description,
-                ec.amount_needed,
-                ec.amount_received,
-                ec.division,
-                ec.verification_status,
-                ec.lifecycle_status,
-                ec.second_verification_required,
-                ec.created_at,
-                ebc.ebc_id,
-                c.category_id, c.category_name,
-                et.event_type_id, et.event_type_name,
-                CASE WHEN ec.cover_photo IS NOT NULL THEN 1 ELSE 0 END AS has_cover_photo,
-                CASE WHEN ec.doc IS NOT NULL THEN 1 ELSE 0 END AS has_document
-            FROM EVENT_CREATION ec
-            JOIN EVENT_BASED_ON_CATEGORY ebc ON ebc.ebc_id = ec.ebc_id
-            JOIN CATEGORY c ON c.category_id = ebc.category_id
-            JOIN EVENT_TYPE et ON et.event_type_id = ebc.event_type_id
-            LEFT JOIN INDIVIDUAL i ON i.individual_id = ec.individual_id
-            LEFT JOIN FOUNDATION f ON f.foundation_id = ec.foundation_id
-            WHERE 1=1`;
+    let sql = `
+      SELECT 
+        ec.creation_id,
+        ec.creator_type,
+        CASE 
+          WHEN ec.creator_type='individual' THEN CONCAT(COALESCE(i.first_name,''),' ',COALESCE(i.last_name,''))
+          WHEN ec.creator_type='foundation' THEN COALESCE(f.foundation_name,'')
+          ELSE 'Unknown Creator'
+        END AS creator_name,
+        ec.individual_id,
+        ec.foundation_id,
+        ec.title,
+        ec.description,
+        ec.amount_needed,
+        ec.amount_received,
+        ec.division,
+        ec.verification_status,
+        ec.lifecycle_status,
+        ec.second_verification_required,
+        ec.created_at,
+        ebc.ebc_id,
+        c.category_id, c.category_name,
+        et.event_type_id, et.event_type_name,
+        CASE WHEN ec.cover_photo IS NOT NULL THEN 1 ELSE 0 END AS has_cover_photo,
+        CASE WHEN ec.doc IS NOT NULL THEN 1 ELSE 0 END AS has_document
+      FROM EVENT_CREATION ec
+      JOIN EVENT_BASED_ON_CATEGORY ebc ON ebc.ebc_id = ec.ebc_id
+      JOIN CATEGORY c ON c.category_id = ebc.category_id
+      JOIN EVENT_TYPE et ON et.event_type_id = ebc.event_type_id
+      LEFT JOIN INDIVIDUAL i ON i.individual_id = ec.individual_id
+      LEFT JOIN FOUNDATION f ON f.foundation_id = ec.foundation_id
+      WHERE 1=1`;
 
-        const params = [];
-        
-        // For admin verification, we need to show both:
-        // 1. Unverified events (which are typically inactive)
-        // 2. Verified events (which are typically active)
-        // So we don't filter by lifecycle_status by default
-        
-        if (status) {
-            sql += ' AND ec.verification_status = ?';
-            params.push(status);
-        } else {
-            // Show all four verification statuses: unverified, pending, verified, and rejected
-            sql += " AND ec.verification_status IN (?,?,?,?)";
-            params.push('unverified');
-            params.push('pending'); // Add pending status
-            params.push('verified');
-            params.push('rejected');
-        }
-        
-        // Only exclude closed events (keep inactive for unverified and active for verified)
-        sql += " AND ec.lifecycle_status != 'closed'";
-        if (category_id) { sql += ' AND c.category_id = ?'; params.push(category_id); }
-        if (event_type_id) { sql += ' AND et.event_type_id = ?'; params.push(event_type_id); }
-        if (ebc_id) { sql += ' AND ebc.ebc_id = ?'; params.push(ebc_id); }
-        if (creator_type) { sql += ' AND ec.creator_type = ?'; params.push(creator_type); }
-        sql += sort_by === 'recent' ? ' ORDER BY ec.created_at DESC' : ' ORDER BY ec.created_at DESC';
-        sql += ' LIMIT ? OFFSET ?';
-        
-        // Add pagination parameters
-        const limitNum = parseInt(limit, 10) || 100;
-        const offsetNum = parseInt(offset, 10) || 0;
-        params.push(limitNum);
-        params.push(offsetNum);
-        
-        // Use query() with manual escaping instead of execute() with prepared statements
-        const escapedParams = params.map(p => adminDb.escape(p));
-        let finalSql = sql;
-        let paramIndex = 0;
-        finalSql = finalSql.replace(/\?/g, () => escapedParams[paramIndex++]);
-        
-        const [rows] = await adminDb.query(finalSql);
-        return res.json({ success: true, data: rows, total: rows.length });
-    } catch (error) {
-        console.error('Events fetch error:', error);
-        res.status(500).json({ success: false, message: 'Failed to fetch events', error: error.message });
+    const params = [];
+
+    if (status) {
+      sql += ' AND ec.verification_status = ?';
+      params.push(status);
+    } else {
+      sql += " AND ec.verification_status IN (?,?,?,?)";
+      params.push('unverified', 'pending', 'verified', 'rejected');
     }
+
+    sql += " AND ec.lifecycle_status != 'closed'";
+    if (category_id) { sql += ' AND c.category_id = ?'; params.push(category_id); }
+    if (event_type_id) { sql += ' AND et.event_type_id = ?'; params.push(event_type_id); }
+    if (ebc_id) { sql += ' AND ebc.ebc_id = ?'; params.push(ebc_id); }
+    if (creator_type) { sql += ' AND ec.creator_type = ?'; params.push(creator_type); }
+    sql += (sort_by === 'recent' ? ' ORDER BY ec.created_at DESC' : ' ORDER BY ec.created_at DESC');
+    sql += ' LIMIT ? OFFSET ?';
+
+    const limitNum = parseInt(limit, 10) || 100;
+    const offsetNum = parseInt(offset, 10) || 0;
+    params.push(limitNum, offsetNum);
+
+    const escapedParams = params.map(p => adminDb.escape(p));
+    let finalSql = sql;
+    let paramIndex = 0;
+    finalSql = finalSql.replace(/\?/g, () => escapedParams[paramIndex++]);
+
+    const [rows] = await adminDb.query(finalSql);
+    return res.json({ success: true, data: rows, total: rows.length });
+  } catch (error) {
+    console.error('Events fetch error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch events', error: error.message });
+  }
 });
 
-// Shortcut for unverified events - delegate to /events route
 router.get('/events/unverified', authenticateAdmin, async (req, res) => {
-    req.query.status = 'unverified';
-    // Use req.app to properly delegate to the /events route
-    return req.app.handle({ 
-        ...req, 
-        url: req.url.replace('/unverified', ''),
-        path: req.path.replace('/unverified', '')
-    }, res);
+  req.query.status = 'unverified';
+  return req.app.handle({ 
+    ...req, 
+    url: req.url.replace('/unverified', ''),
+    path: req.path.replace('/unverified', '')
+  }, res);
 });
 
-// Approve/Reject an event (using new stored procedures)
+// =============================
+// EVENT VERIFICATION
+// =============================
 router.put('/events/:id/verify', authenticateAdmin, async (req, res) => {
-    const conn = adminDb; // promise pool
-    try {
-        const { id } = req.params; // creation_id like ECxxxxx
-        const { action, request_staff_verification } = req.body; // 'approve', 'reject', or 'request_staff'
-        
-        // Map frontend action to procedure decision
-        let decision;
-        if (action === 'approve') {
-            decision = 'approved';
-        } else if (action === 'reject') {
-            decision = 'rejected';
-        } else if (action === 'request_staff' || request_staff_verification) {
-            decision = 'request_staff_verification';
-        } else {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Invalid action. Use approve, reject, or request_staff' 
-            });
-        }
+  const conn = adminDb; // promise pool
+  try {
+    const { id } = req.params; // ECxxxxx
+    const { action, request_staff_verification } = req.body;
 
-        // Use our new stored procedure
-        console.log(`🔍 Calling sp_admin_verify_event for ${id} with decision: ${decision}`);
-        await conn.execute('CALL sp_admin_verify_event(?, ?)', [id, decision]);
-        console.log(`✅ Event verification completed for ${id}: ${decision}`);
-        
-        // Get updated event status for response
-        const [rows] = await conn.execute(
-            'SELECT verification_status, second_verification_required FROM EVENT_CREATION WHERE creation_id = ?', 
-            [id]
-        );
-        
-        const event = rows[0];
-        let message;
-        if (decision === 'approved') {
-            message = 'Event approved and activated';
-        } else if (decision === 'rejected') {
-            message = 'Event rejected';
-        } else if (decision === 'request_staff_verification') {
-            message = 'Staff verification requested';
-        }
-        
-        return res.json({ 
-            success: true, 
-            message, 
-            verification_status: event?.verification_status,
-            second_verification_required: event?.second_verification_required 
-        });
-        
-    } catch (error) {
-        console.error('Event verification error:', error);
-        
-        // Handle specific database errors
-        if (error.message.includes('Staff verification only allowed for individual events')) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Staff verification is only available for individual-created events' 
-            });
-        }
-        
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to verify event', 
-            error: error.message 
-        });
+    let decision;
+    if (action === 'approve') decision = 'approved';
+    else if (action === 'reject') decision = 'rejected';
+    else if (action === 'request_staff' || request_staff_verification) decision = 'request_staff_verification';
+    else {
+      return res.status(400).json({ success: false, message: 'Invalid action. Use approve, reject, or request_staff' });
     }
+
+    console.log(`🔍 Calling sp_admin_verify_event for ${id} with decision: ${decision}`);
+    await conn.execute('CALL sp_admin_verify_event(?, ?)', [id, decision]);
+    console.log(`✅ Event verification completed for ${id}: ${decision}`);
+    
+    const [rows] = await conn.execute(
+      'SELECT verification_status, second_verification_required FROM EVENT_CREATION WHERE creation_id = ?', 
+      [id]
+    );
+    const event = rows[0];
+    let message;
+    if (decision === 'approved') message = 'Event approved and activated';
+    else if (decision === 'rejected') message = 'Event rejected';
+    else message = 'Staff verification requested';
+    
+    return res.json({ 
+      success: true, 
+      message, 
+      verification_status: event?.verification_status,
+      second_verification_required: event?.second_verification_required 
+    });
+  } catch (error) {
+    console.error('Event verification error:', error);
+    if (error.message.includes('Staff verification only allowed for individual events')) {
+      return res.status(400).json({ success: false, message: 'Staff verification is only available for individual-created events' });
+    }
+    res.status(500).json({ success: false, message: 'Failed to verify event', error: error.message });
+  }
 });
 
-// Staff verification endpoint - for staff to verify events
 router.put('/events/:id/staff-verify', authenticateAdmin, async (req, res) => {
-    const conn = adminDb;
-    try {
-        const { id } = req.params; // creation_id
-        const { action, staff_id } = req.body; // 'approve' or 'reject', staff_id required
-        
-        if (!staff_id) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Staff ID is required for staff verification' 
-            });
-        }
-        
-        const decision = action === 'approve' ? 'approved' : 'rejected';
-        
-        console.log(`🔍 Staff verification: ${staff_id} verifying ${id} with decision: ${decision}`);
-        await conn.execute('CALL sp_staff_verify_event(?, ?, ?)', [staff_id, id, decision]);
-        console.log(`✅ Staff verification completed for ${id}: ${decision}`);
-        
-        // Get updated event status
-        const [rows] = await conn.execute(
-            'SELECT verification_status, second_verification_required FROM EVENT_CREATION WHERE creation_id = ?', 
-            [id]
-        );
-        
-        const event = rows[0];
-        let message;
-        if (decision === 'approved') {
-            message = 'Event approved by staff, pending final admin approval';
-        } else {
-            message = 'Event rejected by staff';
-        }
-        
-        return res.json({ 
-            success: true, 
-            message,
-            verification_status: event?.verification_status,
-            second_verification_required: event?.second_verification_required 
-        });
-        
-    } catch (error) {
-        console.error('Staff verification error:', error);
-        
-        // Handle specific database errors
-        if (error.message.includes('Staff cannot verify events for individuals they assisted')) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'You cannot verify events for individuals you helped register' 
-            });
-        } else if (error.message.includes('Staff can only verify events from their own division')) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'You can only verify events from your division' 
-            });
-        } else if (error.message.includes('Event is not pending staff verification')) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'This event is not pending staff verification' 
-            });
-        }
-        
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to complete staff verification', 
-            error: error.message 
-        });
+  const conn = adminDb;
+  try {
+    const { id } = req.params;
+    const { action, staff_id } = req.body;
+    if (!staff_id) {
+      return res.status(400).json({ success: false, message: 'Staff ID is required for staff verification' });
     }
+    const decision = action === 'approve' ? 'approved' : 'rejected';
+    console.log(`🔍 Staff verification: ${staff_id} verifying ${id} with decision: ${decision}`);
+    await conn.execute('CALL sp_staff_verify_event(?, ?, ?)', [staff_id, id, decision]);
+    console.log(`✅ Staff verification completed for ${id}: ${decision}`);
+    
+    const [rows] = await conn.execute(
+      'SELECT verification_status, second_verification_required FROM EVENT_CREATION WHERE creation_id = ?', 
+      [id]
+    );
+    const event = rows[0];
+    let message = (decision === 'approved')
+      ? 'Event approved by staff, pending final admin approval'
+      : 'Event rejected by staff';
+    return res.json({ 
+      success: true, 
+      message,
+      verification_status: event?.verification_status,
+      second_verification_required: event?.second_verification_required 
+    });
+  } catch (error) {
+    console.error('Staff verification error:', error);
+    if (error.message.includes('Staff cannot verify events for individuals they assisted')) {
+      return res.status(400).json({ success: false, message: 'You cannot verify events for individuals you helped register' });
+    } else if (error.message.includes('Staff can only verify events from their own division')) {
+      return res.status(400).json({ success: false, message: 'You can only verify events from your division' });
+    } else if (error.message.includes('Event is not pending staff verification')) {
+      return res.status(400).json({ success: false, message: 'This event is not pending staff verification' });
+    }
+    res.status(500).json({ success: false, message: 'Failed to complete staff verification', error: error.message });
+  }
 });
 
 // Get events pending staff verification (for staff dashboard)
 router.get('/events/pending-staff', authenticateAdmin, async (req, res) => {
-    try {
-        const { division } = req.query;
-        
-        let sql = 'SELECT * FROM v_events_pending_staff_verification';
-        const params = [];
-        
-        if (division) {
-            sql += ' WHERE target_division = ?';
-            params.push(division);
-        }
-        
-        sql += ' ORDER BY created_at DESC';
-        
-        const [rows] = await adminDb.execute(sql, params);
-        return res.json({ success: true, data: rows });
-        
-    } catch (error) {
-        console.error('Error fetching pending staff events:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch events pending staff verification' 
-        });
-    }
+  try {
+    const { division } = req.query;
+    let sql = 'SELECT * FROM v_events_pending_staff_verification';
+    const params = [];
+    if (division) { sql += ' WHERE target_division = ?'; params.push(division); }
+    sql += ' ORDER BY created_at DESC';
+    const [rows] = await adminDb.execute(sql, params);
+    return res.json({ success: true, data: rows });
+  } catch (error) {
+    console.error('Error fetching pending staff events:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch events pending staff verification' });
+  }
 });
 
 // Get events pending final admin approval (after staff approval)
 router.get('/events/pending-admin-final', authenticateAdmin, async (req, res) => {
-    try {
-        const [rows] = await adminDb.execute(
-            'SELECT * FROM v_events_pending_admin_final ORDER BY staff_approval_at DESC'
-        );
-        return res.json({ success: true, data: rows });
-        
-    } catch (error) {
-        console.error('Error fetching events pending final admin approval:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch events pending final admin approval' 
-        });
-    }
+  try {
+    const [rows] = await adminDb.execute(
+      'SELECT * FROM v_events_pending_admin_final ORDER BY staff_approval_at DESC'
+    );
+    return res.json({ success: true, data: rows });
+  } catch (error) {
+    console.error('Error fetching events pending final admin approval:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch events pending final admin approval' });
+  }
 });
 
 // Get available staff for event verification
 router.get('/events/:id/available-staff', authenticateAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        
-        const [rows] = await adminDb.execute(
-            'SELECT * FROM v_available_staff_for_verification WHERE creation_id = ?',
-            [id]
-        );
-        
-        return res.json({ success: true, data: rows });
-        
-    } catch (error) {
-        console.error('Error fetching available staff:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch available staff for verification' 
-        });
-    }
-});
-
-// Admin: Event details (rich) for a creation_id
-router.get('/events/:id/details', authenticateAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const sql = `SELECT
-            ec.creation_id,
-            ec.title,
-            ec.description,
-            ec.amount_needed,
-            ec.amount_received,
-            ec.division,
-            ec.verification_status,
-            ec.lifecycle_status,
-            ec.created_at,
-            ec.updated_at,
-            (ec.cover_photo IS NOT NULL) AS has_cover_photo,
-            (ec.doc IS NOT NULL) AS has_document,
-            ebc.ebc_id,
-            c.category_id, c.category_name,
-            et.event_type_id, et.event_type_name,
-            ec.creator_type,
-            CASE WHEN ec.creator_type='individual' THEN CONCAT(i.first_name,' ',i.last_name) ELSE f.foundation_name END AS creator_name,
-            CASE WHEN ec.creator_type='individual' THEN i.mobile ELSE f.mobile END AS contact_phone,
-            CASE WHEN ec.creator_type='individual' THEN i.email  ELSE f.email  END AS contact_email,
-            (SELECT COUNT(*) FROM DONATION d WHERE d.creation_id=ec.creation_id) AS total_donors,
-            (SELECT COALESCE(SUM(d.amount),0) FROM DONATION d WHERE d.creation_id=ec.creation_id) AS total_raised,
-            (SELECT MAX(d.paid_at) FROM DONATION d WHERE d.creation_id=ec.creation_id) AS last_donation_at
-        FROM EVENT_CREATION ec
-        JOIN EVENT_BASED_ON_CATEGORY ebc ON ebc.ebc_id = ec.ebc_id
-        JOIN CATEGORY c ON c.category_id = ebc.category_id
-        JOIN EVENT_TYPE et ON et.event_type_id = ebc.event_type_id
-        LEFT JOIN INDIVIDUAL i ON i.individual_id = ec.individual_id
-        LEFT JOIN FOUNDATION f ON f.foundation_id = ec.foundation_id
-        WHERE ec.creation_id = ?`;
-        const [rows] = await adminDb.execute(sql, [id]);
-        if (!rows.length) return res.status(404).json({ success:false, message:'Event not found' });
-        const e = rows[0];
-        e.cover_photo_url = e.has_cover_photo ? `/api/admin/events/${id}/cover-photo` : null;
-        e.document_url = e.has_document ? `/api/admin/events/${id}/document` : null;
-        return res.json({ success:true, data: e });
-    } catch (error) {
-        console.error('Admin event details error:', error);
-        res.status(500).json({ success:false, message:'Failed to fetch event details', error: error.message });
-    }
-});
-
-// Admin: Stream cover photo BLOB
-router.get('/events/:id/cover-photo', authenticateAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const [rows] = await adminDb.execute('SELECT cover_photo FROM EVENT_CREATION WHERE creation_id = ?', [id]);
-        if (!rows.length || !rows[0].cover_photo) return res.status(404).json({ success:false, message:'No cover photo' });
-        const buf = rows[0].cover_photo;
-        res.setHeader('Content-Type', 'image/jpeg');
-        res.setHeader('Content-Disposition', `inline; filename="${id}_cover.jpg"`);
-        res.send(buf);
-    } catch (error) {
-        console.error('Cover photo stream error:', error);
-        res.status(500).json({ success:false, message:'Failed to stream cover photo' });
-    }
-});
-
-// Admin: Stream supporting document BLOB
-router.get('/events/:id/document', authenticateAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const [rows] = await adminDb.execute('SELECT doc FROM EVENT_CREATION WHERE creation_id = ?', [id]);
-        if (!rows.length || !rows[0].doc) return res.status(404).json({ success:false, message:'No document uploaded' });
-        const buf = rows[0].doc;
-        res.setHeader('Content-Type', 'application/octet-stream');
-        res.setHeader('Content-Disposition', `attachment; filename="${id}_document.bin"`);
-        res.send(buf);
-    } catch (error) {
-        console.error('Document stream error:', error);
-        res.status(500).json({ success:false, message:'Failed to download document' });
-    }
-});
-
-router.post('/events/:id/request-volunteer-verification', authenticateAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { volunteerIds, instructions } = req.body;
-        
-        // Create verification requests for selected volunteers
-        for (const volunteerId of volunteerIds) {
-            await adminDb.execute(`
-                INSERT INTO volunteer_verification_requests 
-                (event_id, volunteer_id, instructions, status, created_at)
-                VALUES (?, ?, ?, 'pending', NOW())
-            `, [id, volunteerId, instructions]);
-        }
-        
-        // Update event status to indicate volunteer verification is requested
-        await adminDb.execute(
-            'UPDATE events SET volunteer_verification_requested = true WHERE id = ?',
-            [id]
-        );
-        
-        res.json({
-            success: true,
-            message: 'Volunteer verification requests sent successfully'
-        });
-    } catch (error) {
-        console.error('Volunteer verification request error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to send verification requests' 
-        });
-    }
-});
-
-router.put('/events/:id/trending', authenticateAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { isTrending } = req.body;
-        
-        await adminDb.execute(
-            'UPDATE events SET is_trending = ?, trending_added_at = ? WHERE id = ?',
-            [isTrending, isTrending ? new Date() : null, id]
-        );
-        
-        res.json({
-            success: true,
-            message: `Event ${isTrending ? 'added to' : 'removed from'} trending successfully`
-        });
-    } catch (error) {
-        console.error('Trending update error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to update trending status' 
-        });
-    }
-});
-
-// =============================
-// STAFF VERIFICATION (Admin)
-// =============================
-
-// List staff (no BLOBs) via view V_ADMIN_STAFF
-router.get('/staff', authenticateAdmin, async (req, res) => {
-    try {
-        const { status } = req.query; // unverified | verified | suspended | all
-        const params = [];
-        let sql = 'SELECT * FROM V_ADMIN_STAFF';
-        if (status && status !== 'all') {
-            sql += ' WHERE status = ?';
-            params.push(status);
-        }
-        sql += ' ORDER BY staff_id DESC';
-        const [rows] = await adminDb.execute(sql, params);
-        res.json({ success: true, data: rows });
-    } catch (error) {
-        console.error('❌ Staff list error:', error);
-        res.status(500).json({ success: false, message: 'Failed to fetch staff' });
-    }
-});
-
-// Staff details (metadata, no raw BLOB in JSON)
-router.get('/staff/:id/details', authenticateAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const [rows] = await adminDb.execute(
-            `SELECT 
-               staff_id, username, first_name, last_name, email, mobile, nid, dob,
-               house_no, road_no, area, district, administrative_div, zip,
-               status,
-               (CV IS NOT NULL) AS has_cv,
-               CASE WHEN CV IS NULL THEN 0 ELSE OCTET_LENGTH(CV) END AS cv_size
-             FROM STAFF
-             WHERE staff_id = ?`,
-            [id]
-        );
-        if (!rows.length) return res.status(404).json({ success: false, message: 'Staff not found' });
-        res.json({ success: true, data: rows[0] });
-    } catch (error) {
-        console.error('❌ Staff details error:', error);
-        res.status(500).json({ success: false, message: 'Failed to fetch staff details' });
-    }
-});
-
-// Staff CV download/stream (BLOB)
-router.get('/staff/:id/cv', authenticateAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const [rows] = await adminDb.execute('SELECT CV FROM STAFF WHERE staff_id = ?', [id]);
-        if (!rows.length || !rows[0].CV) return res.status(404).json({ success: false, message: 'No CV uploaded' });
-        const buf = rows[0].CV;
-        res.setHeader('Content-Type', 'application/octet-stream');
-        res.setHeader('Content-Disposition', `attachment; filename="${id}_cv.bin"`);
-        res.send(buf);
-    } catch (error) {
-        console.error('❌ Staff CV error:', error);
-        res.status(500).json({ success: false, message: 'Failed to fetch CV' });
-    }
-});
-
-// Verify/Suspend/Unsuspend staff via stored procedure
-router.put('/staff/:id/verify', authenticateAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { action, notes } = req.body; // 'verify' | 'suspend' | 'unsuspend'
-        const adminUser = req.headers['x-admin-user'] || 'admin';
-        if (!['verify','suspend','unsuspend'].includes(action)) {
-            return res.status(400).json({ success: false, message: 'Invalid action' });
-        }
-        await adminDb.execute('CALL sp_admin_verify_staff(?,?,?,?)', [id, action, notes || null, adminUser]);
-        res.json({ success: true, message: `Staff ${action} successful` });
-    } catch (error) {
-        console.error('❌ Staff verify error:', error);
-        if (error && error.sqlState === '45000') {
-            return res.status(400).json({ success: false, message: error.message });
-        }
-        res.status(500).json({ success: false, message: 'Failed to update staff status' });
-    }
-});
-
-// Permanently delete a staff record (admin action)
-router.delete('/staff/:id', authenticateAdmin, async (req, res) => {
+  try {
     const { id } = req.params;
-    try {
-        const [result] = await adminDb.execute('DELETE FROM STAFF WHERE staff_id = ?', [id]);
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ success: false, message: 'Staff not found' });
-        }
-        return res.json({ success: true, message: 'Staff deleted' });
-    } catch (err) {
-        console.error('Error deleting staff:', err);
-        return res.status(500).json({ success: false, message: 'Failed to delete staff' });
-    }
+    const [rows] = await adminDb.execute(
+      'SELECT * FROM v_available_staff_for_verification WHERE creation_id = ?',
+      [id]
+    );
+    return res.json({ success: true, data: rows });
+  } catch (error) {
+    console.error('Error fetching available staff:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch available staff for verification' });
+  }
 });
 
-// Foundation Management Routes
+
+// =============================
+// Assign staff to latest pending request_staff_verification
+// (shared handler, registered for BOTH POST and PUT)
+// =============================
+async function assignStaffHandler(req, res) {
+  try {
+    const { id } = req.params;          // creation_id (e.g., CRE6933)
+    const { staff_id } = req.body;
+
+    if (!staff_id) {
+      return res.status(400).json({ success: false, message: 'staff_id required' });
+    }
+
+    // Assign the most recent unassigned "request_staff_verification" log to this staff member
+    const [result] = await adminDb.execute(`
+      UPDATE EVENT_VERIFICATION ev
+      JOIN (
+        SELECT log_id
+        FROM EVENT_VERIFICATION
+        WHERE creation_id = ?
+          AND decision = 'request_staff_verification'
+          AND staff_id IS NULL
+        ORDER BY verified_at DESC, log_id DESC
+        LIMIT 1
+      ) x ON x.log_id = ev.log_id
+      SET ev.staff_id = ?
+    `, [id, staff_id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No pending staff-verification request to assign (not requested yet or already assigned)'
+      });
+    }
+
+    return res.json({ success: true, message: 'Staff assigned to verification request' });
+  } catch (e) {
+    console.error('assign-staff error:', e);
+    return res.status(500).json({ success: false, message: 'Failed to assign staff', error: e.message });
+  }
+}
+
+// Register both verbs:
+router.post('/events/:id/assign-staff', authenticateAdmin, assignStaffHandler);
+router.put('/events/:id/assign-staff', authenticateAdmin, assignStaffHandler);
+
+
+// =============================
+// EVENT DETAILS & ASSETS
+// =============================
+router.get('/events/:id/details', authenticateAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const sql = `SELECT
+        ec.creation_id,
+        ec.title,
+        ec.description,
+        ec.amount_needed,
+        ec.amount_received,
+        ec.division,
+        ec.verification_status,
+        ec.lifecycle_status,
+        ec.created_at,
+        ec.updated_at,
+        (ec.cover_photo IS NOT NULL) AS has_cover_photo,
+        (ec.doc IS NOT NULL) AS has_document,
+        ebc.ebc_id,
+        c.category_id, c.category_name,
+        et.event_type_id, et.event_type_name,
+        ec.creator_type,
+        CASE WHEN ec.creator_type='individual' THEN CONCAT(i.first_name,' ',i.last_name) ELSE f.foundation_name END AS creator_name,
+        CASE WHEN ec.creator_type='individual' THEN i.mobile ELSE f.mobile END AS contact_phone,
+        CASE WHEN ec.creator_type='individual' THEN i.email  ELSE f.email  END AS contact_email,
+        (SELECT COUNT(*) FROM DONATION d WHERE d.creation_id=ec.creation_id) AS total_donors,
+        (SELECT COALESCE(SUM(d.amount),0) FROM DONATION d WHERE d.creation_id=ec.creation_id) AS total_raised,
+        (SELECT MAX(d.paid_at) FROM DONATION d WHERE d.creation_id=ec.creation_id) AS last_donation_at
+      FROM EVENT_CREATION ec
+      JOIN EVENT_BASED_ON_CATEGORY ebc ON ebc.ebc_id = ec.ebc_id
+      JOIN CATEGORY c ON c.category_id = ebc.category_id
+      JOIN EVENT_TYPE et ON et.event_type_id = ebc.event_type_id
+      LEFT JOIN INDIVIDUAL i ON i.individual_id = ec.individual_id
+      LEFT JOIN FOUNDATION f ON f.foundation_id = ec.foundation_id
+      WHERE ec.creation_id = ?`;
+    const [rows] = await adminDb.execute(sql, [id]);
+    if (!rows.length) return res.status(404).json({ success:false, message:'Event not found' });
+    const e = rows[0];
+    e.cover_photo_url = e.has_cover_photo ? `/api/admin/events/${id}/cover-photo` : null;
+    e.document_url = e.has_document ? `/api/admin/events/${id}/document` : null;
+    return res.json({ success:true, data: e });
+  } catch (error) {
+    console.error('Admin event details error:', error);
+    res.status(500).json({ success:false, message:'Failed to fetch event details', error: error.message });
+  }
+});
+
+router.get('/events/:id/cover-photo', authenticateAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await adminDb.execute('SELECT cover_photo FROM EVENT_CREATION WHERE creation_id = ?', [id]);
+    if (!rows.length || !rows[0].cover_photo) return res.status(404).json({ success:false, message:'No cover photo' });
+    const buf = rows[0].cover_photo;
+    res.setHeader('Content-Type', 'image/jpeg');
+    res.setHeader('Content-Disposition', `inline; filename="${id}_cover.jpg"`);
+    res.send(buf);
+  } catch (error) {
+    console.error('Cover photo stream error:', error);
+    res.status(500).json({ success:false, message:'Failed to stream cover photo' });
+  }
+});
+
+router.get('/events/:id/document', authenticateAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await adminDb.execute('SELECT doc FROM EVENT_CREATION WHERE creation_id = ?', [id]);
+    if (!rows.length || !rows[0].doc) return res.status(404).json({ success:false, message:'No document uploaded' });
+    const buf = rows[0].doc;
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.setHeader('Content-Disposition', `attachment; filename="${id}_document.bin"`);
+    res.send(buf);
+  } catch (error) {
+    console.error('Document stream error:', error);
+    res.status(500).json({ success:false, message:'Failed to download document' });
+  }
+});
+
+// =============================
+// STAFF (ADMIN)
+// =============================
+router.get('/staff', authenticateAdmin, async (req, res) => {
+  try {
+    const { status } = req.query; // unverified | verified | suspended | all
+    const params = [];
+    let sql = 'SELECT * FROM V_ADMIN_STAFF';
+    if (status && status !== 'all') { sql += ' WHERE status = ?'; params.push(status); }
+    sql += ' ORDER BY staff_id DESC';
+    const [rows] = await adminDb.execute(sql, params);
+    res.json({ success: true, data: rows });
+  } catch (error) {
+    console.error('❌ Staff list error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch staff' });
+  }
+});
+
+router.get('/staff/:id/details', authenticateAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await adminDb.execute(
+      `SELECT 
+         staff_id, username, first_name, last_name, email, mobile, nid, dob,
+         house_no, road_no, area, district, administrative_div, zip,
+         status,
+         (CV IS NOT NULL) AS has_cv,
+         CASE WHEN CV IS NULL THEN 0 ELSE OCTET_LENGTH(CV) END AS cv_size
+       FROM STAFF
+       WHERE staff_id = ?`,
+      [id]
+    );
+    if (!rows.length) return res.status(404).json({ success: false, message: 'Staff not found' });
+    res.json({ success: true, data: rows[0] });
+  } catch (error) {
+    console.error('❌ Staff details error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch staff details' });
+  }
+});
+
+router.get('/staff/:id/cv', authenticateAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await adminDb.execute('SELECT CV FROM STAFF WHERE staff_id = ?', [id]);
+    if (!rows.length || !rows[0].CV) return res.status(404).json({ success: false, message: 'No CV uploaded' });
+    const buf = rows[0].CV;
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.setHeader('Content-Disposition', `attachment; filename="${id}_cv.bin"`);
+    res.send(buf);
+  } catch (error) {
+    console.error('❌ Staff CV error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch CV' });
+  }
+});
+
+router.put('/staff/:id/verify', authenticateAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action, notes } = req.body; // 'verify' | 'suspend' | 'unsuspend'
+    const adminUser = req.headers['x-admin-user'] || 'admin';
+    if (!['verify','suspend','unsuspend'].includes(action)) {
+      return res.status(400).json({ success: false, message: 'Invalid action' });
+    }
+    await adminDb.execute('CALL sp_admin_verify_staff(?,?,?,?)', [id, action, notes || null, adminUser]);
+    res.json({ success: true, message: `Staff ${action} successful` });
+  } catch (error) {
+    console.error('❌ Staff verify error:', error);
+    if (error && error.sqlState === '45000') {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+    res.status(500).json({ success: false, message: 'Failed to update staff status' });
+  }
+});
+
+router.delete('/staff/:id', authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [result] = await adminDb.execute('DELETE FROM STAFF WHERE staff_id = ?', [id]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Staff not found' });
+    }
+    return res.json({ success: true, message: 'Staff deleted' });
+  } catch (err) {
+    console.error('Error deleting staff:', err);
+    return res.status(500).json({ success: false, message: 'Failed to delete staff' });
+  }
+});
+
+// =============================
+// FOUNDATIONS (ADMIN)
+// =============================
 router.get('/foundations', authenticateAdmin, async (req, res) => {
-    try {
-        console.log('📋 GET /api/admin/foundations - Request received');
-        console.log('📋 Query params:', req.query);
-        
-        const { status } = req.query;
-        
-        let query = `
-            SELECT 
-                foundation_id,
-                foundation_name,
-                foundation_license,
-                email,
-                mobile,
-                house_no,
-                road_no,
-                area,
-                district,
-                administrative_div,
-                zip,
-                bkash,
-                bank_account,
-                description,
-                status,
-                certificate IS NOT NULL as has_certificate,
-                CASE 
-                    WHEN certificate IS NULL THEN 0
-                    ELSE LENGTH(certificate)
-                END as certificate_size
-            FROM foundation
-        `;
-        const params = [];
-        
-        if (status) {
-            query += ' WHERE status = ?';
-            params.push(status);
-        }
-        
-        query += ' ORDER BY foundation_id DESC';
-        
-        console.log('📋 Executing query:', query);
-        console.log('📋 Query params:', params);
-        
-        const [foundations] = await adminDb.execute(query, params);
-        
-        // Convert has_certificate to boolean and add certificate status
-        const processedFoundations = foundations.map(foundation => ({
-            ...foundation,
-            has_certificate: !!foundation.has_certificate,
-            certificate_status: foundation.has_certificate ? 'available' : 'not_uploaded',
-            certificate_size: foundation.certificate_size || 0
-        }));
-        
-        console.log('📋 Query result count:', processedFoundations.length);
-        console.log('📋 Sample foundation:', processedFoundations[0] ? {
-            id: processedFoundations[0].foundation_id,
-            name: processedFoundations[0].foundation_name,
-            status: processedFoundations[0].status,
-            has_certificate: processedFoundations[0].has_certificate
-        } : 'None');
-        
-        res.json({
-            success: true,
-            data: processedFoundations,
-            count: processedFoundations.length
-        });
-    } catch (error) {
-        console.error('❌ Foundations fetch error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch foundations',
-            error: error.message
-        });
-    }
+  try {
+    const { status } = req.query;
+    let query = `
+      SELECT 
+        foundation_id,
+        foundation_name,
+        foundation_license,
+        email,
+        mobile,
+        house_no,
+        road_no,
+        area,
+        district,
+        administrative_div,
+        zip,
+        bkash,
+        bank_account,
+        description,
+        status,
+        certificate IS NOT NULL as has_certificate,
+        CASE WHEN certificate IS NULL THEN 0 ELSE LENGTH(certificate) END as certificate_size
+      FROM foundation
+    `;
+    const params = [];
+    if (status) { query += ' WHERE status = ?'; params.push(status); }
+    query += ' ORDER BY foundation_id DESC';
+    const [foundations] = await adminDb.execute(query, params);
+    const processedFoundations = foundations.map(foundation => ({
+      ...foundation,
+      has_certificate: !!foundation.has_certificate,
+      certificate_status: foundation.has_certificate ? 'available' : 'not_uploaded',
+      certificate_size: foundation.certificate_size || 0
+    }));
+    res.json({ success: true, data: processedFoundations, count: processedFoundations.length });
+  } catch (error) {
+    console.error('❌ Foundations fetch error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch foundations', error: error.message });
+  }
 });
 
-// Get unverified foundations for admin verification
 router.get('/foundations/unverified', authenticateAdmin, async (req, res) => {
-    try {
-        const [foundations] = await adminDb.execute(`
-            SELECT 
-                foundation_id,
-                foundation_name,
-                foundation_license,
-                certificate,
-                email,
-                mobile,
-                house_no,
-                road_no,
-                area,
-                district,
-                administrative_div,
-                zip,
-                bkash,
-                bank_account,
-                description,
-                status
-            FROM foundation 
-            WHERE status = 'unverified' 
-            ORDER BY foundation_id ASC
-        `);
-        
-        res.json({
-            success: true,
-            data: foundations
-        });
-    } catch (error) {
-        console.error('Unverified foundations fetch error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch unverified foundations' 
-        });
-    }
+  try {
+    const [foundations] = await adminDb.execute(`
+      SELECT 
+        foundation_id,
+        foundation_name,
+        foundation_license,
+        certificate,
+        email,
+        mobile,
+        house_no,
+        road_no,
+        area,
+        district,
+        administrative_div,
+        zip,
+        bkash,
+        bank_account,
+        description,
+        status
+      FROM foundation 
+      WHERE status = 'unverified' 
+      ORDER BY foundation_id ASC
+    `);
+    res.json({ success: true, data: foundations });
+  } catch (error) {
+    console.error('Unverified foundations fetch error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch unverified foundations' });
+  }
 });
 
-// Get specific foundation details for verification
 router.get('/foundations/:id/details', authenticateAdmin, async (req, res) => {
-    try {
-        console.log('📋 GET /api/admin/foundations/:id/details - Request received');
-        const { id } = req.params;
-        console.log('📋 Foundation ID:', id);
-        
-        const [foundation] = await adminDb.execute(`
-            SELECT 
-                foundation_id,
-                foundation_name,
-                foundation_license,
-                certificate,
-                email,
-                mobile,
-                house_no,
-                road_no,
-                area,
-                district,
-                administrative_div,
-                zip,
-                bkash,
-                bank_account,
-                description,
-                status
-            FROM foundation 
-            WHERE foundation_id = ?
-        `, [id]);
-        
-        console.log('📋 Foundation query result count:', foundation.length);
-        
-        if (foundation.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'Foundation not found'
-            });
-        }
-        
-        console.log('📋 Found foundation:', foundation[0].foundation_name);
-        
-        // Convert BLOB to base64 if certificate exists and remove the raw BLOB data
-        if (foundation[0].certificate && foundation[0].certificate !== null) {
-            console.log('🖼️ Converting certificate BLOB to base64, size:', foundation[0].certificate.length);
-            foundation[0].certificate_base64 = foundation[0].certificate.toString('base64');
-            foundation[0].has_certificate = true;
-            // Remove the raw BLOB data to avoid sending huge response
-            foundation[0].certificate = null;
-        } else {
-            console.log('🖼️ No certificate found for foundation');
-            foundation[0].certificate_base64 = null;
-            foundation[0].has_certificate = false;
-            foundation[0].certificate = null;
-        }
-        
-        res.json({
-            success: true,
-            data: foundation[0]
-        });
-    } catch (error) {
-        console.error('❌ Foundation details fetch error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch foundation details',
-            error: error.message
-        });
+  try {
+    const { id } = req.params;
+    const [foundation] = await adminDb.execute(`
+      SELECT 
+        foundation_id,
+        foundation_name,
+        foundation_license,
+        certificate,
+        email,
+        mobile,
+        house_no,
+        road_no,
+        area,
+        district,
+        administrative_div,
+        zip,
+        bkash,
+        bank_account,
+        description,
+        status
+      FROM foundation 
+      WHERE foundation_id = ?
+    `, [id]);
+    if (foundation.length === 0) {
+      return res.status(404).json({ success: false, message: 'Foundation not found' });
     }
+    if (foundation[0].certificate) {
+      foundation[0].certificate_base64 = foundation[0].certificate.toString('base64');
+      foundation[0].has_certificate = true;
+      foundation[0].certificate = null;
+    } else {
+      foundation[0].certificate_base64 = null;
+      foundation[0].has_certificate = false;
+      foundation[0].certificate = null;
+    }
+    res.json({ success: true, data: foundation[0] });
+  } catch (error) {
+    console.error('❌ Foundation details fetch error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch foundation details', error: error.message });
+  }
 });
 
-// Serve foundation certificate image
 router.get('/foundations/:id/certificate', authenticateAdmin, async (req, res) => {
-    try {
-        console.log('🖼️ GET /api/admin/foundations/:id/certificate - Request received');
-        const { id } = req.params;
-        
-        const [foundation] = await adminDb.execute(`
-            SELECT certificate FROM foundation WHERE foundation_id = ?
-        `, [id]);
-        
-        if (foundation.length === 0 || !foundation[0].certificate) {
-            return res.status(404).json({
-                success: false,
-                message: 'Certificate not found'
-            });
-        }
-        
-        const certificateBuffer = foundation[0].certificate;
-        
-        // Detect file type from buffer header
-        let contentType = 'application/octet-stream';
-        let filename = 'certificate';
-        
-        if (certificateBuffer.length >= 4) {
-            const header = certificateBuffer.toString('hex', 0, 4).toUpperCase();
-            const pdfHeader = certificateBuffer.toString('ascii', 0, 4);
-            
-            if (pdfHeader === '%PDF') {
-                contentType = 'application/pdf';
-                filename = 'certificate.pdf';
-            } else if (header.startsWith('FFD8FF')) {
-                contentType = 'image/jpeg';
-                filename = 'certificate.jpg';
-            } else if (header.startsWith('89504E47')) {
-                contentType = 'image/png';
-                filename = 'certificate.png';
-            } else if (header.startsWith('474946')) {
-                contentType = 'image/gif';
-                filename = 'certificate.gif';
-            }
-        }
-        
-        // Set appropriate headers
-        res.set({
-            'Content-Type': contentType,
-            'Content-Length': certificateBuffer.length,
-            'Content-Disposition': `inline; filename="${filename}"`,
-            'Cache-Control': 'public, max-age=86400' // Cache for 1 day
-        });
-        
-        console.log('🖼️ Serving certificate image, size:', certificateBuffer.length, 'bytes');
-        res.send(certificateBuffer);
-        
-    } catch (error) {
-        console.error('❌ Certificate serve error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to serve certificate image',
-            error: error.message
-        });
+  try {
+    const { id } = req.params;
+    const [foundation] = await adminDb.execute(`
+      SELECT certificate FROM foundation WHERE foundation_id = ?
+    `, [id]);
+    if (foundation.length === 0 || !foundation[0].certificate) {
+      return res.status(404).json({ success: false, message: 'Certificate not found' });
     }
+    const certificateBuffer = foundation[0].certificate;
+
+    let contentType = 'application/octet-stream';
+    let filename = 'certificate';
+    if (certificateBuffer.length >= 4) {
+      const header = certificateBuffer.toString('hex', 0, 4).toUpperCase();
+      const pdfHeader = certificateBuffer.toString('ascii', 0, 4);
+      if (pdfHeader === '%PDF') { contentType = 'application/pdf'; filename = 'certificate.pdf'; }
+      else if (header.startsWith('FFD8FF')) { contentType = 'image/jpeg'; filename = 'certificate.jpg'; }
+      else if (header.startsWith('89504E47')) { contentType = 'image/png'; filename = 'certificate.png'; }
+      else if (header.startsWith('474946')) { contentType = 'image/gif'; filename = 'certificate.gif'; }
+    }
+    res.set({
+      'Content-Type': contentType,
+      'Content-Length': certificateBuffer.length,
+      'Content-Disposition': `inline; filename="${filename}"`,
+      'Cache-Control': 'public, max-age=86400'
+    });
+    res.send(certificateBuffer);
+  } catch (error) {
+    console.error('❌ Certificate serve error:', error);
+    res.status(500).json({ success: false, message: 'Failed to serve certificate image', error: error.message });
+  }
 });
 
 router.put('/foundations/:id/verify', authenticateAdmin, async (req, res) => {
-    // Robust verification: transactional update with validation and clear responses
-    const { id } = req.params;
-    const { action } = req.body;
-
-    // Validate input
-    if (!id) {
-        return res.status(400).json({ success: false, message: 'Foundation id is required' });
+  const { id } = req.params;
+  const { action } = req.body;
+  if (!id) return res.status(400).json({ success: false, message: 'Foundation id is required' });
+  if (!['approve','delete'].includes(action)) {
+    return res.status(400).json({ success: false, message: "Invalid action. Must be 'approve' or 'delete'" });
+  }
+  let connection;
+  try {
+    connection = await adminDb.getConnection();
+    await connection.beginTransaction();
+    const [rows] = await connection.execute(
+      'SELECT foundation_id, status FROM foundation WHERE foundation_id = ? FOR UPDATE', [id]
+    );
+    if (rows.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ success: false, message: 'Foundation not found' });
     }
-
-        if (!['approve', 'delete'].includes(action)) {
-            return res.status(400).json({ success: false, message: "Invalid action. Must be 'approve' or 'delete'" });
-        }
-
-        let connection;
-        try {
-            connection = await adminDb.getConnection();
-            await connection.beginTransaction();
-
-            // Lock the foundation row to avoid race conditions
-            const [rows] = await connection.execute(
-                'SELECT foundation_id, status FROM foundation WHERE foundation_id = ? FOR UPDATE',
-                [id]
-            );
-
-            if (rows.length === 0) {
-                await connection.rollback();
-                return res.status(404).json({ success: false, message: 'Foundation not found' });
-            }
-
-            if (action === 'approve') {
-                // Approve foundation
-                const [updateResult] = await connection.execute(
-                    'UPDATE foundation SET status = ? WHERE foundation_id = ?',
-                    ['verified', id]
-                );
-                if (updateResult.affectedRows === 0) {
-                    await connection.rollback();
-                    return res.status(500).json({ success: false, message: 'Failed to update foundation status' });
-                }
-                await connection.commit();
-                const [updatedRows] = await adminDb.execute(
-                    'SELECT foundation_id, foundation_name, email, mobile, status FROM foundation WHERE foundation_id = ?',
-                    [id]
-                );
-                return res.json({ success: true, message: 'Foundation verified successfully', data: updatedRows[0] });
-            } else if (action === 'delete') {
-                // Delete foundation
-                const [deleteResult] = await connection.execute(
-                    'DELETE FROM foundation WHERE foundation_id = ?',
-                    [id]
-                );
-                if (deleteResult.affectedRows === 0) {
-                    await connection.rollback();
-                    return res.status(500).json({ success: false, message: 'Failed to delete foundation' });
-                }
-                await connection.commit();
-                return res.json({ success: true, message: 'Foundation deleted successfully', foundationId: id });
-            }
-        } catch (error) {
-            console.error('❌ Foundation verification error:', error);
-            try { if (connection) await connection.rollback(); } catch (e) { /* ignore */ }
-            return res.status(500).json({ success: false, message: 'Failed to update foundation status', error: error.message });
-        } finally {
-            try { if (connection) connection.release(); } catch (e) { /* ignore */ }
-        }
-
-    try {
-        // Acquire a dedicated connection for the transaction
-        connection = await adminDb.getConnection();
-        await connection.beginTransaction();
-
-        // Lock the foundation row to avoid race conditions
-        const [rows] = await connection.execute(
-            'SELECT foundation_id, status FROM foundation WHERE foundation_id = ? FOR UPDATE',
-            [id]
-        );
-
-        if (rows.length === 0) {
-            await connection.rollback();
-            return res.status(404).json({ success: false, message: 'Foundation not found' });
-        }
-
-        const currentStatus = rows[0].status;
-
-        // If already in desired state, commit and return the current state
-        if (currentStatus === newStatus) {
-            await connection.commit();
-            return res.json({ success: true, message: `Foundation already ${newStatus}`, foundationId: id, status: newStatus });
-        }
-
-        // Perform the update using a single safe statement
-        const [updateResult] = await connection.execute(
-            'UPDATE foundation SET status = ? WHERE foundation_id = ?',
-            [newStatus, id]
-        );
-
-        // Ensure update affected a row
-        if (updateResult.affectedRows === 0) {
-            await connection.rollback();
-            return res.status(500).json({ success: false, message: 'Failed to update foundation status' });
-        }
-
-        await connection.commit();
-
-        // Return the updated foundation summary
-        const [updatedRows] = await adminDb.execute(
-            'SELECT foundation_id, foundation_name, email, mobile, status FROM foundation WHERE foundation_id = ?',
-            [id]
-        );
-
-        return res.json({ success: true, message: `Foundation ${newStatus} successfully`, data: updatedRows[0] });
-    } catch (error) {
-        console.error('❌ Foundation verification error:', error);
-        try { if (connection) await connection.rollback(); } catch (e) { /* ignore */ }
-        return res.status(500).json({ success: false, message: 'Failed to update foundation status', error: error.message });
-    } finally {
-        try { if (connection) connection.release(); } catch (e) { /* ignore */ }
-    }
-});
-
-// Volunteer Management Routes
-router.get('/volunteers', authenticateAdmin, async (req, res) => {
-    try {
-        const { status, location, page = 1, limit = 10 } = req.query;
-        const offset = (page - 1) * limit;
-        
-        let query = 'SELECT * FROM volunteers';
-        const conditions = [];
-        const params = [];
-        
-        if (status) {
-            conditions.push('status = ?');
-            params.push(status);
-        }
-        
-        if (location) {
-            conditions.push('location LIKE ?');
-            params.push(`%${location}%`);
-        }
-        
-        if (conditions.length > 0) {
-            query += ' WHERE ' + conditions.join(' AND ');
-        }
-        
-        query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-        params.push(parseInt(limit), offset);
-        
-        const [volunteers] = await adminDb.execute(query, params);
-        
-        res.json({
-            success: true,
-            data: volunteers
-        });
-    } catch (error) {
-        console.error('Volunteers fetch error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch volunteers' 
-        });
-    }
-});
-
-router.put('/volunteers/:id/verify', authenticateAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { action, notes } = req.body;
-        
-        const status = action === 'approve' ? 'approved' : 'rejected';
-        
-        await adminDb.execute(
-            'UPDATE volunteers SET status = ?, admin_notes = ?, verified_at = NOW() WHERE id = ?',
-            [status, notes || null, id]
-        );
-        
-        res.json({
-            success: true,
-            message: `Volunteer ${action === 'approve' ? 'approved' : 'rejected'} successfully`
-        });
-    } catch (error) {
-        console.error('Volunteer verification error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to update volunteer status' 
-        });
-    }
-});
-
-router.get('/volunteers/nearby/:eventId', authenticateAdmin, async (req, res) => {
-    try {
-        const { eventId } = req.params;
-        
-        // Get event location first
-        const [eventResult] = await adminDb.execute(
-            'SELECT location FROM events WHERE id = ?',
-            [eventId]
-        );
-        
-        if (eventResult.length === 0) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Event not found' 
-            });
-        }
-        
-        const eventLocation = eventResult[0].location;
-        
-        // Find volunteers in the same area (simplified matching by location name)
-        const [volunteers] = await adminDb.execute(`
-            SELECT id, name, email, phone, location, skills, availability
-            FROM volunteers 
-            WHERE status = 'approved' 
-            AND location LIKE ?
-            ORDER BY created_at DESC
-        `, [`%${eventLocation.split(',')[0]}%`]); // Match by city/district
-        
-        res.json({
-            success: true,
-            data: volunteers
-        });
-    } catch (error) {
-        console.error('Nearby volunteers fetch error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch nearby volunteers' 
-        });
-    }
-});
-
-// Category Management Routes
-/*router.get('/categories', authenticateAdmin, async (req, res) => {
-    try {
-        const [categories] = await adminDb.execute(`
-            SELECT c.*, COUNT(e.id) as event_count
-            FROM categories c
-            LEFT JOIN events e ON c.id = e.category_id
-            GROUP BY c.id
-            ORDER BY c.name
-        `);
-        
-        res.json({
-            success: true,
-            data: categories
-        });
-    } catch (error) {
-        console.error('Categories fetch error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch categories' 
-        });
-    }
-});
-
-router.post('/categories', authenticateAdmin, async (req, res) => {
-    try {
-        const { name, icon, description } = req.body;
-        
-        if (!name || !icon) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Name and icon are required' 
-            });
-        }
-        
-        const [result] = await adminDb.execute(
-            'INSERT INTO categories (name, icon, description, active, created_at) VALUES (?, ?, ?, true, NOW())',
-            [name, icon, description || null]
-        );
-        
-        res.json({
-            success: true,
-            message: 'Category created successfully',
-            data: { id: result.insertId, name, icon, description }
-        });
-    } catch (error) {
-        console.error('Category creation error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to create category' 
-        });
-    }
-});
-
-router.put('/categories/:id', authenticateAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { name, icon, description, active } = req.body;
-        
-        await adminDb.execute(
-            'UPDATE categories SET name = ?, icon = ?, description = ?, active = ? WHERE id = ?',
-            [name, icon, description, active, id]
-        );
-        
-        res.json({
-            success: true,
-            message: 'Category updated successfully'
-        });
-    } catch (error) {
-        console.error('Category update error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to update category' 
-        });
-    }
-});
-
-router.delete('/categories/:id', authenticateAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        
-        // Check if category is being used by any events
-        const [eventCheck] = await adminDb.execute(
-            'SELECT COUNT(*) as count FROM events WHERE category_id = ?',
-            [id]
-        );
-        
-        if (eventCheck[0].count > 0) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Cannot delete category that is being used by events' 
-            });
-        }
-        
-        await adminDb.execute('DELETE FROM categories WHERE id = ?', [id]);
-        
-        res.json({
-            success: true,
-            message: 'Category deleted successfully'
-        });
-    } catch (error) {
-        console.error('Category deletion error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to delete category' 
-        });
-    }
-});*/
-
-// Donation Analytics Routes
-router.get('/analytics/donations', authenticateAdmin, async (req, res) => {
-    try {
-        const { period = 'month', startDate, endDate } = req.query;
-        
-        let dateGroup;
-        switch (period) {
-            case 'day':
-                dateGroup = 'DATE(created_at)';
-                break;
-            case 'week':
-                dateGroup = 'YEARWEEK(created_at)';
-                break;
-            case 'month':
-                dateGroup = 'DATE_FORMAT(created_at, "%Y-%m")';
-                break;
-            case 'year':
-                dateGroup = 'YEAR(created_at)';
-                break;
-            default:
-                dateGroup = 'DATE_FORMAT(created_at, "%Y-%m")';
-        }
-        
-        let query = `
-            SELECT 
-                ${dateGroup} as period,
-                COUNT(*) as donation_count,
-                SUM(amount) as total_amount,
-                AVG(amount) as average_amount
-            FROM donations
-        `;
-        
-        const params = [];
-        const conditions = [];
-        
-        if (startDate && endDate) {
-            conditions.push('DATE(created_at) BETWEEN ? AND ?');
-            params.push(startDate, endDate);
-        }
-        
-        if (conditions.length > 0) {
-            query += ' WHERE ' + conditions.join(' AND ');
-        }
-        
-        query += ` GROUP BY ${dateGroup} ORDER BY period DESC`;
-        
-        const [analytics] = await adminDb.execute(query, params);
-        
-        res.json({
-            success: true,
-            data: analytics
-        });
-    } catch (error) {
-        console.error('Donation analytics error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch donation analytics' 
-        });
-    }
-});
-
-router.get('/analytics/donations/by-category', authenticateAdmin, async (req, res) => {
-    try {
-        const [analytics] = await adminDb.execute(`
-            SELECT 
-                c.name as category_name,
-                c.icon as category_icon,
-                COUNT(d.id) as donation_count,
-                SUM(d.amount) as total_amount,
-                AVG(d.amount) as average_amount
-            FROM categories c
-            LEFT JOIN events e ON c.id = e.category_id
-            LEFT JOIN donations d ON e.id = d.event_id
-            GROUP BY c.id, c.name, c.icon
-            HAVING donation_count > 0
-            ORDER BY total_amount DESC
-        `);
-        
-        res.json({
-            success: true,
-            data: analytics
-        });
-    } catch (error) {
-        console.error('Category donation analytics error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch category donation analytics' 
-        });
-    }
-});
-
-// Trending Management Routes
-router.get('/trending', authenticateAdmin, async (req, res) => {
-    try {
-        const [trending] = await adminDb.execute(`
-            SELECT e.*, f.name as organizer_name, c.name as category_name
-            FROM events e
-            LEFT JOIN foundations f ON e.foundation_id = f.id
-            LEFT JOIN categories c ON e.category_id = c.id
-            WHERE e.is_trending = true
-            ORDER BY e.trending_added_at DESC
-        `);
-        
-        res.json({
-            success: true,
-            data: trending
-        });
-    } catch (error) {
-        console.error('Trending fetch error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch trending events' 
-        });
-    }
-});
-
-// Admin Settings Routes
-router.get('/settings', authenticateAdmin, async (req, res) => {
-    try {
-        const [settings] = await adminDb.execute('SELECT * FROM admin_settings');
-        
-        res.json({
-            success: true,
-            data: settings
-        });
-    } catch (error) {
-        console.error('Settings fetch error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch settings' 
-        });
-    }
-});
-
-router.put('/settings', authenticateAdmin, async (req, res) => {
-    try {
-        const settings = req.body;
-        
-        for (const [key, value] of Object.entries(settings)) {
-            await adminDb.execute(
-                'INSERT INTO admin_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = ?',
-                [key, value, value]
-            );
-        }
-        
-        res.json({
-            success: true,
-            message: 'Settings updated successfully'
-        });
-    } catch (error) {
-        console.error('Settings update error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to update settings' 
-        });
-    }
-});
-
-
-
-
-
-// Get categories with their event types
-router.get('/categories/events', authenticateAdmin, async (req, res) => {
-    try {
-        const [rows] = await adminDb.execute(`
-            SELECT 
-                c.category_id, c.category_name,
-                GROUP_CONCAT(et.event_type_name ORDER BY et.event_type_name) AS event_type_names,
-                GROUP_CONCAT(et.event_type_id ORDER BY et.event_type_name) AS event_type_ids
-            FROM CATEGORY c
-            LEFT JOIN EVENT_BASED_ON_CATEGORY ebc ON ebc.category_id = c.category_id
-            LEFT JOIN EVENT_TYPE et ON et.event_type_id = ebc.event_type_id
-            GROUP BY c.category_id, c.category_name
-            ORDER BY c.category_name
-        `);
-
-        const data = rows.map(row => ({
-            category_id: row.category_id,
-            category_name: row.category_name,
-            event_types: (row.event_type_names ? row.event_type_names.split(',') : []).map((name, idx) => ({
-                event_type_id: row.event_type_ids ? row.event_type_ids.split(',')[idx] : '',
-                event_type_name: name
-            }))
-        }));
-
-        res.json({ success: true, data });
-    } catch (err) {
-        res.status(500).json({ success: false, message: 'Failed to fetch categories', error: err.message });
-    }
-});
-
-// Delete category (with check for usage)
-router.delete('/categories/:categoryId', authenticateAdmin, async (req, res) => {
-    const { categoryId } = req.params;
-    try {
-        // Check if category is used in any events
-        const [used] = await adminDb.execute(
-            `SELECT COUNT(*) AS cnt FROM EVENT_CREATION ec
-             JOIN EVENT_BASED_ON_CATEGORY ebc ON ec.ebc_id = ebc.ebc_id
-             WHERE ebc.category_id = ?`, [categoryId]
-        );
-        if (used[0].cnt > 0) {
-            return res.status(400).json({ success: false, message: 'Cannot delete category in use by events.' });
-        }
-        // Delete links first
-        await adminDb.execute('DELETE FROM EVENT_BASED_ON_CATEGORY WHERE category_id = ?', [categoryId]);
-        // Delete category
-        await adminDb.execute('DELETE FROM CATEGORY WHERE category_id = ?', [categoryId]);
-        res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ success: false, message: 'Delete failed', error: err.message });
-    }
-});
-
-
-
-
-router.post('/categories/full', authenticateAdmin, async (req, res) => {
-    const { name, icon, eventTypes } = req.body;
-    if (!name || !Array.isArray(eventTypes) || eventTypes.length === 0) {
-        return res.status(400).json({ success: false, message: 'Category name and at least one event type required.' });
-    }
-
-    const connection = await adminDb.getConnection();
-    try {
-        await connection.beginTransaction();
-
-        // Insert category
-        // Use 7 characters max for category_id
-const category_id = 'CAT' + Math.floor(1000 + Math.random() * 9000); // 'CAT1234'
-        await connection.execute(
-            'INSERT INTO CATEGORY (category_id, category_name) VALUES (?, ?)',
-            [category_id, name]
-        );
-
-        // Insert event types and link them
-        for (const eventTypeName of eventTypes) {
-            const event_type_id = 'EVT' + Math.floor(1000 + Math.random() * 9000); // 7 chars
-            await connection.execute(
-                'INSERT IGNORE INTO EVENT_TYPE (event_type_id, event_type_name) VALUES (?, ?)',
-                [event_type_id, eventTypeName]
-            );
-
-            const [etRow] = await connection.execute(
-                'SELECT event_type_id FROM EVENT_TYPE WHERE event_type_name = ?',
-                [eventTypeName]
-            );
-            const final_event_type_id = etRow[0].event_type_id;
-
-            await connection.execute(
-                'INSERT IGNORE INTO EVENT_BASED_ON_CATEGORY (ebc_id, category_id, event_type_id) VALUES (?, ?, ?)',
-                [
-                    'EBC' + Math.floor(1000 + Math.random() * 9000),
-                    category_id,
-                    final_event_type_id
-                ]
-            );
-        }
-
-        await connection.commit();
-        res.json({ success: true, message: 'Category and event types added.' });
-    } catch (err) {
+    if (action === 'approve') {
+      const [updateResult] = await connection.execute(
+        'UPDATE foundation SET status = ? WHERE foundation_id = ?', ['verified', id]
+      );
+      if (updateResult.affectedRows === 0) {
         await connection.rollback();
-        console.error(err);
-        res.status(500).json({ success: false, message: 'Failed to add category and event types.' });
-    } finally {
-        connection.release();
-    }
-});
-
-
-
-router.post('/categories/:categoryId/add-event-type', authenticateAdmin, async (req, res) => {
-    const { categoryId } = req.params;
-    const { eventTypeName } = req.body;
-    if (!eventTypeName) {
-        return res.status(400).json({ success: false, message: 'Event type name required.' });
-    }
-    const connection = await adminDb.getConnection();
-    try {
-        await connection.beginTransaction();
-
-        // Insert event type if not exists
-        const event_type_id = 'EVT' + Math.floor(1000 + Math.random() * 9000); // 7 chars
-        await connection.execute(
-            'INSERT IGNORE INTO EVENT_TYPE (event_type_id, event_type_name) VALUES (?, ?)',
-            [event_type_id, eventTypeName]
-        );
-        // Get event_type_id (if already exists)
-        const [etRow] = await connection.execute(
-            'SELECT event_type_id FROM EVENT_TYPE WHERE event_type_name = ?',
-            [eventTypeName]
-        );
-        const final_event_type_id = etRow[0].event_type_id;
-
-        // Insert into EVENT_BASED_ON_CATEGORY if not exists
-        await connection.execute(
-            'INSERT IGNORE INTO EVENT_BASED_ON_CATEGORY (ebc_id, category_id, event_type_id) VALUES (?, ?, ?)',
-            [
-                'EBC' + Math.floor(1000 + Math.random() * 9000),
-                categoryId,
-                final_event_type_id
-            ]
-        );
-
-        await connection.commit();
-        res.json({ success: true, message: 'Event type added to category.' });
-    } catch (err) {
+        return res.status(500).json({ success: false, message: 'Failed to update foundation status' });
+      }
+      await connection.commit();
+      const [updatedRows] = await adminDb.execute(
+        'SELECT foundation_id, foundation_name, email, mobile, status FROM foundation WHERE foundation_id = ?',
+        [id]
+      );
+      return res.json({ success: true, message: 'Foundation verified successfully', data: updatedRows[0] });
+    } else {
+      const [deleteResult] = await connection.execute(
+        'DELETE FROM foundation WHERE foundation_id = ?', [id]
+      );
+      if (deleteResult.affectedRows === 0) {
         await connection.rollback();
-        res.status(500).json({ success: false, message: 'Failed to add event type to category.' });
-    } finally {
-        connection.release();
+        return res.status(500).json({ success: false, message: 'Failed to delete foundation' });
+      }
+      await connection.commit();
+      return res.json({ success: true, message: 'Foundation deleted successfully', foundationId: id });
     }
+  } catch (error) {
+    console.error('❌ Foundation verification error:', error);
+    try { if (connection) await connection.rollback(); } catch {}
+    return res.status(500).json({ success: false, message: 'Failed to update foundation status', error: error.message });
+  } finally {
+    try { if (connection) connection.release(); } catch {}
+  }
 });
 
 // =============================
-// DONATION ANALYTICS ROUTES
+// ANALYTICS (ADMIN)
 // =============================
-
-// Test route to verify analytics routes are loading
 router.get('/analytics/test', (req, res) => {
-    res.json({ success: true, message: 'Analytics routes are loaded!' });
+  res.json({ success: true, message: 'Analytics routes are loaded!' });
 });
 
-// Analytics overview with KPIs and basic trends
 router.get('/analytics/overview', authenticateAdmin, async (req, res) => {
+  try {
+    const { start_date, end_date } = req.query;
+    const [results] = await adminDb.execute(
+      'CALL sp_get_donation_analytics(?, ?, ?)',
+      [start_date || null, end_date || null, 1]
+    );
+    const actualKpiRow = results[1] && results[1][0] ? results[1][0] : {};
+    const actualTrendData = results[2] || [];
+    const actualGeographic = results[3] || [];
+    const kpis = {
+      total_donations: actualKpiRow.total_donations || 0,
+      unique_donors: actualKpiRow.unique_donors || 0,
+      total_amount_raised: parseFloat(actualKpiRow.total_amount) || 0,
+      average_donation: parseFloat(actualKpiRow.average_donation) || 0,
+      min_donation: parseFloat(actualKpiRow.min_donation) || 0,
+      max_donation: parseFloat(actualKpiRow.max_donation) || 0,
+      campaigns_supported: actualKpiRow.campaigns_supported || 0,
+      active_days: actualKpiRow.active_days || 0,
+      active_campaigns: actualKpiRow.active_campaigns || 0,
+      repeat_donors: actualKpiRow.repeat_donors || 0,
+      amount_growth: 0, donor_growth: 0, donation_growth: 0, avg_growth: 0
+    };
+    res.json({
+      success: true,
+      data: { kpis, trends: actualTrendData, geographic: actualGeographic, period: { start: start_date, end: end_date } }
+    });
+  } catch (error) {
+    console.error('❌ Analytics overview error:', error);
     try {
-        const { start_date, end_date } = req.query;
-        
-        console.log('📊 Analytics Overview - Date range:', start_date, 'to', end_date);
-        
-        // Call stored procedure for comprehensive analytics
-        const [results] = await adminDb.execute(
-            'CALL sp_get_donation_analytics(?, ?, ?)',
-            [start_date || null, end_date || null, 1]
-        );
-        
-        // Parse stored procedure results - multiple result sets
-        const kpiRow = results[0][0] || {}; // First row of first result set  
-        const trendData = results[1] || []; // Second result set (daily trends)
-        const geographic = results[2] || []; // Third result set (geographic data)
-        
-        console.log('📊 Raw stored procedure results:', results.length, 'result sets');
-        console.log('📊 Results[0] (status):', results[0]);
-        console.log('📊 Results[1] (KPIs):', results[1]);
-        console.log('📊 KPI Row:', JSON.stringify(kpiRow, null, 2));
-        
-        // The stored procedure returns: [status], [kpis], [trends], [geographic]
-        // So we need to adjust the indices
-        const actualKpiRow = results[1] && results[1][0] ? results[1][0] : {};
-        const actualTrendData = results[2] || [];
-        const actualGeographic = results[3] || [];
-        
-        console.log('📊 Actual KPI Row:', JSON.stringify(actualKpiRow, null, 2));
-        
-        // Format KPI data for frontend - use the actual data from stored procedure
-        const kpis = {
-            total_donations: actualKpiRow.total_donations || 0,
-            unique_donors: actualKpiRow.unique_donors || 0,
-            total_amount_raised: parseFloat(actualKpiRow.total_amount) || 0,
-            average_donation: parseFloat(actualKpiRow.average_donation) || 0,
-            min_donation: parseFloat(actualKpiRow.min_donation) || 0,
-            max_donation: parseFloat(actualKpiRow.max_donation) || 0,
-            campaigns_supported: actualKpiRow.campaigns_supported || 0,
-            active_days: actualKpiRow.active_days || 0,
-            
-            // Restored metrics from stored procedure  
-            active_campaigns: actualKpiRow.active_campaigns || 0,
-            repeat_donors: actualKpiRow.repeat_donors || 0,
-            
-            // Calculate growth (for now, set to 0 as we don't have comparison data)
-            amount_growth: 0,
-            donor_growth: 0,
-            donation_growth: 0,
-            avg_growth: 0
-        };
-        
-        console.log('📊 KPIs retrieved:', Object.keys(kpis).length, 'metrics');
-        console.log('📊 KPI values:', JSON.stringify(kpis, null, 2));
-        console.log('📊 Trends retrieved:', actualTrendData.length, 'days');
-        console.log('📊 Geographic data:', actualGeographic.length, 'regions');
-        
-        res.json({
-            success: true,
-            data: {
-                kpis: kpis,
-                trends: actualTrendData,
-                geographic: actualGeographic,
-                period: {
-                    start: start_date,
-                    end: end_date
-                }
-            }
-        });
-        
-    } catch (error) {
-        console.error('❌ Analytics overview error:', error);
-        
-        // Fallback to basic queries if stored procedure fails
-        try {
-            const [overviewData] = await adminDb.execute(`
-                SELECT * FROM v_donation_overview 
-                WHERE (? IS NULL OR donation_date >= ?) 
-                AND (? IS NULL OR donation_date <= ?)
-                LIMIT 1
-            `, [start_date, start_date, end_date, end_date]);
-            
-            const [trendsData] = await adminDb.execute(`
-                SELECT * FROM v_donation_trends_monthly 
-                WHERE (? IS NULL OR donation_month >= DATE_FORMAT(?, '%Y-%m')) 
-                AND (? IS NULL OR donation_month <= DATE_FORMAT(?, '%Y-%m'))
-                ORDER BY donation_month DESC
-                LIMIT 12
-            `, [start_date, start_date, end_date, end_date]);
-            
-            res.json({
-                success: true,
-                data: {
-                    kpis: overviewData[0] || {},
-                    trends: trendsData,
-                    period: {
-                        start: start_date,
-                        end: end_date
-                    }
-                }
-            });
-            
-        } catch (fallbackError) {
-            console.error('❌ Analytics fallback error:', fallbackError);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to fetch analytics data',
-                error: error.message
-            });
-        }
+      const [overviewData] = await adminDb.execute(`
+        SELECT * FROM v_donation_overview 
+        WHERE (? IS NULL OR donation_date >= ?) 
+        AND (? IS NULL OR donation_date <= ?)
+        LIMIT 1
+      `, [req.query.start_date, req.query.start_date, req.query.end_date, req.query.end_date]);
+      const [trendsData] = await adminDb.execute(`
+        SELECT * FROM v_donation_trends_monthly 
+        WHERE (? IS NULL OR donation_month >= DATE_FORMAT(?, '%Y-%m')) 
+        AND (? IS NULL OR donation_month <= DATE_FORMAT(?, '%Y-%m'))
+        ORDER BY donation_month DESC
+        LIMIT 12
+      `, [req.query.start_date, req.query.start_date, req.query.end_date, req.query.end_date]);
+      res.json({ success: true, data: { kpis: overviewData[0] || {}, trends: trendsData, period: { start: req.query.start_date, end: req.query.end_date } } });
+    } catch (fallbackError) {
+      console.error('❌ Analytics fallback error:', fallbackError);
+      res.status(500).json({ success: false, message: 'Failed to fetch analytics data', error: error.message });
     }
+  }
 });
 
-// Detailed analytics with trend analysis
 router.get('/analytics/detailed', authenticateAdmin, async (req, res) => {
-    try {
-        const { start_date, end_date, period = 'month' } = req.query;
-        
-        // Call trend analysis stored procedure
-        const [results] = await adminDb.execute(
-            'CALL sp_get_trend_analysis(?, ?, ?)',
-            [start_date || null, end_date || null, period]
-        );
-        
-        res.json({
-            success: true,
-            data: results[0] || []
-        });
-        
-    } catch (error) {
-        console.error('❌ Detailed analytics error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to fetch detailed analytics',
-            error: error.message
-        });
-    }
+  try {
+    const { start_date, end_date, period = 'month' } = req.query;
+    const [results] = await adminDb.execute('CALL sp_get_trend_analysis(?, ?, ?)', [start_date || null, end_date || null, period]);
+    res.json({ success: true, data: results[0] || [] });
+  } catch (error) {
+    console.error('❌ Detailed analytics error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch detailed analytics', error: error.message });
+  }
 });
 
-// Donor insights and segmentation
 router.get('/analytics/donors', authenticateAdmin, async (req, res) => {
-    try {
-        const { start_date, end_date } = req.query;
-        
-        // Get donor segmentation data
-        const [segmentData] = await adminDb.execute(`
-            SELECT * FROM v_donor_analytics 
-            WHERE (? IS NULL OR last_donation_date >= ?) 
-            AND (? IS NULL OR last_donation_date <= ?)
-            ORDER BY total_donated DESC
-        `, [start_date, start_date, end_date, end_date]);
-        
-        // Get top donors
-        const [topDonors] = await adminDb.execute(`
-            SELECT 
-                CONCAT(d.first_name, ' ', d.last_name) as donor_name,
-                d.email,
-                SUM(don.amount) as total_amount,
-                COUNT(don.donation_id) as donation_count,
-                MAX(don.paid_at) as last_donation_date,
-                fn_donor_segment_score(
-                    SUM(don.amount), 
-                    COUNT(don.donation_id), 
-                    DATEDIFF(CURDATE(), MAX(don.paid_at))
-                ) as segment_score
-            FROM DONOR d
-            JOIN DONATION don ON d.donor_id = don.donor_id
-            WHERE (? IS NULL OR don.paid_at >= ?) 
-            AND (? IS NULL OR don.paid_at <= ?)
-            GROUP BY d.donor_id, d.first_name, d.last_name, d.email
-            ORDER BY total_amount DESC
-            LIMIT 20
-        `, [start_date, start_date, end_date, end_date]);
-        
-        // Add segment labels to top donors
-        const topDonorsWithSegments = topDonors.map(donor => {
-            let segment = 'New';
-            const score = donor.segment_score || 0;
-            
-            if (score >= 8) segment = 'Champion';
-            else if (score >= 6) segment = 'Loyal';
-            else if (score >= 4) segment = 'Regular';
-            else if (score >= 2) segment = 'Repeat';
-            
-            return { ...donor, segment };
+  try {
+    const { start_date, end_date } = req.query;
+    const [segmentData] = await adminDb.execute(`
+      SELECT * FROM v_donor_analytics 
+      WHERE (? IS NULL OR last_donation_date >= ?) 
+      AND (? IS NULL OR last_donation_date <= ?)
+      ORDER BY total_donated DESC
+    `, [start_date, start_date, end_date, end_date]);
+
+    const [topDonors] = await adminDb.execute(`
+      SELECT 
+        CONCAT(d.first_name, ' ', d.last_name) as donor_name,
+        d.email,
+        SUM(don.amount) as total_amount,
+        COUNT(don.donation_id) as donation_count,
+        MAX(don.paid_at) as last_donation_date,
+        fn_donor_segment_score(
+          SUM(don.amount), 
+          COUNT(don.donation_id), 
+          DATEDIFF(CURDATE(), MAX(don.paid_at))
+        ) as segment_score
+      FROM DONOR d
+      JOIN DONATION don ON d.donor_id = don.donor_id
+      WHERE (? IS NULL OR don.paid_at >= ?) 
+      AND (? IS NULL OR don.paid_at <= ?)
+      GROUP BY d.donor_id, d.first_name, d.last_name, d.email
+      ORDER BY total_amount DESC
+      LIMIT 20
+    `, [start_date, start_date, end_date, end_date]);
+
+    const topDonorsWithSegments = topDonors.map(donor => {
+      const score = donor.segment_score || 0;
+      let segment = 'New';
+      if (score >= 8) segment = 'Champion';
+      else if (score >= 6) segment = 'Loyal';
+      else if (score >= 4) segment = 'Regular';
+      else if (score >= 2) segment = 'Repeat';
+      return { ...donor, segment };
+    });
+
+    const segments = segmentData.reduce((acc, row) => {
+      const existing = acc.find(s => s.segment === row.segment);
+      if (existing) {
+        existing.donor_count += row.donor_count || 0;
+        existing.total_amount += parseFloat(row.total_amount || 0);
+      } else {
+        acc.push({
+          segment: row.segment,
+          donor_count: row.donor_count || 0,
+          total_amount: parseFloat(row.total_amount || 0),
+          avg_donation: parseFloat(row.avg_donation || 0)
         });
-        
-        // Group segments for chart
-        const segments = segmentData.reduce((acc, row) => {
-            const existing = acc.find(s => s.segment === row.segment);
-            if (existing) {
-                existing.donor_count += row.donor_count || 0;
-                existing.total_amount += parseFloat(row.total_amount || 0);
-            } else {
-                acc.push({
-                    segment: row.segment,
-                    donor_count: row.donor_count || 0,
-                    total_amount: parseFloat(row.total_amount || 0),
-                    avg_donation: parseFloat(row.avg_donation || 0)
-                });
-            }
-            return acc;
-        }, []);
-        
-        res.json({
-            success: true,
-            data: {
-                segments: segments,
-                top_donors: topDonorsWithSegments
-            }
-        });
-        
-    } catch (error) {
-        console.error('❌ Donor analytics error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to fetch donor analytics',
-            error: error.message
-        });
-    }
+      }
+      return acc;
+    }, []);
+
+    res.json({ success: true, data: { segments, top_donors: topDonorsWithSegments } });
+  } catch (error) {
+    console.error('❌ Donor analytics error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch donor analytics', error: error.message });
+  }
 });
 
-// Trends analysis
 router.get('/analytics/trends', authenticateAdmin, async (req, res) => {
-    try {
-        const { start_date, end_date, period = 'month' } = req.query;
-        
-        const [trendsData] = await adminDb.execute(`
-            SELECT 
-                YEAR(paid_at) as donation_year,
-                MONTH(paid_at) as donation_month,
-                DATE_FORMAT(paid_at, '%Y-%m') as month_year,
-                DATE_FORMAT(paid_at, '%M %Y') as month_name,
-                COUNT(donation_id) as donation_count,
-                COUNT(DISTINCT donor_id) as unique_donors,
-                SUM(amount) as total_amount,
-                AVG(amount) as avg_amount
-            FROM DONATION 
-            WHERE (? IS NULL OR paid_at >= ?) 
-            AND (? IS NULL OR paid_at <= ?)
-            GROUP BY YEAR(paid_at), MONTH(paid_at), DATE_FORMAT(paid_at, '%Y-%m'), DATE_FORMAT(paid_at, '%M %Y')
-            ORDER BY YEAR(paid_at) DESC, MONTH(paid_at) DESC
-            LIMIT 24
-        `, [start_date, start_date, end_date, end_date]);
-        
-        // Calculate growth rates
-        const trendsWithGrowth = trendsData.map((current, index) => {
-            if (index < trendsData.length - 1) {
-                const previous = trendsData[index + 1];
-                const growthRate = previous.total_amount > 0 
-                    ? ((current.total_amount - previous.total_amount) / previous.total_amount) * 100 
-                    : 0;
-                
-                return {
-                    period: current.donation_month,
-                    total_amount: current.total_amount,
-                    donation_count: current.donation_count,
-                    unique_donors: current.unique_donors,
-                    avg_donation: current.avg_donation,
-                    growth_rate: growthRate
-                };
-            }
-            
-            return {
-                period: current.donation_month,
-                total_amount: current.total_amount,
-                donation_count: current.donation_count,
-                unique_donors: current.unique_donors,
-                avg_donation: current.avg_donation,
-                growth_rate: 0
-            };
-        });
-        
-        res.json({
-            success: true,
-            data: trendsWithGrowth
-        });
-        
-    } catch (error) {
-        console.error('❌ Trends analytics error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to fetch trends analytics',
-            error: error.message
-        });
-    }
+  try {
+    const { start_date, end_date } = req.query;
+    const [trendsData] = await adminDb.execute(`
+      SELECT 
+        YEAR(paid_at) as donation_year,
+        MONTH(paid_at) as donation_month,
+        DATE_FORMAT(paid_at, '%Y-%m') as month_year,
+        DATE_FORMAT(paid_at, '%M %Y') as month_name,
+        COUNT(donation_id) as donation_count,
+        COUNT(DISTINCT donor_id) as unique_donors,
+        SUM(amount) as total_amount,
+        AVG(amount) as avg_amount
+      FROM DONATION 
+      WHERE (? IS NULL OR paid_at >= ?) 
+      AND (? IS NULL OR paid_at <= ?)
+      GROUP BY YEAR(paid_at), MONTH(paid_at), DATE_FORMAT(paid_at, '%Y-%m'), DATE_FORMAT(paid_at, '%M %Y')
+      ORDER BY YEAR(paid_at) DESC, MONTH(paid_at) DESC
+      LIMIT 24
+    `, [start_date, start_date, end_date, end_date]);
+
+  const trendsWithGrowth = trendsData.map((current, index) => {
+      if (index < trendsData.length - 1) {
+        const previous = trendsData[index + 1];
+        const growthRate = previous.total_amount > 0 
+          ? ((current.total_amount - previous.total_amount) / previous.total_amount) * 100 
+          : 0;
+        return { period: current.donation_month, total_amount: current.total_amount, donation_count: current.donation_count, unique_donors: current.unique_donors, avg_donation: current.avg_donation, growth_rate: growthRate };
+      }
+      return { period: current.donation_month, total_amount: current.total_amount, donation_count: current.donation_count, unique_donors: current.unique_donors, avg_donation: current.avg_donation, growth_rate: 0 };
+    });
+
+    res.json({ success: true, data: trendsWithGrowth });
+  } catch (error) {
+    console.error('❌ Trends analytics error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch trends analytics', error: error.message });
+  }
 });
 
-// Geographic distribution
 router.get('/analytics/geographic', authenticateAdmin, async (req, res) => {
-    try {
-        const { start_date, end_date } = req.query;
-        
-        const [geoData] = await adminDb.execute(`
-            SELECT * FROM v_geographic_distribution 
-            WHERE (? IS NULL OR last_donation >= ?) 
-            AND (? IS NULL OR last_donation <= ?)
-            ORDER BY total_amount DESC
-        `, [start_date, start_date, end_date, end_date]);
-        
-        // Separate countries and divisions
-        const countries = geoData.filter(row => row.country).map(row => ({
-            country: row.country,
-            total_amount: parseFloat(row.total_amount || 0),
-            donor_count: row.donor_count || 0,
-            donation_count: row.donation_count || 0
-        }));
-        
-        const divisions = geoData.filter(row => row.division && row.country === 'Bangladesh').map(row => ({
-            division: row.division,
-            total_amount: parseFloat(row.total_amount || 0),
-            donor_count: row.donor_count || 0,
-            donation_count: row.donation_count || 0
-        }));
-        
-        res.json({
-            success: true,
-            data: {
-                countries: countries,
-                divisions: divisions
-            }
-        });
-        
-    } catch (error) {
-        console.error('❌ Geographic analytics error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to fetch geographic analytics',
-            error: error.message
-        });
-    }
+  try {
+    const { start_date, end_date } = req.query;
+    const [geoData] = await adminDb.execute(`
+      SELECT * FROM v_geographic_distribution 
+      WHERE (? IS NULL OR last_donation >= ?) 
+      AND (? IS NULL OR last_donation <= ?)
+      ORDER BY total_amount DESC
+    `, [start_date, start_date, end_date, end_date]);
+
+    const countries = geoData.filter(row => row.country).map(row => ({
+      country: row.country,
+      total_amount: parseFloat(row.total_amount || 0),
+      donor_count: row.donor_count || 0,
+      donation_count: row.donation_count || 0
+    }));
+    const divisions = geoData
+      .filter(row => row.division && row.country === 'Bangladesh')
+      .map(row => ({
+        division: row.division,
+        total_amount: parseFloat(row.total_amount || 0),
+        donor_count: row.donor_count || 0,
+        donation_count: row.donation_count || 0
+      }));
+    res.json({ success: true, data: { countries, divisions } });
+  } catch (error) {
+    console.error('❌ Geographic analytics error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch geographic analytics', error: error.message });
+  }
 });
 
-// Campaign performance
 router.get('/analytics/campaigns', authenticateAdmin, async (req, res) => {
-    try {
-        const { start_date, end_date } = req.query;
-        
-        const [campaignData] = await adminDb.execute(`
-            SELECT * FROM v_campaign_performance 
-            WHERE (? IS NULL OR last_donation >= ?) 
-            AND (? IS NULL OR last_donation <= ?)
-            ORDER BY amount_received DESC
-            LIMIT 50
-        `, [start_date, start_date, end_date, end_date]);
-        
-        res.json({
-            success: true,
-            data: campaignData.map(row => ({
-                ...row,
-                total_amount: parseFloat(row.amount_received || 0),
-                avg_donation: parseFloat(row.avg_donation || 0),
-                success_rate: parseFloat(row.success_rate || 0)
-            }))
-        });
-        
-    } catch (error) {
-        console.error('❌ Campaign analytics error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to fetch campaign analytics',
-            error: error.message
-        });
-    }
+  try {
+    const { start_date, end_date } = req.query;
+    const [campaignData] = await adminDb.execute(`
+      SELECT * FROM v_campaign_performance 
+      WHERE (? IS NULL OR last_donation >= ?) 
+      AND (? IS NULL OR last_donation <= ?)
+      ORDER BY amount_received DESC
+      LIMIT 50
+    `, [start_date, start_date, end_date, end_date]);
+    res.json({
+      success: true,
+      data: campaignData.map(row => ({
+        ...row,
+        total_amount: parseFloat(row.amount_received || 0),
+        avg_donation: parseFloat(row.avg_donation || 0),
+        success_rate: parseFloat(row.success_rate || 0)
+      }))
+    });
+  } catch (error) {
+    console.error('❌ Campaign analytics error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch campaign analytics', error: error.message });
+  }
 });
 
-// Real-time analytics (cached)
 router.get('/analytics/realtime', authenticateAdmin, async (req, res) => {
-    try {
-        // Get real-time stats from the last 24 hours
-        const [realtimeStats] = await adminDb.execute(`
-            SELECT 
-                COUNT(*) as donations_today,
-                COALESCE(SUM(amount), 0) as amount_today,
-                COUNT(DISTINCT donor_id) as unique_donors_today
-            FROM DONATION 
-            WHERE DATE(paid_at) = CURDATE()
-        `);
-        
-        const [hourlyStats] = await adminDb.execute(`
-            SELECT 
-                HOUR(paid_at) as hour_of_day,
-                COUNT(*) as donation_count,
-                SUM(amount) as total_amount
-            FROM DONATION 
-            WHERE DATE(paid_at) = CURDATE()
-            GROUP BY HOUR(paid_at)
-            ORDER BY hour_of_day
-        `);
-        
-        res.json({
-            success: true,
-            data: {
-                today_summary: realtimeStats[0],
-                hourly_breakdown: hourlyStats
-            }
-        });
-        
-    } catch (error) {
-        console.error('❌ Real-time analytics error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to fetch real-time analytics',
-            error: error.message
-        });
-    }
+  try {
+    const [realtimeStats] = await adminDb.execute(`
+      SELECT 
+        COUNT(*) as donations_today,
+        COALESCE(SUM(amount), 0) as amount_today,
+        COUNT(DISTINCT donor_id) as unique_donors_today
+      FROM DONATION 
+      WHERE DATE(paid_at) = CURDATE()
+    `);
+    const [hourlyStats] = await adminDb.execute(`
+      SELECT 
+        HOUR(paid_at) as hour_of_day,
+        COUNT(*) as donation_count,
+        SUM(amount) as total_amount
+      FROM DONATION 
+      WHERE DATE(paid_at) = CURDATE()
+      GROUP BY HOUR(paid_at)
+      ORDER BY hour_of_day
+    `);
+  res.json({ success: true, data: { today_summary: realtimeStats[0], hourly_breakdown: hourlyStats } });
+  } catch (error) {
+    console.error('❌ Real-time analytics error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch real-time analytics', error: error.message });
+  }
 });
 
-// Export analytics data
 router.get('/analytics/export', authenticateAdmin, async (req, res) => {
-    try {
-        const { type, format, start_date, end_date } = req.query;
-        
-        let data = [];
-        let filename = 'analytics_export';
-        
-        switch (type) {
-            case 'donations':
-                const [donationData] = await adminDb.execute(`
-                    SELECT 
-                        d.donation_id,
-                        don.donor_name,
-                        don.email,
-                        d.amount,
-                        d.paid_at,
-                        ec.title as campaign_name,
-                        ec.verification_status
-                    FROM DONATION d
-                    LEFT JOIN DONOR don ON d.donor_id = don.donor_id
-                    LEFT JOIN EVENT_CREATION ec ON d.creation_id = ec.creation_id
-                    WHERE (? IS NULL OR DATE(d.paid_at) >= ?) 
-                    AND (? IS NULL OR DATE(d.paid_at) <= ?)
-                    ORDER BY d.paid_at DESC
-                `, [start_date, start_date, end_date, end_date]);
-                data = donationData;
-                filename = 'donations_export';
-                break;
-                
-            case 'donors':
-                const [donorData] = await adminDb.execute(`
-                    SELECT 
-                        d.donor_id,
-                        d.donor_name,
-                        d.email,
-                        d.mobile,
-                        d.country,
-                        d.division,
-                        COUNT(don.donation_id) as total_donations,
-                        SUM(don.amount) as total_amount,
-                        MAX(don.paid_at) as last_donation
-                    FROM DONOR d
-                    LEFT JOIN DONATION don ON d.donor_id = don.donor_id
-                    WHERE (? IS NULL OR DATE(don.paid_at) >= ?) 
-                    AND (? IS NULL OR DATE(don.paid_at) <= ?)
-                    GROUP BY d.donor_id
-                    ORDER BY total_amount DESC
-                `, [start_date, start_date, end_date, end_date]);
-                data = donorData;
-                filename = 'donors_export';
-                break;
-                
-            case 'campaigns':
-                const [campaignData] = await adminDb.execute(`
-                    SELECT * FROM v_campaign_performance 
-                    WHERE (? IS NULL OR last_donation >= ?) 
-                    AND (? IS NULL OR last_donation <= ?)
-                    ORDER BY total_donated DESC
-                `, [start_date, start_date, end_date, end_date]);
-                data = campaignData;
-                filename = 'campaigns_export';
-                break;
-                
-            case 'trends':
-                const [trendsData] = await adminDb.execute(`
-                    SELECT * FROM v_donation_trends_monthly 
-                    WHERE (? IS NULL OR month_year >= ?) 
-                    AND (? IS NULL OR month_year <= ?)
-                    ORDER BY donation_year ASC, donation_month ASC
-                `, [start_date, start_date, end_date, end_date]);
-                data = trendsData;
-                filename = 'trends_export';
-                break;
-                
-            default:
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid export type'
-                });
-        }
-        
-        if (format === 'csv') {
-            // Convert to CSV
-            if (data.length === 0) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'No data to export'
-                });
-            }
-            
-            const headers = Object.keys(data[0]);
-            const csvContent = [
-                headers.join(','),
-                ...data.map(row => 
-                    headers.map(header => {
-                        const value = row[header];
-                        return typeof value === 'string' ? `"${value.replace(/"/g, '""')}"` : value;
-                    }).join(',')
-                )
-            ].join('\n');
-            
-            res.setHeader('Content-Type', 'text/csv');
-            res.setHeader('Content-Disposition', `attachment; filename="${filename}.csv"`);
-            res.send(csvContent);
-            
-        } else if (format === 'json') {
-            res.setHeader('Content-Type', 'application/json');
-            res.setHeader('Content-Disposition', `attachment; filename="${filename}.json"`);
-            res.json(data);
-            
-        } else {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid format. Use csv or json'
-            });
-        }
-        
-    } catch (error) {
-        console.error('❌ Export error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to export data',
-            error: error.message
-        });
+  try {
+    const { type, format, start_date, end_date } = req.query;
+    let data = [];
+    let filename = 'analytics_export';
+    if (type === 'donations') {
+      const [donationData] = await adminDb.execute(`
+        SELECT 
+          d.donation_id,
+          don.donor_name,
+          don.email,
+          d.amount,
+          d.paid_at,
+          ec.title as campaign_name,
+          ec.verification_status
+        FROM DONATION d
+        LEFT JOIN DONOR don ON d.donor_id = don.donor_id
+        LEFT JOIN EVENT_CREATION ec ON d.creation_id = ec.creation_id
+        WHERE (? IS NULL OR DATE(d.paid_at) >= ?) 
+        AND (? IS NULL OR DATE(d.paid_at) <= ?)
+        ORDER BY d.paid_at DESC
+      `, [start_date, start_date, end_date, end_date]);
+      data = donationData; filename = 'donations_export';
+    } else if (type === 'donors') {
+      const [donorData] = await adminDb.execute(`
+        SELECT 
+          d.donor_id,
+          d.donor_name,
+          d.email,
+          d.mobile,
+          d.country,
+          d.division,
+          COUNT(don.donation_id) as total_donations,
+          SUM(don.amount) as total_amount,
+          MAX(don.paid_at) as last_donation
+        FROM DONOR d
+        LEFT JOIN DONATION don ON d.donor_id = don.donor_id
+        WHERE (? IS NULL OR DATE(don.paid_at) >= ?) 
+        AND (? IS NULL OR DATE(don.paid_at) <= ?)
+        GROUP BY d.donor_id
+        ORDER BY total_amount DESC
+      `, [start_date, start_date, end_date, end_date]);
+      data = donorData; filename = 'donors_export';
+    } else if (type === 'campaigns') {
+      const [campaignData] = await adminDb.execute(`
+        SELECT * FROM v_campaign_performance 
+        WHERE (? IS NULL OR last_donation >= ?) 
+        AND (? IS NULL OR last_donation <= ?)
+        ORDER BY total_donated DESC
+      `, [start_date, start_date, end_date, end_date]);
+      data = campaignData; filename = 'campaigns_export';
+    } else if (type === 'trends') {
+      const [trendsData] = await adminDb.execute(`
+        SELECT * FROM v_donation_trends_monthly 
+        WHERE (? IS NULL OR month_year >= ?) 
+        AND (? IS NULL OR month_year <= ?)
+        ORDER BY donation_year ASC, donation_month ASC
+      `, [start_date, start_date, end_date, end_date]);
+      data = trendsData; filename = 'trends_export';
+    } else {
+      return res.status(400).json({ success: false, message: 'Invalid export type' });
     }
+
+    if (format === 'csv') {
+      if (data.length === 0) {
+        return res.status(404).json({ success: false, message: 'No data to export' });
+      }
+      const headers = Object.keys(data[0]);
+      const csvContent = [
+        headers.join(','),
+        ...data.map(row => headers.map(header => {
+          const value = row[header];
+          return typeof value === 'string' ? `"${value.replace(/"/g, '""')}"` : value;
+        }).join(','))
+      ].join('\n');
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}.csv"`);
+      res.send(csvContent);
+    } else if (format === 'json') {
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}.json"`);
+      res.json(data);
+    } else {
+      return res.status(400).json({ success: false, message: 'Invalid format. Use csv or json' });
+    }
+  } catch (error) {
+    console.error('❌ Export error:', error);
+    res.status(500).json({ success: false, message: 'Failed to export data', error: error.message });
+  }
 });
 
-// Refresh analytics cache
 router.post('/analytics/refresh-cache', authenticateAdmin, async (req, res) => {
-    try {
-        console.log('🔄 Refreshing analytics cache...');
-        
-        // Call cache refresh stored procedure
-        await adminDb.execute('CALL sp_refresh_analytics_cache()');
-        
-        res.json({
-            success: true,
-            message: 'Analytics cache refreshed successfully'
-        });
-        
-    } catch (error) {
-        console.error('❌ Cache refresh error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to refresh cache',
-            error: error.message
-        });
-    }
+  try {
+    await adminDb.execute('CALL sp_refresh_analytics_cache()');
+    res.json({ success: true, message: 'Analytics cache refreshed successfully' });
+  } catch (error) {
+    console.error('❌ Cache refresh error:', error);
+    res.status(500).json({ success: false, message: 'Failed to refresh cache', error: error.message });
+  }
 });
 
 module.exports = router;
