@@ -1,0 +1,328 @@
+SHODESH STAFF MODULE: ALL QUERIES & DEFINITIONS
+===============================================
+
+-------------------------------
+-- TABLES
+-------------------------------
+
+Name: STAFF
+Type: TABLE
+Purpose: Staff accounts for second-round verification.
+Definition:
+CREATE TABLE STAFF(
+  staff_id VARCHAR(7) NOT NULL,
+  first_name VARCHAR(30) NOT NULL CHECK (first_name REGEXP '^[A-Za-z ]+$'),
+  last_name VARCHAR(30) NOT NULL CHECK (last_name REGEXP '^[A-Za-z ]+$'),
+  username VARCHAR(15) NOT NULL,
+  password VARCHAR(255) NOT NULL CHECK (LENGTH(password) >= 6),
+  mobile VARCHAR(11) NOT NULL CHECK (mobile REGEXP '^0[0-9]{10}$'),
+  email VARCHAR(100) CHECK (email REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}$'),
+  nid VARCHAR(17) NOT NULL CHECK (nid REGEXP '^[0-9]{10,17}$'),
+  dob DATE,
+  house_no VARCHAR(7),
+  road_no VARCHAR(4) CHECK (road_no REGEXP '^[0-9]{1,4}$'),
+  area VARCHAR(30) CHECK (area REGEXP '^[A-Za-z ]+$'),
+  district VARCHAR(30) CHECK (district REGEXP '^[A-Za-z ]+$'),
+  administrative_div VARCHAR(30) CHECK (administrative_div REGEXP '^[A-Za-z ]+$'),
+  zip VARCHAR(4) CHECK (zip REGEXP '^[0-9]{4}$'),
+  CV BLOB NULL,
+  status ENUM('verified','suspended','unverified') DEFAULT 'unverified',
+  CONSTRAINT STAFF_STAFF_ID_PK PRIMARY KEY (staff_id),
+  CONSTRAINT STAFF_NID_U UNIQUE (nid)
+);
+
+Name: EVENT_CREATION
+Type: TABLE
+Purpose: Core campaign/event entity; staff may be assigned for second verification.
+Definition:
+CREATE TABLE EVENT_CREATION (
+  creation_id   VARCHAR(7)  NOT NULL,
+  creator_type  ENUM('individual','foundation') NOT NULL,
+  individual_id VARCHAR(7) NULL,
+  foundation_id VARCHAR(7) NULL,
+  ebc_id        VARCHAR(7) NOT NULL,
+  title         VARCHAR(50)   NOT NULL,
+  description   VARCHAR(1000) NOT NULL,
+  flag          INT NOT NULL DEFAULT 0,
+  amount_needed   DECIMAL(12,2) NOT NULL CHECK (amount_needed >= 0),
+  amount_received DECIMAL(12,2) NOT NULL DEFAULT 0 CHECK (amount_received >= 0),
+  division      VARCHAR(30) NOT NULL CHECK (division REGEXP '^[A-Za-z ]+$'),
+  doc           LONGBLOB NULL,
+  cover_photo   LONGBLOB NULL,
+  verification_status ENUM('unverified','verified','pending') NOT NULL DEFAULT 'unverified',
+  lifecycle_status    ENUM('inactive','active','closed') NOT NULL DEFAULT 'inactive',
+  second_verification_required TINYINT NOT NULL DEFAULT 0,
+  created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT EVENT_CREATION_PK PRIMARY KEY (creation_id),
+  CONSTRAINT EC_EBC_FK        FOREIGN KEY (ebc_id)        REFERENCES EVENT_BASED_ON_CATEGORY(ebc_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT EC_INDIVIDUAL_FK FOREIGN KEY (individual_id) REFERENCES INDIVIDUAL(individual_id)       ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT EC_FOUNDATION_FK FOREIGN KEY (foundation_id) REFERENCES FOUNDATION(foundation_id)       ON DELETE SET NULL ON UPDATE CASCADE,
+  INDEX IDX_EVENT_STATE (verification_status, lifecycle_status, second_verification_required),
+  INDEX IDX_EVENT_EBC   (ebc_id),
+  INDEX IDX_EVENT_DIV   (division)
+);
+
+Name: EVENT_VERIFICATION
+Type: TABLE
+Purpose: Audit log of verification rounds (1 = initial, 2 = staff follow-up).
+Definition:
+CREATE TABLE EVENT_VERIFICATION (
+  log_id       VARCHAR(7)  NOT NULL,
+  creation_id  VARCHAR(7)  NOT NULL,
+  round_no     TINYINT NOT NULL,
+  staff_id     VARCHAR(7) NULL,
+  decision     ENUM('verified','unverified','request_staff_verification') NOT NULL DEFAULT 'unverified',
+  request_staff_verification TINYINT NOT NULL DEFAULT 0,
+  notes        VARCHAR(1000) NULL,
+  verified_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT EVENT_VERIFICATION_PK PRIMARY KEY (log_id),
+  CONSTRAINT EV_EVENT_FK FOREIGN KEY (creation_id) REFERENCES EVENT_CREATION(creation_id) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT EV_STAFF_FK FOREIGN KEY (staff_id) REFERENCES STAFF(staff_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  INDEX EV_EVENT_IDX (creation_id, round_no, verified_at),
+  INDEX EV_VERIFIER_IDX (staff_id, verified_at)
+);
+
+-------------------------------
+-- VIEWS
+-------------------------------
+
+Name: V_ADMIN_STAFF
+Type: VIEW
+Purpose: Admin-friendly staff listing without CV BLOB, including has_cv and cv_size flags.
+Definition:
+CREATE VIEW V_ADMIN_STAFF AS
+SELECT s.staff_id, s.username, CONCAT(s.first_name,' ',s.last_name) AS full_name,
+       s.email, s.mobile, s.district, s.administrative_div, s.status,
+       (s.CV IS NOT NULL) AS has_cv,
+       CASE WHEN s.CV IS NULL THEN 0 ELSE OCTET_LENGTH(s.CV) END AS cv_size
+FROM STAFF s;
+
+-------------------------------
+-- PROCEDURES
+-------------------------------
+
+Name: sp_admin_verify_staff
+Type: PROCEDURE [PL/SQL]
+Purpose: Admin action to verify/suspend/unsuspend staff; updates STAFF only.
+Definition:
+DROP PROCEDURE IF EXISTS sp_admin_verify_staff;
+DELIMITER $$
+CREATE PROCEDURE sp_admin_verify_staff(
+  IN p_staff_id VARCHAR(7),
+  IN p_action ENUM('verify','suspend','unsuspend'),
+  IN p_notes TEXT,
+  IN p_admin_user VARCHAR(100)
+)
+BEGIN
+  DECLARE v_exists INT DEFAULT 0;
+  DECLARE v_status ENUM('verified','suspended','unverified');
+  SELECT COUNT(*), MAX(status) INTO v_exists, v_status FROM STAFF WHERE staff_id = p_staff_id;
+  IF v_exists = 0 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Staff not found'; END IF;
+  IF p_action = 'verify' THEN
+    IF v_status IN ('unverified','suspended') THEN
+      UPDATE STAFF SET status='verified' WHERE staff_id = p_staff_id;
+    ELSE
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Already verified';
+    END IF;
+  ELSEIF p_action = 'suspend' THEN
+    IF v_status <> 'suspended' THEN
+      UPDATE STAFF SET status='suspended' WHERE staff_id = p_staff_id;
+    ELSE
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Already suspended';
+    END IF;
+  ELSEIF p_action = 'unsuspend' THEN
+    IF v_status = 'suspended' THEN
+      UPDATE STAFF SET status='verified' WHERE staff_id = p_staff_id;
+    ELSE
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Not suspended';
+    END IF;
+  ELSE
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid action';
+  END IF;
+END$$
+DELIMITER ;
+
+-------------------------------
+-- TRIGGERS
+-------------------------------
+
+Name: staff_bi_id
+Type: TRIGGER [PL/SQL] (BEFORE INSERT)
+Purpose: Generate staff_id automatically if not provided or invalid format.
+Definition:
+DELIMITER $$
+CREATE TRIGGER staff_bi_id BEFORE INSERT ON STAFF FOR EACH ROW
+BEGIN
+  IF NEW.staff_id IS NULL OR NEW.staff_id NOT REGEXP '^STF[0-9]{4}$' THEN
+    SET NEW.staff_id = CONCAT('STF', LPAD(FLOOR(RAND()*9000)+1000, 4, '0'));
+  END IF;
+END$$
+DELIMITER ;
+
+Name: staff_bu_status_guard
+Type: TRIGGER [PL/SQL] (BEFORE UPDATE)
+Purpose: Validate STAFF.status and block reverting verified/suspended back to unverified.
+Definition:
+DELIMITER $$
+CREATE TRIGGER staff_bu_status_guard BEFORE UPDATE ON STAFF FOR EACH ROW
+BEGIN
+  IF NEW.status NOT IN ('unverified','verified','suspended') THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid STAFF.status';
+  END IF;
+  IF OLD.status IN ('verified','suspended') AND NEW.status = 'unverified' THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Cannot revert to unverified';
+  END IF;
+END$$
+DELIMITER ;
+
+Name: BI_EVENT_VERIFICATION_ENFORCE
+Type: TRIGGER [PL/SQL] (BEFORE INSERT)
+Purpose: Validates verification rounds and staff involvement logic.
+Definition:
+DELIMITER $$
+CREATE TRIGGER BI_EVENT_VERIFICATION_ENFORCE
+BEFORE INSERT ON EVENT_VERIFICATION
+FOR EACH ROW
+BEGIN
+  DECLARE v_need_staff TINYINT DEFAULT 0;
+  IF NEW.round_no NOT IN (1,2) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='round_no must be 1 or 2';
+  END IF;
+  IF (NEW.round_no = 1 AND NEW.staff_id IS NOT NULL) OR
+     (NEW.round_no = 2 AND NEW.staff_id IS NULL) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT='Invalid verifier: round 1 -> no staff_id; round 2 -> staff_id required';
+  END IF;
+  IF NEW.round_no <> 1 THEN SET NEW.request_staff_verification = 0; END IF;
+  IF NEW.round_no = 2 THEN
+    SELECT second_verification_required INTO v_need_staff
+    FROM EVENT_CREATION WHERE creation_id = NEW.creation_id FOR UPDATE;
+    IF v_need_staff <> 1 THEN
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Staff follow-up was not requested for this event';
+    END IF;
+  END IF;
+END $$
+DELIMITER ;
+
+Name: AI_EVENT_VERIFICATION_APPLY
+Type: TRIGGER [PL/SQL] (AFTER INSERT)
+Purpose: Applies verification decision to EVENT_CREATION lifecycle & status.
+Definition:
+DELIMITER $$
+CREATE TRIGGER AI_EVENT_VERIFICATION_APPLY
+AFTER INSERT ON EVENT_VERIFICATION
+FOR EACH ROW
+BEGIN
+  IF NEW.round_no = 1 THEN
+    IF NEW.decision = 'verified' THEN
+      IF NEW.request_staff_verification = 1 THEN
+        UPDATE EVENT_CREATION
+        SET second_verification_required = 1,
+            verification_status = 'unverified',
+            lifecycle_status    = 'inactive'
+        WHERE creation_id = NEW.creation_id;
+      ELSE
+        UPDATE EVENT_CREATION
+        SET second_verification_required = 0,
+            verification_status = 'verified',
+            lifecycle_status    = 'active'
+        WHERE creation_id = NEW.creation_id;
+      END IF;
+    ELSE
+      UPDATE EVENT_CREATION
+      SET second_verification_required = 0,
+          verification_status = 'unverified',
+          lifecycle_status    = 'inactive'
+      WHERE creation_id = NEW.creation_id;
+    END IF;
+  END IF;
+  IF NEW.round_no = 2 THEN
+    UPDATE EVENT_CREATION
+    SET second_verification_required = 0,
+        verification_status = CASE WHEN NEW.decision='verified' THEN 'verified' ELSE 'unverified' END,
+        lifecycle_status    = CASE WHEN NEW.decision='verified' THEN 'active'    ELSE 'inactive'    END
+    WHERE creation_id = NEW.creation_id;
+  END IF;
+END $$
+DELIMITER ;
+
+-------------------------------
+-- API QUERIES (src/routes/staff.js)
+-------------------------------
+
+-- Check for duplicate username/email/nid
+SELECT staff_id FROM STAFF WHERE username=? OR email=? OR nid=?;
+
+-- Count staff for staff_id generation
+SELECT COUNT(*) AS count FROM STAFF;
+
+-- Insert staff
+INSERT INTO STAFF (
+  staff_id, first_name, last_name, username, password, mobile, email, nid, dob,
+  house_no, road_no, area, district, administrative_div, zip, CV, status
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Staff sign-in
+SELECT * FROM STAFF WHERE username = ?;
+
+-- Get pending events for staff
+SELECT 
+  ec.creation_id,
+  ec.title,
+  ec.amount_needed,
+  ec.created_at,
+  ec.division,
+  CASE 
+    WHEN ec.creator_type = 'individual' THEN CONCAT(i.first_name, ' ', i.last_name)
+    ELSE f.foundation_name
+  END AS creator_name
+FROM EVENT_CREATION ec
+JOIN EVENT_VERIFICATION ev 
+  ON ec.creation_id = ev.creation_id
+LEFT JOIN INDIVIDUAL i ON ec.individual_id = i.individual_id
+LEFT JOIN FOUNDATION f ON ec.foundation_id = f.foundation_id
+WHERE ec.verification_status = 'pending'
+  AND ec.second_verification_required = 1
+  AND ev.round_no = 1
+  AND ev.decision = 'request_staff_verification'
+  AND ev.staff_id = ?
+GROUP BY ec.creation_id
+ORDER BY ec.created_at DESC;
+
+-- Check staff access to event
+SELECT 1
+FROM EVENT_CREATION ec
+JOIN EVENT_VERIFICATION ev ON ec.creation_id = ev.creation_id
+WHERE ec.creation_id = ?
+  AND ec.verification_status = 'pending'
+  AND ec.second_verification_required = 1
+  AND ev.round_no = 1
+  AND ev.decision = 'request_staff_verification'
+  AND ev.staff_id = ?
+LIMIT 1;
+
+-- Get event details for staff
+SELECT 
+  ec.*,
+  c.category_name,
+  et.event_type_name,
+  CASE 
+    WHEN ec.creator_type = 'individual' THEN CONCAT(i.first_name, ' ', i.last_name)
+    ELSE f.foundation_name
+  END AS creator_name
+FROM EVENT_CREATION ec
+LEFT JOIN INDIVIDUAL i ON ec.individual_id = i.individual_id AND ec.creator_type = 'individual'
+LEFT JOIN FOUNDATION f ON ec.foundation_id = f.foundation_id AND ec.creator_type = 'foundation'
+LEFT JOIN EVENT_BASED_ON_CATEGORY ebc ON ec.ebc_id = ebc.ebc_id
+LEFT JOIN CATEGORY c ON ebc.category_id = c.category_id
+LEFT JOIN EVENT_TYPE et ON ebc.event_type_id = et.event_type_id
+WHERE ec.creation_id = ?
+LIMIT 1;
+
+-- Staff decision (calls stored procedure)
+CALL sp_staff_verify_event(?, ?, ?);
+
+-------------------------------
+END OF STAFF MODULE QUERIES
+-------------------------------

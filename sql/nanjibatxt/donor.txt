@@ -1,0 +1,129 @@
+SHODESH DONOR MODULE: ALL QUERIES & DEFINITIONS
+===============================================
+
+-------------------------------
+-- TABLES
+-------------------------------
+
+Name: DONOR
+Type: TABLE
+Purpose: Donor accounts; donors can contribute to verified+active events.
+Definition:
+CREATE TABLE DONOR (
+  donor_id VARCHAR(7) NOT NULL,
+  first_name VARCHAR(50) NOT NULL CHECK (first_name REGEXP '^[A-Za-z ]+$'),
+  last_name VARCHAR(50) NOT NULL CHECK (last_name REGEXP '^[A-Za-z ]+$'),
+  username VARCHAR(20) NOT NULL,
+  email VARCHAR(100) NOT NULL CHECK (email REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}$'),
+  password VARCHAR(255) NOT NULL CHECK (LENGTH(password) >= 6),
+  country VARCHAR(50) NOT NULL CHECK (country REGEXP '^[A-Za-z ]+$'),
+  division VARCHAR(30) NULL CHECK (division IN ('Barisal', 'Chittagong', 'Dhaka', 'Khulna', 'Mymensingh', 'Rajshahi', 'Rangpur', 'Sylhet')),
+  date_of_birth DATE NOT NULL,
+  profile_created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT DONOR_DONOR_ID_PK PRIMARY KEY (donor_id),
+  CONSTRAINT DONOR_USERNAME_U UNIQUE (username),
+  CONSTRAINT DONOR_EMAIL_U UNIQUE (email),
+  CONSTRAINT DONOR_DIVISION_CHECK CHECK ((country = 'Bangladesh' AND division IS NOT NULL) OR (country != 'Bangladesh' AND division IS NULL))
+);
+
+Name: DONATION
+Type: TABLE
+Purpose: Ledger of donations; donors can contribute to events.
+Definition:
+CREATE TABLE DONATION (
+  donation_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  creation_id VARCHAR(7) NOT NULL,
+  donor_id    VARCHAR(7) NOT NULL,
+  amount      DECIMAL(12,2) NOT NULL CHECK (amount > 0),
+  paid_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT DON_EVENT_FK FOREIGN KEY (creation_id) REFERENCES EVENT_CREATION(creation_id) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT DON_DONOR_FK FOREIGN KEY (donor_id)    REFERENCES DONOR(donor_id)            ON DELETE RESTRICT ON UPDATE CASCADE,
+  INDEX IDX_DON_EVENT (creation_id, paid_at),
+  INDEX IDX_DON_DONOR (donor_id, paid_at)
+);
+
+-------------------------------
+-- VIEWS
+-------------------------------
+
+Name: donor_donation_history
+Type: VIEW
+Purpose: Shows donation history for each donor, including project and foundation info.
+Definition:
+CREATE OR REPLACE VIEW donor_donation_history AS
+SELECT
+  d.donor_id,
+  d.amount,
+  d.paid_at AS date,
+  ec.title AS projectTitle,
+  IF(ec.creator_type='foundation', f.foundation_name, CONCAT(i.first_name, ' ', i.last_name)) AS foundationName
+FROM DONATION d
+LEFT JOIN EVENT_CREATION ec ON d.creation_id = ec.creation_id
+LEFT JOIN FOUNDATION f ON ec.foundation_id = f.foundation_id
+LEFT JOIN INDIVIDUAL i ON ec.individual_id = i.individual_id;
+
+-------------------------------
+-- API QUERIES (src/routes/donor.js)
+-------------------------------
+
+-- Register Donor (check for existing username/email)
+SELECT username, email FROM donor 
+WHERE username = ? OR email = ?;
+
+-- Insert Donor
+INSERT INTO donor (
+  donor_id, first_name, last_name, username, email, password, 
+  country, division, date_of_birth
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Donor Sign-in (fetch by username)
+SELECT donor_id, first_name, last_name, username, email, password,
+       date_of_birth, country, division, profile_created_at
+FROM donor 
+WHERE username = ?;
+
+-- Get Donor Profile by donorId
+SELECT donor_id, first_name, last_name, username, email, 
+       date_of_birth, country, division, profile_created_at
+FROM donor 
+WHERE donor_id = ?;
+
+-- Check username/email availability
+SELECT username FROM donor WHERE username = ?;
+SELECT email FROM donor WHERE email = ?;
+
+-- Check username (excluding current donor)
+SELECT donor_id FROM donor WHERE username = ? AND donor_id != ?;
+
+-- Update Donor Profile
+UPDATE donor SET username = ?, password = ? WHERE donor_id = ?;
+
+-- Get Donation History (with event and creator info)
+SELECT amount, date, projectTitle, foundationName
+FROM donor_donation_history
+WHERE donor_id = ?
+ORDER BY date DESC;
+
+-- Get Donation Stats
+SELECT 
+  IFNULL(SUM(amount),0) AS totalDonation,
+  IFNULL(MAX(amount),0) AS largestDonation
+FROM donation
+WHERE donor_id = ?;
+
+-- Delete Donor
+DELETE FROM donor WHERE donor_id = ?;
+
+-------------------------------
+-- SESSION & SIGNOUT HELPERS
+-------------------------------
+
+-- Get current signed-in donor session
+N/A (session object in Express)
+
+-- Sign out (destroy session)
+N/A (session.destroy() in Express)
+
+-------------------------------
+END OF DONOR MODULE QUERIES
+-------------------------------

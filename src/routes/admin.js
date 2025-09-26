@@ -714,6 +714,244 @@ router.put('/foundations/:id/verify', authenticateAdmin, async (req, res) => {
   }
 });
 
+
+// =============================
+// CATEGORIES + EVENT TYPES (ADMIN)
+// =============================
+
+// GET /api/admin/categories/events
+router.get('/categories/events', authenticateAdmin, async (req, res) => {
+  try {
+    const [rows] = await adminDb.execute(`
+      SELECT 
+        c.category_id,
+        c.category_name,
+        et.event_type_id,
+        et.event_type_name
+      FROM CATEGORY c
+      LEFT JOIN EVENT_BASED_ON_CATEGORY ebc ON ebc.category_id = c.category_id
+      LEFT JOIN EVENT_TYPE et ON et.event_type_id = ebc.event_type_id
+      ORDER BY c.category_name ASC, et.event_type_name ASC
+    `);
+
+    const byCat = new Map();
+    for (const r of rows) {
+      if (!byCat.has(r.category_id)) {
+        byCat.set(r.category_id, {
+          category_id: r.category_id,
+          category_name: r.category_name,
+          event_types: []
+        });
+      }
+      if (r.event_type_id) {
+        byCat.get(r.category_id).event_types.push({
+          event_type_id: r.event_type_id,
+          event_type_name: r.event_type_name
+        });
+      }
+    }
+
+    res.json({ success: true, data: Array.from(byCat.values()) });
+  } catch (err) {
+    console.error('Categories/events fetch error:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch categories with event types', error: err.message });
+  }
+});
+
+
+// POST /api/admin/categories/:id/add-event-type
+// Creates the event type if missing, then maps it to the category.
+// Explicitly generates ebc_id (fixes “Field 'ebc_id' doesn't have a default value”).
+router.post('/categories/:id/add-event-type', authenticateAdmin, async (req, res) => {
+  const { id } = req.params; // category_id like CAT0001
+  const { eventTypeName } = req.body;
+
+  if (!eventTypeName || !eventTypeName.trim()) {
+    return res.status(400).json({ success: false, message: 'eventTypeName is required' });
+  }
+
+  let conn;
+  try {
+    conn = await adminDb.getConnection();
+    await conn.beginTransaction();
+
+    // helper to generate next ID like CAT0001/EVT0001/EBC0001
+    async function nextPrefixedId(table, col, prefix, pad = 4) {
+      const [rows] = await conn.query(
+        `SELECT ${col} AS id FROM ${table} WHERE ${col} LIKE ? ORDER BY ${col} DESC LIMIT 1`,
+        [`${prefix}%`]
+      );
+      if (!rows.length) return `${prefix}${'1'.padStart(pad, '0')}`;
+      const last = String(rows[0].id || '');
+      const m = last.match(/^([A-Za-z]+)(\d+)$/);
+      if (m) {
+        const width = m[2].length;
+        const nextNum = (parseInt(m[2], 10) + 1).toString().padStart(width, '0');
+        return `${prefix}${nextNum}`;
+      }
+      return `${prefix}${Date.now().toString().slice(-pad)}`;
+    }
+
+    // ensure category exists
+    const [catRows] = await conn.execute('SELECT category_id FROM CATEGORY WHERE category_id = ?', [id]);
+    if (!catRows.length) {
+      await conn.rollback();
+      return res.status(404).json({ success: false, message: 'Category not found' });
+    }
+
+    // find or create event type
+    const cleanName = eventTypeName.trim();
+    const [etRows] = await conn.execute(
+      'SELECT event_type_id FROM EVENT_TYPE WHERE event_type_name = ?',
+      [cleanName]
+    );
+
+    let eventTypeId;
+    if (etRows.length) {
+      eventTypeId = etRows[0].event_type_id;
+    } else {
+      const newEvtId = await nextPrefixedId('EVENT_TYPE', 'event_type_id', 'EVT', 4);
+      await conn.execute(
+        'INSERT INTO EVENT_TYPE (event_type_id, event_type_name) VALUES (?, ?)',
+        [newEvtId, cleanName]
+      );
+      eventTypeId = newEvtId;
+    }
+
+    // map in EVENT_BASED_ON_CATEGORY (generate ebc_id explicitly)
+    const [mapRows] = await conn.execute(
+      'SELECT ebc_id FROM EVENT_BASED_ON_CATEGORY WHERE category_id = ? AND event_type_id = ?',
+      [id, eventTypeId]
+    );
+    if (!mapRows.length) {
+      const ebcId = await nextPrefixedId('EVENT_BASED_ON_CATEGORY', 'ebc_id', 'EBC', 4);
+      await conn.execute(
+        'INSERT INTO EVENT_BASED_ON_CATEGORY (ebc_id, category_id, event_type_id) VALUES (?, ?, ?)',
+        [ebcId, id, eventTypeId]
+      );
+    }
+
+    await conn.commit();
+
+    // return updated list for this category
+    const [evts] = await adminDb.execute(
+      `SELECT et.event_type_id, et.event_type_name
+       FROM EVENT_BASED_ON_CATEGORY ebc
+       JOIN EVENT_TYPE et ON et.event_type_id = ebc.event_type_id
+       WHERE ebc.category_id = ?
+       ORDER BY et.event_type_name ASC`,
+      [id]
+    );
+
+    res.json({
+      success: true,
+      message: 'Event type added to category',
+      data: { category_id: id, event_types: evts }
+    });
+  } catch (err) {
+    try { if (conn) await conn.rollback(); } catch {}
+    console.error('Add event type error:', err);
+    res.status(500).json({ success: false, message: 'Failed to add event type to category', error: err.message });
+  } finally {
+    try { if (conn) conn.release(); } catch {}
+  }
+});
+
+
+// POST /api/admin/categories/full
+// Body: { name: string, icon?: string, eventTypes: string[] }
+router.post('/categories/full', authenticateAdmin, async (req, res) => {
+  const { name, icon = null, eventTypes } = req.body || {};
+
+  if (!name || !Array.isArray(eventTypes) || eventTypes.length === 0) {
+    return res.status(400).json({ success: false, message: 'name and non-empty eventTypes are required' });
+  }
+
+  let conn;
+  try {
+    conn = await adminDb.getConnection();
+    await conn.beginTransaction();
+
+    async function nextPrefixedId(table, col, prefix, pad = 4) {
+      const [rows] = await conn.query(
+        `SELECT ${col} AS id FROM ${table} WHERE ${col} LIKE ? ORDER BY ${col} DESC LIMIT 1`,
+        [`${prefix}%`]
+      );
+      if (!rows.length) return `${prefix}${'1'.padStart(pad, '0')}`;
+      const last = String(rows[0].id || '');
+      const m = last.match(/^([A-Za-z]+)(\d+)$/);
+      if (m) {
+        const width = m[2].length;
+        const nextNum = (parseInt(m[2], 10) + 1).toString().padStart(width, '0');
+        return `${prefix}${nextNum}`;
+      }
+      return `${prefix}${Date.now().toString().slice(-pad)}`;
+    }
+
+    // 1) Create category
+    const catId = await nextPrefixedId('CATEGORY', 'category_id', 'CAT', 4);
+    await conn.execute(
+      `INSERT INTO CATEGORY (category_id, category_name, icon) VALUES (?, ?, ?)`,
+      [catId, name.trim(), icon]
+    );
+
+    // 2) Ensure each event type exists, then 3) map CAT<->EVT via EBC
+    const createdEventTypes = [];
+    for (const rawName of eventTypes) {
+      const etName = String(rawName || '').trim();
+      if (!etName) continue;
+
+      const [exist] = await conn.execute(
+        `SELECT event_type_id FROM EVENT_TYPE WHERE event_type_name = ?`,
+        [etName]
+      );
+
+      let eventTypeId;
+      if (exist.length) {
+        eventTypeId = exist[0].event_type_id;
+      } else {
+        eventTypeId = await nextPrefixedId('EVENT_TYPE', 'event_type_id', 'EVT', 4);
+        await conn.execute(
+          `INSERT INTO EVENT_TYPE (event_type_id, event_type_name) VALUES (?, ?)`,
+          [eventTypeId, etName]
+        );
+      }
+
+      const [mapped] = await conn.execute(
+        `SELECT ebc_id FROM EVENT_BASED_ON_CATEGORY WHERE category_id = ? AND event_type_id = ?`,
+        [catId, eventTypeId]
+      );
+      if (!mapped.length) {
+        const ebcId = await nextPrefixedId('EVENT_BASED_ON_CATEGORY', 'ebc_id', 'EBC', 4);
+        await conn.execute(
+          `INSERT INTO EVENT_BASED_ON_CATEGORY (ebc_id, category_id, event_type_id) VALUES (?, ?, ?)`,
+          [ebcId, catId, eventTypeId]
+        );
+      }
+
+      createdEventTypes.push({ event_type_id: eventTypeId, event_type_name: etName });
+    }
+
+    await conn.commit();
+
+    res.json({
+      success: true,
+      message: 'Category and event types created & mapped',
+      data: {
+        category_id: catId,
+        category_name: name.trim(),
+        event_types: createdEventTypes
+      }
+    });
+  } catch (err) {
+    try { if (conn) await conn.rollback(); } catch {}
+    console.error('POST /categories/full error:', err);
+    res.status(500).json({ success: false, message: 'Failed to create category with event types', error: err.message });
+  } finally {
+    try { if (conn) conn.release(); } catch {}
+  }
+});
+
 // =============================
 // ANALYTICS (ADMIN)
 // =============================

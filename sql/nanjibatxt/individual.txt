@@ -1,0 +1,172 @@
+SHODESH INDIVIDUAL MODULE: ALL QUERIES & DEFINITIONS
+====================================================
+
+-------------------------------
+-- TABLES
+-------------------------------
+
+Name: INDIVIDUAL
+Type: TABLE
+Purpose: Stores individual user accounts (potential event creators) with validation constraints.
+Definition:
+CREATE TABLE INDIVIDUAL (
+  individual_id VARCHAR(7) PRIMARY KEY,
+  first_name VARCHAR(30) NOT NULL,
+  last_name VARCHAR(30) NOT NULL,
+  username VARCHAR(15) NOT NULL UNIQUE,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  mobile VARCHAR(11) NOT NULL UNIQUE,
+  nid VARCHAR(17) NOT NULL UNIQUE,
+  dob DATE,
+  house_no VARCHAR(7),
+  road_no VARCHAR(4),
+  area VARCHAR(30),
+  district VARCHAR(30),
+  administrative_div VARCHAR(30),
+  zip VARCHAR(4),
+  bkash VARCHAR(11),
+  bank_account VARCHAR(18)
+);
+
+Name: STAFF_ASSIST
+Type: TABLE
+Purpose: Logs which staff assisted with individual registration (audit trail).
+Definition:
+CREATE TABLE STAFF_ASSIST (
+  staff_assist_id VARCHAR(7) PRIMARY KEY,
+  staff_id VARCHAR(7),
+  individual_id VARCHAR(7),
+  staff_name_at_creation VARCHAR(61) NOT NULL,
+  staff_username_at_creation VARCHAR(15) NOT NULL,
+  individual_name_at_creation VARCHAR(61) NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (staff_id) REFERENCES STAFF(staff_id) ON DELETE SET NULL ON UPDATE CASCADE,
+  FOREIGN KEY (individual_id) REFERENCES INDIVIDUAL(individual_id) ON DELETE SET NULL ON UPDATE CASCADE
+);
+
+Name: EVENT_CREATION
+Type: TABLE
+Purpose: Stores all projects/events created by individuals or foundations.
+Definition:
+CREATE TABLE EVENT_CREATION (
+  creation_id VARCHAR(7) PRIMARY KEY,
+  title VARCHAR(100),
+  description TEXT,
+  amount_needed DECIMAL(12,2),
+  amount_received DECIMAL(12,2),
+  individual_id VARCHAR(7),
+  foundation_id VARCHAR(7),
+  creator_type ENUM('individual','foundation'),
+  created_at DATETIME,
+  FOREIGN KEY (individual_id) REFERENCES INDIVIDUAL(individual_id)
+);
+
+Name: DONATION
+Type: TABLE
+Purpose: Stores all donations made to projects/events.
+Definition:
+CREATE TABLE DONATION (
+  donation_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  creation_id VARCHAR(7) NOT NULL,
+  donor_id VARCHAR(7) NOT NULL,
+  amount DECIMAL(12,2) NOT NULL,
+  paid_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (creation_id) REFERENCES EVENT_CREATION(creation_id),
+  FOREIGN KEY (donor_id) REFERENCES DONOR(donor_id)
+);
+
+Name: DONOR
+Type: TABLE
+Purpose: Stores donor accounts.
+Definition:
+CREATE TABLE DONOR (
+  donor_id VARCHAR(7) PRIMARY KEY,
+  first_name VARCHAR(50),
+  last_name VARCHAR(50)
+  -- other fields...
+);
+
+Name: STAFF
+Type: TABLE
+Purpose: Stores staff accounts.
+Definition:
+CREATE TABLE STAFF (
+  staff_id VARCHAR(7) PRIMARY KEY,
+  first_name VARCHAR(50),
+  last_name VARCHAR(50),
+  username VARCHAR(15)
+  -- other fields...
+);
+
+-------------------------------
+-- API QUERIES (src/routes/individual.js)
+-------------------------------
+
+-- Check for existing username, email, mobile, or NID
+SELECT username, email, mobile, nid FROM individual 
+WHERE username = ? OR email = ? OR mobile = ? OR nid = ?;
+
+-- Insert new individual
+INSERT INTO individual (
+  individual_id, first_name, last_name, username, email, password, 
+  mobile, nid, dob, house_no, road_no, area, district, 
+  administrative_div, zip, bkash, bank_account
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Insert into STAFF_ASSIST (if staff assisted registration)
+INSERT INTO STAFF_ASSIST (
+  staff_assist_id, staff_id, individual_id, 
+  staff_name_at_creation, staff_username_at_creation, 
+  individual_name_at_creation, created_at
+) VALUES (?, ?, ?, ?, ?, ?, NOW());
+
+-- Check field availability (username, email, mobile, nid)
+SELECT {field} FROM individual WHERE {field} = ?;
+
+-- Authenticate individual (sign in)
+SELECT individual_id, first_name, last_name, username, email, password,
+       mobile, nid, dob, house_no, road_no, area, district, 
+       administrative_div, zip, bkash, bank_account
+FROM individual 
+WHERE username = ?;
+
+-- Get individual profile by individual_id
+SELECT individual_id, first_name, last_name, username, email, 
+       mobile, nid, dob, house_no, road_no, area, district, 
+       administrative_div, zip, bkash, bank_account
+FROM individual 
+WHERE individual_id = ?;
+
+-- Update individual profile (username/password)
+UPDATE individual SET username = ?, password = ? WHERE individual_id = ?;
+
+-- Get all projects for an individual
+SELECT creation_id, title, description, amount_needed, amount_received
+FROM event_creation
+WHERE individual_id = ?
+ORDER BY created_at DESC;
+
+-- Get donations for a project (with donor name)
+SELECT d.amount, d.paid_at, donor.first_name, donor.last_name
+FROM donation d
+JOIN donor ON d.donor_id = donor.donor_id
+WHERE d.creation_id = ?
+ORDER BY d.paid_at DESC;
+
+-- Calculate total received for this individual
+SELECT SUM(amount_received) AS total_received
+FROM event_creation
+WHERE individual_id = ?;
+
+-- Get all donations for this individual (across all their projects)
+SELECT d.amount, d.paid_at, donor.first_name, donor.last_name
+FROM donation d
+JOIN donor ON d.donor_id = donor.donor_id
+JOIN event_creation e ON d.creation_id = e.creation_id
+WHERE e.individual_id = ?
+ORDER BY d.paid_at DESC;
+
+-------------------------------
+END OF INDIVIDUAL MODULE QUERIES
+-------------------------------

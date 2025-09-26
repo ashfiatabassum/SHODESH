@@ -1,0 +1,146 @@
+SHODESH FOUNDATION MODULE: ALL QUERIES & DEFINITIONS
+====================================================
+
+-------------------------------
+-- TABLES
+-------------------------------
+
+Name: FOUNDATION
+Type: TABLE
+Purpose: Stores foundation user accounts (potential event creators) with validation constraints and certificate PDF.
+Definition:
+CREATE TABLE FOUNDATION (
+  foundation_id VARCHAR(7) PRIMARY KEY,
+  foundation_name VARCHAR(50) NOT NULL,
+  certificate BLOB NOT NULL,
+  foundation_license VARCHAR(12) NOT NULL UNIQUE,
+  mobile VARCHAR(11) NOT NULL UNIQUE,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  house_no VARCHAR(7),
+  road_no VARCHAR(4),
+  area VARCHAR(30),
+  district VARCHAR(30),
+  administrative_div VARCHAR(30),
+  zip VARCHAR(4),
+  bkash VARCHAR(11),
+  bank_account VARCHAR(18),
+  description TEXT,
+  status ENUM('unverified','verified','suspended') DEFAULT 'unverified'
+);
+
+Name: EVENT_CREATION
+Type: TABLE
+Purpose: Stores all projects/events created by individuals or foundations.
+Definition:
+CREATE TABLE EVENT_CREATION (
+  creation_id VARCHAR(7) PRIMARY KEY,
+  title VARCHAR(100),
+  description TEXT,
+  amount_needed DECIMAL(12,2),
+  amount_received DECIMAL(12,2),
+  individual_id VARCHAR(7),
+  foundation_id VARCHAR(7),
+  creator_type ENUM('individual','foundation'),
+  created_at DATETIME,
+  -- other fields...
+  FOREIGN KEY (foundation_id) REFERENCES FOUNDATION(foundation_id)
+);
+
+Name: DONATION
+Type: TABLE
+Purpose: Stores all donations made to projects/events.
+Definition:
+CREATE TABLE DONATION (
+  donation_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  creation_id VARCHAR(7) NOT NULL,
+  donor_id VARCHAR(7) NOT NULL,
+  amount DECIMAL(12,2) NOT NULL,
+  paid_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (creation_id) REFERENCES EVENT_CREATION(creation_id),
+  FOREIGN KEY (donor_id) REFERENCES DONOR(donor_id)
+);
+
+Name: DONOR
+Type: TABLE
+Purpose: Stores donor accounts.
+Definition:
+CREATE TABLE DONOR (
+  donor_id VARCHAR(7) PRIMARY KEY,
+  first_name VARCHAR(50),
+  last_name VARCHAR(50)
+  -- other fields...
+);
+
+-------------------------------
+-- VIEWS
+-------------------------------
+
+Name: foundation_donations_view
+Type: VIEW
+Purpose: Lists all donations received by a foundation (across all their projects), with donor and project info.
+Definition:
+CREATE VIEW foundation_donations_view AS
+SELECT
+  d.amount,
+  d.paid_at,
+  donor.first_name,
+  donor.last_name,
+  ec.title,
+  ec.description,
+  ec.foundation_id
+FROM DONATION d
+JOIN donor ON d.donor_id = donor.donor_id
+JOIN event_creation ec ON d.creation_id = ec.creation_id
+WHERE ec.foundation_id IS NOT NULL;
+
+-------------------------------
+-- API QUERIES (src/routes/foundation.js)
+-------------------------------
+
+-- Check existing foundation (by email, mobile, or license)
+SELECT email, mobile, foundation_license FROM foundation WHERE email = ? OR mobile = ? OR foundation_license = ?;
+
+-- Insert new foundation
+INSERT INTO foundation (foundation_id, foundation_name, certificate, foundation_license, mobile, email, password, house_no, road_no, area, district, administrative_div, zip, bkash, bank_account, description, status)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Check field availability (email, mobile, foundation_license)
+SELECT {field} FROM foundation WHERE {field} = ?;
+
+-- Foundation sign-in (by foundation_name)
+SELECT * FROM foundation WHERE foundation_name = ?;
+
+-- Get foundation profile by foundation_id
+SELECT * FROM foundation WHERE foundation_id = ?;
+
+-- Update foundation profile (username/password)
+UPDATE foundation SET foundation_name = ?, password = ? WHERE foundation_id = ?;
+
+-- Get projects for a foundation
+SELECT creation_id, title, description, amount_needed, amount_received FROM event_creation WHERE foundation_id = ? ORDER BY created_at DESC;
+
+-- Get donations for a project (with donor info)
+SELECT d.amount, d.paid_at, donor.first_name, donor.last_name FROM donation d JOIN donor ON d.donor_id = donor.donor_id WHERE d.creation_id = ? ORDER BY d.paid_at DESC;
+
+-- Get total received for a foundation
+SELECT SUM(amount_received) AS total_received FROM event_creation WHERE foundation_id = ?;
+
+-- Get all donations for a foundation (via view)
+SELECT amount, paid_at, first_name, last_name, title, description FROM foundation_donations_view WHERE foundation_id = ? ORDER BY paid_at DESC;
+
+-- Check for active events before deletion
+SELECT creation_id FROM event_creation WHERE foundation_id = ? AND lifecycle_status = "active";
+
+-- Delete donations for all events of a foundation
+DELETE d FROM donation d JOIN event_creation e ON d.creation_id = e.creation_id WHERE e.foundation_id = ?;
+
+-- Delete all events for a foundation
+DELETE FROM event_creation WHERE foundation_id = ?;
+
+-- Delete foundation
+DELETE FROM foundation WHERE foundation_id = ?;
+
+-------------------------------
+END OF FOUNDATION MODULE QUERIES
+-------------------------------
