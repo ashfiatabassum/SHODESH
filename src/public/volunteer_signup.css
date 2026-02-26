@@ -353,22 +353,21 @@ body {
 .message {
     margin-bottom: 20px;
     animation: fadeIn 0.3s ease-out;
+    padding: 15px;
+    border-radius: 8px;
+    background: #FFFFFF;
+    border: 1px solid #E0E0E0;
+    color: #333333;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .message.success {
-    background: #d4edda;
-    color: #155724;
-    padding: 15px;
-    border-radius: 5px;
-    border: 1px solid #c3e6cb;
+    border-left: 4px solid #333333;
 }
 
 .message.error {
-    background: #f8d7da;
-    color: #721c24;
-    padding: 15px;
-    border-radius: 5px;
-    border: 1px solid #f5c6cb;
+    border-left: 4px solid #FF0000;
+    color: #000000;
 }
 
 @keyframes fadeIn {

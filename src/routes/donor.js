@@ -268,26 +268,26 @@ router.post('/signin', async (req, res) => {
   console.log('🔐 Donor sign in request received:', req.body);
   
   try {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
     // Input validation
-    if (!username || !password) {
+    if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Username and password are required'
+        message: 'Email and password are required'
       });
     }
 
-    // Query to find donor by username
+    // Query to find donor by email
     const query = `
       SELECT donor_id, first_name, last_name, username, email, password,
              date_of_birth, country, division, profile_created_at
       FROM donor 
-      WHERE username = ?
+      WHERE email = ?
     `;
     
     const results = await new Promise((resolve, reject) => {
-      db.query(query, [username], (err, results) => {
+      db.query(query, [email], (err, results) => {
         if (err) {
           console.error('❌ Error fetching donor:', err);
           reject(err);
@@ -302,7 +302,7 @@ router.post('/signin', async (req, res) => {
     if (results.length === 0) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid username or password'
+        message: 'Invalid email or password'
       });
     }
 

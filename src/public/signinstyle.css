@@ -108,7 +108,17 @@ body {
   width: 100%;
 }
 
-.login-card input {
+.input-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #176b3a;
+  letter-spacing: 0.5px;
+}
+
+.login-card input,
+.login-card select {
   width: 100%;
   padding: 15px 18px;
   border-radius: 10px;
@@ -121,9 +131,17 @@ body {
   font-family: inherit;
 }
 
-.login-card input:focus {
+.login-card input:focus,
+.login-card select:focus {
   border-color: #219150;
   background: #fff;
+}
+
+.login-card select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
 }
 
 .input-focus-border {

@@ -372,14 +372,17 @@ select option {
 
 .alert {
     padding: 15px 20px;
-    border-radius: 10px;
+    border-radius: 8px;
     margin-bottom: 10px;
-    box-shadow: 0 5px 15px rgba(33, 145, 80, 0.10);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     animation: slideInRight 0.3s ease-out;
     display: flex;
     align-items: center;
     gap: 10px;
-    font-weight: 600;
+    font-weight: 500;
+    background: #FFFFFF;
+    border: 1px solid #E0E0E0;
+    color: #333333;
 }
 
 @keyframes slideInRight {
@@ -394,19 +397,17 @@ select option {
 }
 
 .alert.success {
-    background: linear-gradient(135deg, #176b3a, #219150);
-    color: #fff;
-    font-weight: 700;
+    border-left: 4px solid #333333;
 }
 
 .alert.error {
-    background: linear-gradient(135deg, #e17055, #d63031);
-    color: #fff;
-    font-weight: 700;
+    border-left: 4px solid #FF0000;
+    color: #000000;
 }
 
 .alert i {
     font-size: 1.2rem;
+    color: inherit;
 }
 
 .alert-close {

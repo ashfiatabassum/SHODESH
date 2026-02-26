@@ -527,27 +527,27 @@ router.post('/signin', async (req, res) => {
   console.log('🔐 Individual sign in request received:', req.body);
   
   try {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
     // Input validation
-    if (!username || !password) {
+    if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Username and password are required'
+        message: 'Email and password are required'
       });
     }
 
-    // Query to find individual by username
+    // Query to find individual by email
     const query = `
       SELECT individual_id, first_name, last_name, username, email, password,
              mobile, nid, dob, house_no, road_no, area, district, 
              administrative_div, zip, bkash, bank_account
       FROM individual 
-      WHERE username = ?
+      WHERE email = ?
     `;
     
     const results = await new Promise((resolve, reject) => {
-      db.query(query, [username], (err, results) => {
+      db.query(query, [email], (err, results) => {
         if (err) {
           console.error('❌ Error fetching individual:', err);
           reject(err);

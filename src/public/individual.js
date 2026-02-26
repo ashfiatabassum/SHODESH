@@ -622,47 +622,43 @@ customStyles.textContent = `
         right: -400px;
         width: 380px;
         z-index: 10000;
-        border-radius: 12px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         overflow: hidden;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        backdrop-filter: blur(10px);
+        font-family: 'Segoe UI', 'Poppins', Arial, sans-serif;
+        transition: right 0.3s ease;
+        background: #FFFFFF;
+        border: 1px solid #E0E0E0;
+        color: #333333;
     }
 
     .custom-alert.show {
         right: 20px;
-        transform: translateY(0);
     }
 
     .custom-alert.hide {
         right: -400px;
-        opacity: 0;
     }
 
     .custom-alert.success {
-        background: linear-gradient(135deg, #2ed573, #17c0eb);
-        color: white;
+        border-left: 4px solid #333333;
     }
 
     .custom-alert.error {
-        background: linear-gradient(135deg, #ff4757, #ff3838);
-        color: white;
+        border-left: 4px solid #FF0000;
+        color: #000000;
     }
 
     .custom-alert.warning {
-        background: linear-gradient(135deg, #ffa502, #ff6348);
-        color: white;
+        border-left: 4px solid #333333;
     }
 
     .custom-alert.loading {
-        background: linear-gradient(135deg, #5f27cd, #341f97);
-        color: white;
+        border-left: 4px solid #333333;
     }
 
     .custom-alert.info {
-        background: linear-gradient(135deg, #3742fa, #2f3542);
-        color: white;
+        border-left: 4px solid #333333;
     }
 
     .alert-content {

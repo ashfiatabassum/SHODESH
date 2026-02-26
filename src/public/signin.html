@@ -27,10 +27,23 @@
         <h2>Sign In</h2>
         <form id="loginForm">
           <div class="input-wrapper">
-            <input type="text" id="username" placeholder="Username" required autocomplete="username" />
+            <select id="role" required aria-label="Select role">
+              <option value="" selected disabled>Select role</option>
+              <option value="foundation">NGO</option>
+              <option value="staff">Volunteer</option>
+              <option value="individual">Seeker</option>
+              <option value="donor">Donor</option>
+              <option value="admin">Admin</option>
+            </select>
             <div class="input-focus-border"></div>
           </div>
           <div class="input-wrapper">
+            <label for="username" id="usernameLabel" class="input-label">Enter your email</label>
+            <input type="text" id="username" placeholder="your.email@example.com" required autocomplete="username" />
+            <div class="input-focus-border"></div>
+          </div>
+          <div class="input-wrapper">
+            <label for="password" class="input-label">Enter your password</label>
             <input type="password" id="password" placeholder="Password" required autocomplete="current-password" />
             <div class="input-focus-border"></div>
           </div>
@@ -39,7 +52,7 @@
             <div class="button-ripple"></div>
           </button>
         </form>
-        <p class="signup-text">Don't have an account? <a href="role.html" class="signup-link">Sign up now.</a></p>
+        <p class="signup-text" id="signupText">Don't have an account? <a href="#" id="signupLink" class="signup-link">Sign up now.</a></p>
       </div>
     </div>
   </div>

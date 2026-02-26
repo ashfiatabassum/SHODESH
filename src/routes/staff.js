@@ -136,27 +136,27 @@ router.post('/signin', async (req, res) => {
   console.log('Request body:', req.body);
 
   try {
-    const { username, password } = req.body;
-    if (!username || !password) {
-      console.log('Missing username or password');
-      return res.status(400).json({ success: false, message: 'Username and password are required.' });
+    const { email, password } = req.body;
+    if (!email || !password) {
+      console.log('Missing email or password');
+      return res.status(400).json({ success: false, message: 'Email and password are required.' });
     }
 
-    db.query('SELECT * FROM STAFF WHERE username = ?', [username], (err, rows) => {
+    db.query('SELECT * FROM STAFF WHERE email = ?', [email], (err, rows) => {
       if (err) {
         console.error('Staff signin DB error:', err);
         return res.status(500).json({ success: false, message: 'Server error. Please try again.' });
       }
       if (rows.length === 0) {
-        console.log('No staff found for username:', username);
-        return res.status(401).json({ success: false, message: 'Invalid username or password.' });
+        console.log('No staff found for email:', email);
+        return res.status(401).json({ success: false, message: 'Invalid email or password.' });
       }
 
       const staff = rows[0];
       // Plain text check (replace with bcrypt in prod)
       if (staff.password !== password) {
-        console.log('Password mismatch for username:', username);
-        return res.status(401).json({ success: false, message: 'Invalid username or password.' });
+        console.log('Password mismatch for email:', email);
+        return res.status(401).json({ success: false, message: 'Invalid email or password.' });
       }
       if (staff.status !== 'verified') {
         console.log('Staff not verified:', username);

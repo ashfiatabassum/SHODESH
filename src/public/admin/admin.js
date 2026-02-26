@@ -99,22 +99,54 @@ class AdminDashboard {
     }
     
     async logout() {
-        if (confirm('Are you sure you want to logout?')) {
-            try {
-                await fetch('/api/admin/logout', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': this.authToken
-                    }
-                });
-            } catch (error) {
-                console.error('Logout error:', error);
+        this.showConfirmModal('Are you sure you want to logout?', async (confirmed) => {
+            if (confirmed) {
+                try {
+                    await fetch('/api/admin/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': this.authToken
+                        }
+                    });
+                } catch (error) {
+                    console.error('Logout error:', error);
+                }
+                
+                localStorage.removeItem('adminToken');
+                window.location.href = '../index.html';
             }
-            
-            localStorage.removeItem('adminToken');
-            window.location.reload();
-        }
+        });
     }
+
+    showConfirmModal(message, callback) {
+        const modalId = `confirm-modal-${Date.now()}`;
+        const modal = document.createElement('div');
+        modal.id = modalId;
+        modal.className = 'confirm-modal-overlay';
+        modal.innerHTML = `
+            <div class="confirm-modal-content">
+                <div class="confirm-modal-header">
+                    <h3>Confirmation</h3>
+                </div>
+                <div class="confirm-modal-body">
+                    <p>${message}</p>
+                </div>
+                <div class="confirm-modal-actions">
+                    <button class="btn-cancel" onclick="document.getElementById('${modalId}').remove()">Cancel</button>
+                    <button class="btn-confirm" onclick="document.getElementById('${modalId}').remove(); window.confirmCallback();">Yes, Logout</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Store callback globally for onclick
+        window.confirmCallback = () => callback(true);
+        
+        // Also attach to cancel button
+        modal.querySelector('.btn-cancel').addEventListener('click', () => callback(false));
+    }
+    
     
     // API Helper Methods
     async apiRequest(endpoint, options = {}) {

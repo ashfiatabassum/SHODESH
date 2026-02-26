@@ -6,36 +6,36 @@ function showCustomAlert(message, type = 'info', duration = 5000) {
 
     // Create alert container
     const alertContainer = document.createElement('div');
-    alertContainer.className = 'custom-alert ${type}';
+    alertContainer.className = `custom-alert ${type}`;
     
     // Set icon based on type
     let icon;
     switch(type) {
-        case 'success':
-            icon = '✅';
-            break;
-        case 'error':
-            icon = '❌';
-            break;
-        case 'warning':
-            icon = '⚠️';
-            break;
-        case 'loading':
-            icon = '⏳';
-            break;
-        case 'info':
-        default:
-            icon = 'ℹ️';
-            break;
+      case 'success':
+        icon = '✅';
+        break;
+      case 'error':
+        icon = '❌';
+        break;
+      case 'warning':
+        icon = '⚠️';
+        break;
+      case 'loading':
+        icon = '⏳';
+        break;
+      case 'info':
+      default:
+        icon = 'ℹ️';
+        break;
     }
 
     alertContainer.innerHTML = `
-        <div class="alert-content">
-            <div class="alert-icon">${icon}</div>
-            <div class="alert-message">${message}</div>
-            <button class="alert-close" onclick="this.parentElement.parentElement.remove()">×</button>
-        </div>
-        <div class="alert-progress"></div>
+      <div class="alert-content">
+        <div class="alert-icon">${icon}</div>
+        <div class="alert-message">${message}</div>
+        <button class="alert-close" onclick="this.parentElement.parentElement.remove()">×</button>
+      </div>
+      <div class="alert-progress"></div>
     `;
 
     // Add to page
@@ -43,300 +43,308 @@ function showCustomAlert(message, type = 'info', duration = 5000) {
 
     // Animate in
     setTimeout(() => {
-        alertContainer.classList.add('show');
+      alertContainer.classList.add('show');
     }, 10);
 
     // Auto remove after duration (except for loading alerts)
     if (type !== 'loading') {
+      setTimeout(() => {
+        alertContainer.classList.add('hide');
         setTimeout(() => {
-            alertContainer.classList.add('hide');
-            setTimeout(() => {
-                if (alertContainer.parentNode) {
-                    alertContainer.remove();
-                }
-            }, 300);
-        }, duration);
+          if (alertContainer.parentNode) {
+            alertContainer.remove();
+          }
+        }, 300);
+      }, duration);
 
-        // Start progress bar animation
-        const progressBar = alertContainer.querySelector('.alert-progress');
-        progressBar.style.animation = 'progress ${duration}ms linear';
+      // Start progress bar animation
+      const progressBar = alertContainer.querySelector('.alert-progress');
+      progressBar.style.animation = `progress ${duration}ms linear`;
     }
 
     return alertContainer;
-}
+  }
 
-// Function to remove loading alerts manually
-function removeLoadingAlert() {
+  // Function to remove loading alerts manually
+  function removeLoadingAlert() {
     const loadingAlerts = document.querySelectorAll('.custom-alert.loading');
     loadingAlerts.forEach(alert => {
-        alert.classList.add('hide');
-        setTimeout(() => {
-            if (alert.parentNode) {
-                alert.remove();
-            }
-        }, 300);
+      alert.classList.add('hide');
+      setTimeout(() => {
+        if (alert.parentNode) {
+          alert.remove();
+        }
+      }, 300);
     });
+  }
+
+  function getSelectedRole() {
+  const el = document.getElementById('role');
+  return el ? el.value : '';
 }
 
-document.getElementById("signin").addEventListener("click", async () => {
+function getRoleLabel(role) {
+  switch (role) {
+    case 'foundation': return 'NGO';
+    case 'staff': return 'Volunteer';
+    case 'individual': return 'Seeker';
+    case 'donor': return 'Donor';
+    case 'admin': return 'Admin';
+    default: return 'User';
+  }
+}
+
+function getSignupTarget(role) {
+  switch (role) {
+    case 'foundation': return 'foundation.html';
+    case 'donor': return 'donor.html';
+    case 'individual': return 'individual.html';
+    case 'staff': return 'staff_signup.html';
+    case 'admin': return '';
+    default: return '';
+  }
+}
+
+function updateSignupLinkUI() {
+  const role = getSelectedRole();
+  const signupText = document.getElementById('signupText');
+  const signupLink = document.getElementById('signupLink');
+  if (!signupText || !signupLink) return;
+
+  const target = getSignupTarget(role);
+  if (!target) {
+    signupText.style.display = 'none';
+    signupLink.setAttribute('href', '#');
+    return;
+  }
+
+  signupText.style.display = '';
+  signupLink.setAttribute('href', target);
+}
+
+function updateInputLabelUI() {
+  const role = getSelectedRole();
+  const usernameLabel = document.getElementById('usernameLabel');
+  if (!usernameLabel) return;
+
+  if (role === 'admin') {
+    usernameLabel.textContent = 'Enter your username';
+  } else {
+    usernameLabel.textContent = 'Enter your email';
+  }
+}
+
+async function handleRoleBasedSignin(e) {
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
+
+  const role = getSelectedRole();
   const user = document.getElementById("username").value.trim();
   const pass = document.getElementById("password").value.trim();
-  
-  // Basic validation
+  const roleLabel = getRoleLabel(role);
+  const isAdminRole = role === 'admin';
+
+  if (!role) {
+    showCustomAlert('Please select a role first', 'warning');
+    return;
+  }
+
   if (!user || !pass) {
-    showCustomAlert('Please enter both username and password', 'warning');
+    const fieldName = isAdminRole ? 'username' : 'email';
+    showCustomAlert(`Please enter both ${fieldName} and password`, 'warning');
     return;
   }
 
   if (user.length < 4) {
-    showCustomAlert('Username must be at least 4 characters long', 'error');
+    const fieldName = isAdminRole ? 'Username' : 'Email';
+    showCustomAlert(`${fieldName} must be at least 4 characters long`, 'error');
     return;
   }
 
-  if (pass.length < 6) {
-    showCustomAlert('Password must be at least 6 characters long', 'error');
+  const minPasswordLength = role === 'admin' ? 4 : 6;
+  if (pass.length < minPasswordLength) {
+    showCustomAlert(`Password must be at least ${minPasswordLength} characters long`, 'error');
     return;
   }
-  
-  // Show loading state
+
   const signinBtn = document.getElementById("signin");
-  const originalText = signinBtn.textContent;
-  signinBtn.textContent = "Signing in...";
-  signinBtn.disabled = true;
-  signinBtn.style.opacity = "0.7";
-  
-  // Show loading alert
-  showCustomAlert('🔐 Verifying your credentials... Please wait.', 'loading');
-  
+  const buttonTextEl = signinBtn ? (signinBtn.querySelector('.button-text') || signinBtn) : null;
+  const originalText = buttonTextEl ? buttonTextEl.textContent : 'Sign In';
+
+  if (signinBtn) {
+    if (buttonTextEl) buttonTextEl.textContent = "Signing in...";
+    signinBtn.disabled = true;
+    signinBtn.style.opacity = "0.7";
+  }
+
+  showCustomAlert(`🔐 Checking ${roleLabel} credentials... Please wait.`, 'loading');
+
   try {
-    console.log('🔐 Attempting to sign in with username:', user);
-    
-    // Try individual signin first
-    console.log('🔐 Checking individual credentials...');
-    let response = await fetch('/api/individual/signin', {
+    let endpoint;
+    switch (role) {
+      case 'individual': endpoint = '/api/individual/signin'; break;
+      case 'donor': endpoint = '/api/donor/signin'; break;
+      case 'foundation': endpoint = '/api/foundation/signin'; break;
+      case 'staff': endpoint = '/api/staff/signin'; break;
+      case 'admin': endpoint = '/api/admin/login'; break;
+      default:
+        removeLoadingAlert();
+        showCustomAlert('Unknown role selected', 'error');
+        return;
+    }
+
+    // For non-admin roles, send email; for admin, send username
+    const payload = isAdminRole 
+      ? { username: user, password: pass }
+      : { email: user, password: pass };
+
+    const response = await fetch(endpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        username: user,
-        password: pass
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
-    
-    console.log('📊 Individual response status:', response.status);
-    
-    // Handle different response types
+
     let data;
     try {
       data = await response.json();
     } catch (parseError) {
-      console.error('❌ Failed to parse individual response as JSON:', parseError);
+      console.error('❌ Failed to parse sign-in response as JSON:', parseError);
       data = { success: false, message: 'Server response error' };
     }
-    
-    console.log('📋 Individual sign in response:', data);
-    
-    if (response.ok && data.success) {
-      // Remove loading alert
-      removeLoadingAlert();
-      
-      // Store individual data and redirect to profile
-      localStorage.setItem('individualId', data.individualId);
-      localStorage.setItem('individualData', JSON.stringify(data.individualData));
-      localStorage.setItem('userType', 'individual');
-      
-      showCustomAlert(
-        `🎉 <strong>Welcome back, ${data.individualData.personalInfo.firstName}!</strong><br><br>
-        Successfully signed in as an <strong>Individual</strong>.<br><br>
-        <small>Redirecting to your profile...</small>`, 
-        'success', 
-        3000
-      );
-      
-      // Redirect to individual profile after delay
-      setTimeout(() => {
-        window.location.href = 'profileindividual.html';
-      }, 3000);
-      return;
-    }
-    
-    // If individual signin failed, try donor signin
-    console.log('🔐 Individual signin failed, trying donor signin...');
-    console.log('Individual error message:', data.message);
-    
-    // Update loading message
+
     removeLoadingAlert();
-    showCustomAlert('🔐 Checking donor credentials... Please wait.', 'loading');
-    
-    response = await fetch('/api/donor/signin', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        username: user,
-        password: pass
-      })
-    });
-    
-    console.log('📊 Donor response status:', response.status);
-    
-    // Handle different response types for donor
-    try {
-      data = await response.json();
-    } catch (parseError) {
-      console.error('❌ Failed to parse donor response as JSON:', parseError);
-      data = { success: false, message: 'Server response error' };
-    }
-    
-    console.log('📋 Donor sign in response:', data);
-    
-    // Remove loading alert
-    removeLoadingAlert();
-    
+
     if (response.ok && data.success) {
-     // Ensure donorId is inside personalInfo
-   
+      if (role === 'individual') {
+        localStorage.setItem('individualId', data.individualId);
+        localStorage.setItem('individualData', JSON.stringify(data.individualData));
+        localStorage.setItem('userType', 'individual');
 
-    // Store donor data and user type in localStorage
-    localStorage.setItem('donorId', data.donorId);
-    localStorage.setItem('donorData', JSON.stringify(data.donorData));
-    localStorage.setItem('userType', 'donor');
+        showCustomAlert(
+          `🎉 <strong>Welcome back, ${data.individualData.personalInfo.firstName}!</strong><br><br>
+          Successfully signed in as a <strong>Seeker</strong>.<br><br>
+          <small>Redirecting to your profile...</small>`,
+          'success',
+          3000
+        );
+        setTimeout(() => window.location.href = 'profileindividual.html', 3000);
+        return;
+      }
 
+      if (role === 'donor') {
+        localStorage.setItem('donorId', data.donorId);
+        localStorage.setItem('donorData', JSON.stringify(data.donorData));
+        localStorage.setItem('userType', 'donor');
+        if (data.donorData && data.donorData.personalInfo) {
+          data.donorData.personalInfo.donorId = data.donorId;
+        }
 
-     data.donorData.personalInfo.donorId = data.donorId;
+        showCustomAlert(
+          `🎉 <strong>Welcome back, ${data.donorData.personalInfo.firstName}!</strong><br><br>
+          Successfully signed in as a <strong>Donor</strong>.<br><br>
+          <small>Redirecting to your profile...</small>`,
+          'success',
+          3000
+        );
+        setTimeout(() => window.location.href = 'profiledonor.html', 3000);
+        return;
+      }
 
-      
-      showCustomAlert(
-        `🎉 <strong>Welcome back, ${data.donorData.personalInfo.firstName}!</strong><br><br>
-        Successfully signed in as a <strong>Donor</strong>.<br><br>
-        <small>Redirecting to your profile...</small>`, 
-        'success', 
-        3000
-      );
-      
-      // Redirect to donor profile after delay
-      setTimeout(() => {
-        window.location.href = 'profiledonor.html';
-      }, 3000);
-      return;
+      if (role === 'foundation') {
+        localStorage.setItem('foundationId', data.foundationId);
+        localStorage.setItem('foundationData', JSON.stringify(data.foundationData));
+        localStorage.setItem('userType', 'foundation');
+
+        const name = data.foundationData?.foundationInfo?.foundationName;
+        showCustomAlert(
+          `🎉 <strong>Welcome back${name ? `, ${name}` : ''}!</strong><br><br>
+          Successfully signed in as an <strong>NGO</strong>.<br><br>
+          <small>Redirecting to your profile...</small>`,
+          'success',
+          3000
+        );
+        setTimeout(() => window.location.href = 'profilefoundation.html', 3000);
+        return;
+      }
+
+      if (role === 'staff') {
+        localStorage.setItem('staffId', data.staffId);
+        localStorage.setItem('staffData', JSON.stringify(data.staffData));
+        localStorage.setItem('userType', 'staff');
+
+        showCustomAlert(
+          `🎉 <strong>Welcome back, ${data.staffData.first_name}!</strong><br><br>
+          Successfully signed in as <strong>Volunteer</strong>.<br><br>
+          <small>Redirecting to your dashboard...</small>`,
+          'success',
+          3000
+        );
+        setTimeout(() => window.location.href = 'staff_profile.html', 3000);
+        return;
+      }
+
+      if (role === 'admin') {
+        localStorage.setItem('adminToken', data.token);
+        localStorage.setItem('userType', 'admin');
+        showCustomAlert(
+          `🎉 <strong>Admin login successful</strong><br><br>
+          <small>Redirecting to admin dashboard...</small>`,
+          'success',
+          2000
+        );
+        setTimeout(() => window.location.href = 'admin/index.html', 2000);
+        return;
+      }
     }
-    
-    // Both signin attempts failed - show detailed error message
-    console.log('❌ Both signin attempts failed');
-    console.log('Donor error message:', data.message);
 
+    let errorMessage = data && data.message ? data.message : `Invalid ${isAdminRole ? 'username' : 'email'} or password.`;
+    if (response.status >= 500) errorMessage = 'Server error occurred. Please try again later.';
 
-
-    
-
-
-    // After donor sign-in fails, try foundation sign-in
-console.log('🔐 Donor signin failed, trying foundation signin...');
-console.log('Donor error message:', data.message);
-
-// Update loading message
-removeLoadingAlert();
-showCustomAlert('🔐 Checking foundation credentials... Please wait.', 'loading');
-
-response = await fetch('/api/foundation/signin', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    username: user,
-    password: pass
-  })
-});
-
-console.log('📊 Foundation response status:', response.status);
-
-try {
-  data = await response.json();
-} catch (parseError) {
-  console.error('❌ Failed to parse foundation response as JSON:', parseError);
-  data = { success: false, message: 'Server response error' };
-}
-
-console.log('📋 Foundation sign in response:', data);
-
-// Remove loading alert
-removeLoadingAlert();
-
-if (response.ok && data.success) {
-  // Store donor data and user type in localStorage
-    localStorage.setItem('foundationId', data.foundationId);
-    localStorage.setItem('foundationData', JSON.stringify(data.foundationData));
-    localStorage.setItem('userType', 'foundation');
-
-
-
-  showCustomAlert(
-    `🎉 <strong>Welcome back!</strong><br><br>
-    Successfully signed in as a <strong>Foundation</strong>.<br><br>
-    <small>Redirecting to your profile...</small>`, 
-    'success', 
-    3000
-  );
-
-  // Redirect to foundation profile after delay
-  setTimeout(() => {
-    window.location.href = 'profilefoundation.html';
-  }, 3000);
-  return;
-}
-
-
-
-
-
-    
-    let errorMessage = 'Invalid username or password.';
-    
-    // Check if it's a server error
-    if (response.status >= 500) {
-      errorMessage = 'Server error occurred. Please try again later.';
-    } else if (data.message) {
-      errorMessage = data.message;
-    }
-    
     showCustomAlert(
       `<strong>Sign In Failed</strong><br><br>
       ${errorMessage}<br><br>
-      <small>Make sure you're using the correct username and password for your account.</small><br><br>
-      <strong>Account Types:</strong><br>
-      • Individual Account<br>
-      • Donor Account<br><br>
-      <small>If you don't have an account, please register first.</small>`, 
-      'error', 
-      10000
+      <small>Make sure you selected the correct role and entered the correct credentials.</small>`,
+      'error',
+      9000
     );
-    
   } catch (error) {
     console.error('❌ Sign in error:', error);
     removeLoadingAlert();
-    
     showCustomAlert(
       `<strong>Connection Error</strong><br><br>
-      Unable to connect to the server. Please check your internet connection and try again.<br><br>
-      <small>Error: ${error.message}</small><br><br>
-      <small>Make sure the server is running on the correct port.</small>`, 
-      'error', 
+      Unable to connect to the server. Please try again.<br><br>
+      <small>Error: ${error.message}</small>`,
+      'error',
       10000
     );
   } finally {
-    // Reset button state
-    signinBtn.textContent = originalText;
-    signinBtn.disabled = false;
-    signinBtn.style.opacity = "1";
+    if (signinBtn) {
+      if (buttonTextEl) buttonTextEl.textContent = originalText;
+      signinBtn.disabled = false;
+      signinBtn.style.opacity = "1";
+    }
   }
-});
+}
 
 // ...rest of the code remains the same...
 // Handle Enter key press and add real-time validation
 document.addEventListener('DOMContentLoaded', function() {
+  // Role-based sign-in wiring
+  const form = document.getElementById('loginForm');
+  if (form) {
+    form.addEventListener('submit', handleRoleBasedSignin);
+  }
+
+  // Role-based sign-up routing (removes role.html from navigation)
+  const roleSelect = document.getElementById('role');
+  if (roleSelect) {
+    roleSelect.addEventListener('change', () => {
+      updateSignupLinkUI();
+      updateInputLabelUI();
+    });
+  }
+  updateSignupLinkUI();
+  updateInputLabelUI();
+
   const passwordField = document.getElementById("password");
   const usernameField = document.getElementById("username");
   
@@ -344,7 +352,11 @@ document.addEventListener('DOMContentLoaded', function() {
   if (passwordField) {
     passwordField.addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
-        document.getElementById("signin").click();
+        if (form && typeof form.requestSubmit === 'function') {
+          form.requestSubmit();
+        } else {
+          document.getElementById("signin").click();
+        }
       }
     });
   }
@@ -352,23 +364,30 @@ document.addEventListener('DOMContentLoaded', function() {
   if (usernameField) {
     usernameField.addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
-        document.getElementById("signin").click();
+        if (form && typeof form.requestSubmit === 'function') {
+          form.requestSubmit();
+        } else {
+          document.getElementById("signin").click();
+        }
       }
     });
   }
 
-  // Real-time validation feedback for username
+  // Real-time validation feedback for username/email
   if (usernameField) {
     usernameField.addEventListener('input', function() {
       const value = this.value.trim();
+      const role = getSelectedRole();
+      const fieldName = role === 'admin' ? 'Username' : 'Email';
+      
       if (value.length > 0 && value.length < 4) {
         this.style.borderColor = '#ff4757';
         this.style.boxShadow = '0 0 10px rgba(255, 71, 87, 0.3)';
-        this.title = 'Username must be at least 4 characters';
+        this.title = `${fieldName} must be at least 4 characters`;
       } else if (value.length >= 4) {
         this.style.borderColor = '#2ed573';
         this.style.boxShadow = '0 0 10px rgba(46, 213, 115, 0.3)';
-        this.title = 'Username looks good';
+        this.title = `${fieldName} looks good`;
       } else {
         this.style.borderColor = '';
         this.style.boxShadow = '';
@@ -390,11 +409,13 @@ document.addEventListener('DOMContentLoaded', function() {
   if (passwordField) {
     passwordField.addEventListener('input', function() {
       const value = this.value;
-      if (value.length > 0 && value.length < 6) {
+      const role = getSelectedRole();
+      const minLen = role === 'admin' ? 4 : 6;
+      if (value.length > 0 && value.length < minLen) {
         this.style.borderColor = '#ff4757';
         this.style.boxShadow = '0 0 10px rgba(255, 71, 87, 0.3)';
-        this.title = 'Password must be at least 6 characters';
-      } else if (value.length >= 6) {
+        this.title = `Password must be at least ${minLen} characters`;
+      } else if (value.length >= minLen) {
         this.style.borderColor = '#2ed573';
         this.style.boxShadow = '0 0 10px rgba(46, 213, 115, 0.3)';
         this.title = 'Password looks good';
@@ -433,7 +454,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Add account type indicator (only individual and donor)
+  // Add account type indicator
   const formContainer = document.querySelector('.signin-form') || document.querySelector('form');
   if (formContainer && !document.querySelector('.account-types-info')) {
     const accountTypesInfo = document.createElement('div');
@@ -446,15 +467,23 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="account-types-list">
         <div class="account-type">
           <i class="fas fa-user"></i>
-          <span>Individual</span>
+          <span>Seeker</span>
         </div>
         <div class="account-type">
           <i class="fas fa-heart"></i>
           <span>Donor</span>
         </div>
         <div class="account-type">
-          <i class="fas fa-heart"></i>
-          <span>Foundation</span>
+          <i class="fas fa-building"></i>
+          <span>NGO</span>
+        </div>
+        <div class="account-type">
+          <i class="fas fa-users"></i>
+          <span>Volunteer</span>
+        </div>
+        <div class="account-type">
+          <i class="fas fa-user-shield"></i>
+          <span>Admin</span>
         </div>
       </div>
     `;
@@ -475,53 +504,43 @@ customStyles.textContent = `
     /* Custom Alert Styles - Glassmorphism & Modern Look */
 .custom-alert {
     position: fixed;
-    top: 32px;
-    right: -420px;
-    width: 370px;
+    top: 20px;
+    right: -400px;
+    width: 380px;
     z-index: 10000;
-    border-radius: 18px;
-    box-shadow: 0 8px 32px rgba(33,145,80,0.18), 0 2px 8px rgba(0,0,0,0.08);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     overflow: hidden;
-    font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
-    transition: all 0.45s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    backdrop-filter: blur(16px) saturate(180%);
-    background: rgba(255,255,255,0.75);
-    border: 1.5px solid rgba(33,145,80,0.13);
-    color: #176b3a;
-    opacity: 0.98;
+    font-family: 'Segoe UI', 'Poppins', Arial, sans-serif;
+    transition: right 0.3s ease;
+    background: #FFFFFF;
+    border: 1px solid #E0E0E0;
+    color: #333333;
 }
 
 .custom-alert.show {
-    right: 32px;
-    opacity: 1;
-    animation: slideInRight 0.5s;
+    right: 20px;
 }
 
 .custom-alert.hide {
-    right: -420px;
-    opacity: 0;
-    transition: right 0.3s, opacity 0.3s;
+    right: -400px;
 }
 
 .custom-alert.success {
-    border-left: 6px solid #2ed573;
-    background: rgba(46,213,115,0.10);
+    border-left: 4px solid #333333;
 }
 .custom-alert.error {
-    border-left: 6px solid #ff4757;
-    background: rgba(255,71,87,0.10);
+    border-left: 4px solid #FF0000;
+    color: #000000;
 }
 .custom-alert.warning {
-    border-left: 6px solid #ffa502;
-    background: rgba(255,165,2,0.10);
+    border-left: 4px solid #333333;
 }
 .custom-alert.loading {
-    border-left: 6px solid #5f27cd;
-    background: rgba(95,39,205,0.10);
+    border-left: 4px solid #333333;
 }
 .custom-alert.info {
-    border-left: 6px solid #219150;
-    background: rgba(33,145,80,0.10);
+    border-left: 4px solid #333333;
 }
 
 .alert-content {
@@ -533,24 +552,11 @@ customStyles.textContent = `
 }
 
 .alert-icon {
-    font-size: 2rem;
+    font-size: 1.5rem;
     flex-shrink: 0;
     margin-top: 2px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    background: rgba(33,145,80,0.08);
-    box-shadow: 0 2px 8px rgba(33,145,80,0.08);
-    transition: background 0.2s;
+    color: #333333;
 }
-.custom-alert.success .alert-icon { background: rgba(46,213,115,0.15); color: #2ed573; }
-.custom-alert.error .alert-icon { background: rgba(255,71,87,0.15); color: #ff4757; }
-.custom-alert.warning .alert-icon { background: rgba(255,165,2,0.15); color: #ffa502; }
-.custom-alert.loading .alert-icon { background: rgba(95,39,205,0.15); color: #5f27cd; }
-.custom-alert.info .alert-icon { background: rgba(33,145,80,0.15); color: #219150; }
 
 .custom-alert.loading .alert-icon {
     animation: pulse 1.5s ease-in-out infinite;
@@ -566,7 +572,7 @@ customStyles.textContent = `
     font-size: 1.08rem;
     line-height: 1.6;
     font-weight: 500;
-    color: #176b3a;
+  color: #0f172a;
     word-break: break-word;
 }
 
@@ -579,7 +585,7 @@ customStyles.textContent = `
 .alert-close {
     background: none;
     border: none;
-    color: #176b3a;
+    color: #0f172a;
     font-size: 1.3rem;
     cursor: pointer;
     padding: 0 8px;

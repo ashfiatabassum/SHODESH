@@ -121,17 +121,17 @@ router.post('/check-availability', (req, res) => {
 
 // -------------------- SIGNIN --------------------
 router.post('/signin', async (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) return res.status(400).json({ success: false, message: 'Username and password are required' });
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ success: false, message: 'Email and password are required' });
 
-  const query = `SELECT * FROM foundation WHERE foundation_name = ?`;
+  const query = `SELECT * FROM foundation WHERE email = ?`;
   const results = await new Promise((resolve, reject) => {
-    db.query(query, [username], (err, results) => { if (err) reject(err); else resolve(results); });
+    db.query(query, [email], (err, results) => { if (err) reject(err); else resolve(results); });
   });
-  if (results.length === 0) return res.status(401).json({ success: false, message: 'Invalid username or password' });
+  if (results.length === 0) return res.status(401).json({ success: false, message: 'Invalid email or password' });
 
   const foundation = results[0];
-  if (foundation.password !== password) return res.status(401).json({ success: false, message: 'Invalid username or password' });
+  if (foundation.password !== password) return res.status(401).json({ success: false, message: 'Invalid email or password' });
 
   const foundationData = {
     foundationInfo: {

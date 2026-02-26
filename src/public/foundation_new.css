@@ -381,21 +381,23 @@ select {
 
 .message {
     padding: 15px 20px;
-    border-radius: 10px;
+    border-radius: 8px;
     margin-bottom: 10px;
     font-weight: 500;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     animation: slideIn 0.3s ease-out;
+    background: #FFFFFF;
+    border: 1px solid #E0E0E0;
+    color: #333333;
 }
 
 .message.success {
-    background-color: #2ed573;
-    color: white;
+    border-left: 4px solid #333333;
 }
 
 .message.error {
-    background-color: #e74c3c;
-    color: white;
+    border-left: 4px solid #FF0000;
+    color: #000000;
 }
 
 @keyframes slideIn {
