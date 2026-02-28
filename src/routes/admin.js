@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const adminDb = require('../config/db-admin'); // Use promise-based DB for admin functionality
+const { sendFoundationApprovedEmail, sendStaffApprovedEmail } = require('../config/mail');
 
 // Make sure your main server enables JSON body parsing:
 // app.use(express.json());
@@ -485,7 +486,27 @@ router.put('/staff/:id/verify', authenticateAdmin, async (req, res) => {
     if (!['verify','suspend','unsuspend'].includes(action)) {
       return res.status(400).json({ success: false, message: 'Invalid action' });
     }
+    
+    // Get staff details before updating
+    const [staffRows] = await adminDb.execute(
+      'SELECT staff_id, full_name, email FROM STAFF WHERE staff_id = ?',
+      [id]
+    );
+    
     await adminDb.execute('CALL sp_admin_verify_staff(?,?,?,?)', [id, action, notes || null, adminUser]);
+    
+    // Send approval email if action is 'verify'
+    if (action === 'verify' && staffRows.length > 0) {
+      const staff = staffRows[0];
+      try {
+        await sendStaffApprovedEmail(staff.email, staff.full_name);
+        console.log(`📧 Approval email sent to staff: ${staff.email}`);
+      } catch (emailError) {
+        console.error('⚠️ Failed to send approval email:', emailError.message);
+        // Continue with response even if email fails
+      }
+    }
+    
     res.json({ success: true, message: `Staff ${action} successful` });
   } catch (error) {
     console.error('❌ Staff verify error:', error);
@@ -693,6 +714,19 @@ router.put('/foundations/:id/verify', authenticateAdmin, async (req, res) => {
         'SELECT foundation_id, foundation_name, email, mobile, status FROM foundation WHERE foundation_id = ?',
         [id]
       );
+      
+      // Send approval email
+      if (updatedRows.length > 0) {
+        const foundation = updatedRows[0];
+        try {
+          await sendFoundationApprovedEmail(foundation.email, foundation.foundation_name);
+          console.log(`📧 Approval email sent to foundation: ${foundation.email}`);
+        } catch (emailError) {
+          console.error('⚠️ Failed to send approval email:', emailError.message);
+          // Continue with response even if email fails
+        }
+      }
+      
       return res.json({ success: true, message: 'Foundation verified successfully', data: updatedRows[0] });
     } else {
       const [deleteResult] = await connection.execute(

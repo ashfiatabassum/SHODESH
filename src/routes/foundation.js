@@ -3,18 +3,12 @@ const router = express.Router();
 const db = require('../config/db');
 const multer = require('multer');
 const path = require('path');
+const { sendFoundationRegistrationEmail } = require('../config/mail');
 
 // Configure multer for file uploads
 const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf') {
-      cb(null, true);
-    } else {
-      cb(new Error('Only PDF files are allowed'), false);
-    }
-  },
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
 
@@ -98,6 +92,14 @@ router.post('/register', upload.single('certificate'), async (req, res) => {
     await new Promise((resolve, reject) => {
       db.query(insertQuery, insertValues, (err, result) => { if (err) reject(err); else resolve(result); });
     });
+
+    // Send registration confirmation email (non-blocking)
+    try {
+      await sendFoundationRegistrationEmail(email, foundationName);
+    } catch (mailErr) {
+      console.error('⚠️ Email send failed:', mailErr.message);
+      // Continue - email failure should not block registration success
+    }
 
     res.status(201).json({ success: true, message: 'Foundation registration successful! Your account is under review.', foundationId, status: 'unverified' });
 

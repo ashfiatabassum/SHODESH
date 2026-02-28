@@ -1,4 +1,5 @@
 // merged-index.js (updated - contains both donation handlers and richer debug route)
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const session = require('express-session');

@@ -3,20 +3,11 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const multer = require('multer');
+const { sendStaffRegistrationEmail } = require('../config/mail');
 
 // ---------- Multer config for file upload (CV) ----------
 const upload = multer({
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-  fileFilter: (req, file, cb) => {
-    const allowed = [
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'text/plain'
-    ];
-    if (allowed.includes(file.mimetype)) cb(null, true);
-    else cb(new Error('Invalid file type'));
-  }
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
 });
 
 // ---------- Helpers ----------
@@ -101,12 +92,20 @@ router.post('/signup', upload.single('cv'), async (req, res) => {
               staff_id, first_name, last_name, username, password, mobile, email, nid, dob,
               house_no, road_no, area, district, administrative_div, zip, cvBuffer, 'unverified'
             ],
-            (err) => {
+            async (err) => {
               if (err) {
                 console.error('DB error during staff insert:', err);
                 return res.status(500).json({ success: false, message: 'Server error. Please try again.' });
               }
               try { if (req.session) { req.session.staffId = staff_id; req.session.staffUsername = username; } } catch(e){}
+
+              // Send registration confirmation email (non-blocking)
+              try {
+                await sendStaffRegistrationEmail(email, first_name);
+              } catch (mailErr) {
+                console.error('⚠️ Email send failed:', mailErr.message);
+                // Continue - email failure should not block registration success
+              }
 
               res.status(201).json({
                 success: true,
