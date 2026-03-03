@@ -6,6 +6,7 @@
     <title>Shodesh - Helping People Through Trusted Money Donations</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="header.css" />
     <style>
       body {
         background: #e0ebd5;
@@ -172,29 +173,10 @@
         // You can replace this with your actual donation logic
       }
     </script>
+    <script defer src="header.js"></script>
   </head>
   <body>
-    <div class="top-bar">
-      <div>MAIL: contact@shodesh.org</div>
-      <div>PHONE: +880 1712 345 678</div>
-    </div>
-
-   <div class="navbar">
-    
-  <div class="logo"><strong>SHODESH</strong></div>
-  <div class="nav-links">
-    
-   <a href="index.html" class="home-link">Home</a>
-    <a href="about.html" class="about-link">About</a>
-    <!--<a href="#">Gallery</a>-->
-    <a href="contact.html" class="contact-link">Contact</a>
-    <a href="resources.html">Resources</a>
-    <a href="search.html">Search</a>
-    <a href="browse.html">Categories</a>
-    <a href="signin.html">Sign In</a>
-    <a href="volunteer.html">Join Our Team</a>
-  </div>
-</div>
+    <div id="site-header"></div>
 
       <div class="main-banner">
       <div class="main-title">
@@ -489,14 +471,4 @@ function goToProfile() {
     window.location.href = "signin.html";
   }
 }
-</script>
-    <script>
-  // Highlight Home link only on homepage
-  if (
-    window.location.pathname.endsWith("index.html") ||
-    window.location.pathname === "/" ||
-    window.location.pathname === "/SHODESH/" // adjust if your homepage is at a subfolder
-  ) {
-    document.querySelector('.home-link').classList.add('active');
-  }
 </script>

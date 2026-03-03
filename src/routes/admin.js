@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const adminDb = require('../config/db-admin'); // Use promise-based DB for admin functionality
-const { sendFoundationApprovedEmail, sendStaffApprovedEmail } = require('../config/mail');
+const { sendFoundationApprovedEmail, sendStaffApprovedEmail, sendEventApprovedEmail, sendEventRejectedEmail } = require('../config/mail');
 
 // Make sure your main server enables JSON body parsing:
 // app.use(express.json());
@@ -197,6 +197,52 @@ router.put('/events/:id/verify', authenticateAdmin, async (req, res) => {
     if (decision === 'approved') message = 'Event approved and activated';
     else if (decision === 'rejected') message = 'Event rejected';
     else message = 'Staff verification requested';
+    
+    // Send email to creator if event is approved or rejected
+    if (decision === 'approved' || decision === 'rejected') {
+      try {
+        const [eventDetails] = await conn.execute(
+          'SELECT * FROM EVENT_CREATION WHERE creation_id = ?',
+          [id]
+        );
+        
+        if (eventDetails.length > 0) {
+          const eventData = eventDetails[0];
+          
+          // Get creator's email and name based on creator_type
+          let creatorEmail = null;
+          let creatorName = eventData.creator_name || 'Creator';
+          
+          if (eventData.creator_type === 'foundation') {
+            const [foundationData] = await conn.execute(
+              'SELECT email FROM FOUNDATION WHERE foundation_id = ?',
+              [eventData.foundation_id]
+            );
+            if (foundationData.length > 0) creatorEmail = foundationData[0].email;
+          } else if (eventData.creator_type === 'individual') {
+            const [individualData] = await conn.execute(
+              'SELECT email FROM INDIVIDUAL WHERE individual_id = ?',
+              [eventData.individual_id]
+            );
+            if (individualData.length > 0) creatorEmail = individualData[0].email;
+          }
+          
+          // Send appropriate email
+          if (creatorEmail) {
+            if (decision === 'approved') {
+              await sendEventApprovedEmail(creatorEmail, creatorName, eventData.title);
+              console.log(`📧 Approval email sent to ${creatorEmail}`);
+            } else if (decision === 'rejected') {
+              await sendEventRejectedEmail(creatorEmail, creatorName, eventData.title, req.body.reason || null);
+              console.log(`📧 Rejection email sent to ${creatorEmail}`);
+            }
+          }
+        }
+      } catch (emailError) {
+        console.error('⚠️ Failed to send event status email:', emailError.message);
+        // Continue with response even if email fails
+      }
+    }
     
     return res.json({ 
       success: true, 

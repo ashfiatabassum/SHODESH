@@ -371,8 +371,10 @@
     </div>
 
     <script>
-        let allFoundations = [];
+        let allFoundations = [];      // Always contains ALL foundations (for stats)
+        let displayedFoundations = []; // Only contains filtered foundations (for display)
         let currentFilter = 'unverified';
+        let statsLoaded = false;      // Flag to ensure stats are loaded once
 
         // Fallback data with real foundation info
         const fallbackFoundationData = [
@@ -418,9 +420,9 @@
 
         function loadFoundations(status = 'unverified') {
             currentFilter = status;
-            console.log('🔄 Loading foundations from API... status=', status);
-            // Build URL: omit status param when requesting "all"
-            const apiUrl = status === 'all' ? '/api/admin/foundations' : `/api/admin/foundations?status=${status}`;
+            console.log('🔄 Loading all foundations from API for stats...');
+            // Always fetch ALL foundations (no status filter) so stats are accurate
+            const apiUrl = '/api/admin/foundations';
 
             // Try API first, include credentials (session cookie). If 401, redirect to login.
             fetch(apiUrl, {
@@ -442,18 +444,21 @@
             .then(data => {
                 console.log('📊 API Response:', data);
                 if (data.success && data.data && Array.isArray(data.data)) {
-                    console.log('✅ API foundations loaded:', data.data.length, 'foundations');
+                    console.log('✅ API all foundations loaded:', data.data.length, 'foundations');
+                    // Store ALL foundations for stats (never filter this)
                     allFoundations = data.data;
+                    statsLoaded = true;
                 } else {
                     // API returned empty list
                     console.log('⚠️ API returned empty list');
                     allFoundations = [];
                 }
 
-                // Compute displayed list based on the requested status
-                const displayed = status === 'all' ? allFoundations : allFoundations.filter(f => f.status === status);
+                // Update stats with complete data
                 updateStats();
-                displayFoundations(displayed);
+                
+                // Filter for display based on current filter
+                filterDisplayedFoundations(status);
             })
             .catch(error => {
                 console.error('❌ API failed or unavailable:', error.message);
@@ -461,10 +466,26 @@
                 if (allFoundations.length === 0) {
                     allFoundations = fallbackFoundationData;
                     console.log('📋 Fallback foundations loaded:', allFoundations.length);
+                    statsLoaded = true;
                 }
                 updateStats();
-                filterFoundations(currentFilter);
+                filterDisplayedFoundations(status);
             });
+        }
+
+        function filterDisplayedFoundations(status) {
+            // Filter for display only - don't affect stats calculation
+            if (status === 'all') {
+                displayedFoundations = allFoundations;
+            } else if (status === 'verified') {
+                displayedFoundations = allFoundations.filter(f => f.status === 'verified');
+            } else if (status === 'unverified') {
+                displayedFoundations = allFoundations.filter(f => f.status === 'unverified');
+            } else {
+                displayedFoundations = allFoundations;
+            }
+            console.log(`📋 Displaying ${displayedFoundations.length} foundations (filter: ${status})`);
+            displayFoundations(displayedFoundations);
         }
 
         function updateStats() {
@@ -484,8 +505,15 @@
             });
             if (e && e.currentTarget) e.currentTarget.classList.add('active');
 
-            // Load foundations for the selected status (server-side filter)
-            loadFoundations(status);
+            // If stats are already loaded, just filter the display
+            // Otherwise load all foundations first
+            if (statsLoaded) {
+                console.log(`🔄 Filtering to: ${status}`);
+                filterDisplayedFoundations(status);
+            } else {
+                console.log(`🔄 Loading foundations with filter: ${status}`);
+                loadFoundations(status);
+            }
         }
 
         function displayFoundations(foundations) {
@@ -538,9 +566,51 @@
             window.location.href = `foundation-details.html?id=${foundationId}`;
         }
 
-    // Load foundations when page loads (default to unverified)
-    window.addEventListener('load', () => loadFoundations('unverified'));
-</script>
+        // Admin Login Modal Functions
+        function showAdminLoginModal() {
+            const m = document.getElementById('adminLoginModal');
+            if (!m) return;
+            m.classList.add('active');
+        }
+
+        async function submitAdminLogin() {
+            const user = document.getElementById('adminModalUsername').value;
+            const pass = document.getElementById('adminModalPassword').value;
+
+            try {
+                const resp = await fetch('/api/admin/login', {
+                    mSearchethod: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: user, password: pass }),
+                    credentials: 'include'
+                });
+
+                const data = await resp.json();
+                if (data.success) {
+                    document.getElementById('adminLoginModal').classList.remove('active');
+                    // Reload foundations now that session cookie is set
+                    loadFoundations(currentFilter);
+                } else {
+                    alert('Login failed');
+                }
+            } catch (err) {
+                console.error('Login error', err);
+                alert('Login error');
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load foundations when page loads (default to unverified)
+            loadFoundations('unverified');
+            
+            // Attach login button click listener
+            const loginBtn = document.getElementById('adminModalLoginBtn');
+            if (loginBtn) {
+                loginBtn.addEventListener('click', submitAdminLogin);
+            }
+        });
+    </script>
 
     <!-- Inline Admin Login Modal -->
     <style>
@@ -569,41 +639,5 @@
             </div>
         </div>
     </div>
-
-    <script>
-        function showAdminLoginModal() {
-            const m = document.getElementById('adminLoginModal');
-            if (!m) return;
-            m.classList.add('active');
-        }
-
-        async function submitAdminLogin() {
-            const user = document.getElementById('adminModalUsername').value;
-            const pass = document.getElementById('adminModalPassword').value;
-
-            try {
-                const resp = await fetch('/api/admin/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: user, password: pass }),
-                    credentials: 'include'
-                });
-
-                const data = await resp.json();
-                if (data.success) {
-                    document.getElementById('adminLoginModal').classList.remove('active');
-                    // Reload foundations now that session cookie is set
-                    loadFoundations(currentFilter);
-                } else {
-                    alert('Login failed');
-                }
-            } catch (err) {
-                console.error('Login error', err);
-                alert('Login error');
-            }
-        }
-
-        document.getElementById('adminModalLoginBtn').addEventListener('click', submitAdminLogin);
-    </script>
 </body>
 </html>

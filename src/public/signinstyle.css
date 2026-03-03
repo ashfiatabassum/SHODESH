@@ -297,7 +297,7 @@ button#staffSignin:hover .button-text {
 .back-nav-signin {
   position: fixed;
   top: 28px;
-  right: 32px;
+  left: 32px;
   z-index: 100;
   color: #176b3a;
   background: #fff;
@@ -329,7 +329,7 @@ button#staffSignin:hover .button-text {
   }
   .back-nav-signin {
     top: 12px;
-    right: 10px;
+    left: 10px;
     width: 38px;
     height: 38px;
     font-size: 1.2rem;

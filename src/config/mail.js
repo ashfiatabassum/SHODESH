@@ -279,10 +279,130 @@ async function sendStaffApprovedEmail(email, firstName) {
   return sendMail(email, subject, html);
 }
 
+/**
+ * Send event approval email to creator
+ */
+async function sendEventApprovedEmail(email, creatorName, eventTitle) {
+  const subject = '✅ Your Event Has Been Approved - SHODESH';
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #176b3a; color: white; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px; }
+        .header h1 { margin: 0; font-size: 24px; }
+        .content { padding: 20px; }
+        .event-title { background: #f0f8f5; padding: 15px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #176b3a; }
+        .footer { text-align: center; padding: 15px; color: #666; font-size: 12px; }
+        .button { display: inline-block; background: #176b3a; color: white; padding: 10px 25px; border-radius: 6px; text-decoration: none; margin: 10px 0; font-weight: 600; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🎉 Event Approved!</h1>
+        </div>
+        
+        <div class="content">
+          <p>Dear <strong>${creatorName}</strong>,</p>
+          
+          <p>Great news! Your event has been approved by our admin team and is now live on the SHODESH platform.</p>
+          
+          <div class="event-title">
+            <strong style="color: #176b3a;">Event:</strong><br>
+            ${eventTitle}
+          </div>
+          
+          <p>People can now donate to your campaign and volunteers can sign up to help.</p>
+          
+          <p>
+            <a href="https://shodesh.com/dashboard" class="button">View Your Dashboard</a>
+          </p>
+          
+          <p>Thank you for making a difference!<br>The SHODESH Team</p>
+        </div>
+        
+        <div class="footer">
+          <p>&copy; 2025 SHODESH. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+  
+  return sendMail(email, subject, html);
+}
+
+/**
+ * Send event rejection email to creator
+ */
+async function sendEventRejectedEmail(email, creatorName, eventTitle, reason) {
+  const subject = '⚠️ Your Event Submission - Action Needed';
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #dc2626; color: white; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px; }
+        .header h1 { margin: 0; font-size: 24px; }
+        .content { padding: 20px; }
+        .event-title { background: #fef5f5; padding: 15px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #dc2626; }
+        .reason-box { background: #fff5f5; padding: 15px; border-radius: 6px; margin: 15px 0; }
+        .footer { text-align: center; padding: 15px; color: #666; font-size: 12px; }
+        .button { display: inline-block; background: #176b3a; color: white; padding: 10px 25px; border-radius: 6px; text-decoration: none; margin: 10px 0; font-weight: 600; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>Event Needs Review</h1>
+        </div>
+        
+        <div class="content">
+          <p>Dear <strong>${creatorName}</strong>,</p>
+          
+          <p>Your event submission could not be approved at this time.</p>
+          
+          <div class="event-title">
+            <strong style="color: #dc2626;">Event:</strong><br>
+            ${eventTitle}
+          </div>
+          
+          ${reason ? `<div class="reason-box">
+            <strong>Reason:</strong><br>
+            ${reason}
+          </div>` : ''}
+          
+          <p>Please review the feedback and resubmit your event with the necessary changes. If you have questions, contact us at <strong>support@shodesh.com</strong></p>
+          
+          <p>
+            <a href="https://shodesh.com/dashboard" class="button">Go to Dashboard</a>
+          </p>
+          
+          <p>Best regards,<br>The SHODESH Team</p>
+        </div>
+        
+        <div class="footer">
+          <p>&copy; 2025 SHODESH. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+  
+  return sendMail(email, subject, html);
+}
+
 module.exports = {
   sendMail,
   sendFoundationRegistrationEmail,
   sendStaffRegistrationEmail,
   sendFoundationApprovedEmail,
-  sendStaffApprovedEmail
+  sendStaffApprovedEmail,
+  sendEventApprovedEmail,
+  sendEventRejectedEmail
 };
