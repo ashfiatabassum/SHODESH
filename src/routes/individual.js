@@ -701,22 +701,29 @@ router.get('/profile/:individualId', async (req, res) => {
 
 
 router.put('/update/:individualId', async (req, res) => {
-  const individualId = req.params.individualId;
-  const { username, newPassword, currentPassword } = req.body;
+  try {
+    const individualId = req.params.individualId;
+    const { username, newPassword, currentPassword } = req.body;
 
-  if (!currentPassword) {
-    return res.status(400).json({ success: false, message: 'Current password required.' });
-  }
+    if (!currentPassword) {
+      return res.status(400).json({ success: false, message: 'Current password required.' });
+    }
 
-  db.query('SELECT password FROM individual WHERE individual_id = ?', [individualId], (err, results) => {
-    if (err || results.length === 0) {
+    const results = await new Promise((resolve, reject) => {
+      db.query('SELECT password FROM individual WHERE individual_id = ?', [individualId], (err, results) => {
+        if (err) reject(err);
+        else resolve(results);
+      });
+    });
+
+    if (results.length === 0) {
       return res.status(400).json({ success: false, message: 'Individual not found.' });
     }
+
     const dbPassword = results[0].password;
     if (dbPassword !== currentPassword) {
       return res.status(401).json({ success: false, message: 'Current password is incorrect.' });
     }
-    
 
     // Build update query
     let fields = [];
@@ -728,17 +735,22 @@ router.put('/update/:individualId', async (req, res) => {
     }
     values.push(individualId);
 
-    db.query(
-      `UPDATE individual SET ${fields.join(', ')} WHERE individual_id = ?`,
-      values,
-      (err2, result) => {
-        if (err2) {
-          return res.status(500).json({ success: false, message: 'Database error.' });
+    await new Promise((resolve, reject) => {
+      db.query(
+        `UPDATE individual SET ${fields.join(', ')} WHERE individual_id = ?`,
+        values,
+        (err, result) => {
+          if (err) reject(err);
+          else resolve(result);
         }
-        return res.json({ success: true, message: 'Profile updated successfully.' });
-      }
-    );
-  });
+      );
+    });
+
+    res.json({ success: true, message: 'Profile updated successfully.' });
+  } catch (error) {
+    console.error('❌ Individual update error:', error);
+    res.status(500).json({ success: false, message: 'Error updating profile', error: error.message });
+  }
 });
 
 

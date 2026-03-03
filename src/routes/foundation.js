@@ -123,41 +123,56 @@ router.post('/check-availability', (req, res) => {
 
 // -------------------- SIGNIN --------------------
 router.post('/signin', async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ success: false, message: 'Email and password are required' });
-
-  const query = `SELECT * FROM foundation WHERE email = ?`;
-  const results = await new Promise((resolve, reject) => {
-    db.query(query, [email], (err, results) => { if (err) reject(err); else resolve(results); });
-  });
-  if (results.length === 0) return res.status(401).json({ success: false, message: 'Invalid email or password' });
-
-  const foundation = results[0];
-  if (foundation.password !== password) return res.status(401).json({ success: false, message: 'Invalid email or password' });
-
-  const foundationData = {
-    foundationInfo: {
-      foundationName: foundation.foundation_name,
-      email: foundation.email,
-      phone: foundation.mobile,
-      foundationLicense: foundation.foundation_license,
-      bkashNumber: foundation.bkash,
-      bankAccount: foundation.bank_account,
-      visionGoals: foundation.description,
-      operatingSince: "2022",
-      status: foundation.status
-    },
-    address: {
-      houseNo: foundation.house_no,
-      roadNo: foundation.road_no,
-      area: foundation.area,
-      district: foundation.district,
-      division: foundation.administrative_div,
-      zipCode: foundation.zip
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'Email and password are required' });
     }
-  };
 
-  res.json({ success: true, message: 'Sign in successful', foundationId: foundation.foundation_id, foundationData });
+    const query = `SELECT * FROM foundation WHERE email = ?`;
+    const results = await new Promise((resolve, reject) => {
+      db.query(query, [email], (err, results) => {
+        if (err) reject(err);
+        else resolve(results);
+      });
+    });
+
+    if (results.length === 0) {
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
+    }
+
+    const foundation = results[0];
+    if (foundation.password !== password) {
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
+    }
+
+    const foundationData = {
+      foundationInfo: {
+        foundationName: foundation.foundation_name,
+        email: foundation.email,
+        phone: foundation.mobile,
+        foundationLicense: foundation.foundation_license,
+        bkashNumber: foundation.bkash,
+        bankAccount: foundation.bank_account,
+        visionGoals: foundation.description,
+        operatingSince: "2022",
+        status: foundation.status
+      },
+      address: {
+        houseNo: foundation.house_no,
+        roadNo: foundation.road_no,
+        area: foundation.area,
+        district: foundation.district,
+        division: foundation.administrative_div,
+        zipCode: foundation.zip
+      }
+    };
+
+    res.json({ success: true, message: 'Sign in successful', foundationId: foundation.foundation_id, foundationData });
+  } catch (error) {
+    console.error('❌ Foundation signin error:', error);
+    res.status(500).json({ success: false, message: 'Server error during sign in', error: error.message });
+  }
 });
 
 // -------------------- GET PROFILE --------------------
@@ -174,25 +189,49 @@ router.get('/profile/:foundationId', async (req, res) => {
 
 // -------------------- UPDATE PROFILE --------------------
 router.put('/update/:foundationId', async (req, res) => {
-  const foundationId = req.params.foundationId;
-  const { username, newPassword, currentPassword } = req.body;
-  if (!currentPassword) return res.status(400).json({ success: false, message: 'Current password required.' });
+  try {
+    const foundationId = req.params.foundationId;
+    const { username, newPassword, currentPassword } = req.body;
 
-  db.query('SELECT password FROM foundation WHERE foundation_id = ?', [foundationId], (err, results) => {
-    if (err || results.length === 0) return res.status(400).json({ success: false, message: 'Foundation not found.' });
-    if (results[0].password !== currentPassword) return res.status(401).json({ success: false, message: 'Current password is incorrect.' });
+    if (!currentPassword) {
+      return res.status(400).json({ success: false, message: 'Current password required.' });
+    }
+
+    const results = await new Promise((resolve, reject) => {
+      db.query('SELECT password FROM foundation WHERE foundation_id = ?', [foundationId], (err, results) => {
+        if (err) reject(err);
+        else resolve(results);
+      });
+    });
+
+    if (results.length === 0) {
+      return res.status(400).json({ success: false, message: 'Foundation not found.' });
+    }
+
+    if (results[0].password !== currentPassword) {
+      return res.status(401).json({ success: false, message: 'Current password is incorrect.' });
+    }
 
     let fields = [], values = [];
     if (username) { fields.push('foundation_name = ?'); values.push(username); }
     if (newPassword) { fields.push('password = ?'); values.push(newPassword); }
-    if (fields.length === 0) return res.status(400).json({ success: false, message: 'No fields to update.' });
+    if (fields.length === 0) {
+      return res.status(400).json({ success: false, message: 'No fields to update.' });
+    }
     values.push(foundationId);
 
-    db.query(`UPDATE foundation SET ${fields.join(', ')} WHERE foundation_id = ?`, values, (err2, result) => {
-      if (err2) return res.status(500).json({ success: false, message: 'Database error.' });
-      return res.json({ success: true, message: 'Profile updated successfully.' });
+    await new Promise((resolve, reject) => {
+      db.query(`UPDATE foundation SET ${fields.join(', ')} WHERE foundation_id = ?`, values, (err, result) => {
+        if (err) reject(err);
+        else resolve(result);
+      });
     });
-  });
+
+    res.json({ success: true, message: 'Profile updated successfully.' });
+  } catch (error) {
+    console.error('❌ Foundation update error:', error);
+    res.status(500).json({ success: false, message: 'Error updating profile', error: error.message });
+  }
 });
 
 // -------------------- GET PROJECTS --------------------

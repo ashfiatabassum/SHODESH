@@ -37,24 +37,34 @@ SELECT * FROM INDIVIDUAL;
 -- ========================
 -- Table: FOUNDATION
 -- ========================
+-- Drop the table (safe)
+DROP TABLE IF EXISTS FOUNDATION;
+
+-- Recreate with certificate as LONGBLOB NULL
 CREATE TABLE FOUNDATION(
   foundation_id VARCHAR(7) NOT NULL,
   foundation_name VARCHAR(50) NOT NULL,
-  certificate BLOB,
+
+  certificate LONGBLOB NULL,
+
   foundation_license VARCHAR(12) NOT NULL,
   mobile VARCHAR(11) NOT NULL CHECK (mobile REGEXP '^0[0-9]{10}$'),
   email VARCHAR(100) NOT NULL CHECK (email REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}$'),
   password VARCHAR(255) NOT NULL CHECK (LENGTH(password) >= 6),
+
   house_no VARCHAR(7),
   road_no VARCHAR(4) CHECK (road_no REGEXP '^[0-9]{1,4}$'),
   area VARCHAR(30) CHECK (area REGEXP '^[A-Za-z ]+$'),
   district VARCHAR(30) CHECK (district REGEXP '^[A-Za-z ]+$'),
   administrative_div VARCHAR(30) CHECK (administrative_div REGEXP '^[A-Za-z ]+$'),
   zip VARCHAR(4) CHECK (zip REGEXP '^[0-9]{4}$'),
+
   bkash VARCHAR(11) CHECK (bkash REGEXP '^0[0-9]{10}$'),
   bank_account VARCHAR(18),
+
   description TEXT,
   status ENUM('verified', 'unverified', 'suspended') DEFAULT 'unverified',
+
   CONSTRAINT FOUNDATION_FOUNDATION_ID_PK PRIMARY KEY (foundation_id),
   CONSTRAINT FOUNDATION_FOUNDATION_LICENSE_U UNIQUE (foundation_license),
   CONSTRAINT FOUNDATION_EMAIL_U UNIQUE (email),
@@ -1287,7 +1297,6 @@ VALUES
   
 
 
---sample data latest
 INSERT INTO FOUNDATION (
   foundation_id, foundation_name, certificate, foundation_license,
   mobile, email, password, house_no, road_no, area, district,

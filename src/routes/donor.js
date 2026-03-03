@@ -496,22 +496,29 @@ router.post('/check-username', (req, res) => {
 
 
 router.put('/update/:donorId', async (req, res) => {
-  const donorId = req.params.donorId;
-  const { username, newPassword, currentPassword } = req.body;
+  try {
+    const donorId = req.params.donorId;
+    const { username, newPassword, currentPassword } = req.body;
 
-  if (!currentPassword) {
-    return res.status(400).json({ success: false, message: 'Current password required.' });
-  }
+    if (!currentPassword) {
+      return res.status(400).json({ success: false, message: 'Current password required.' });
+    }
 
-  db.query('SELECT password FROM donor WHERE donor_id = ?', [donorId], (err, results) => {
-    if (err || results.length === 0) {
+    const results = await new Promise((resolve, reject) => {
+      db.query('SELECT password FROM donor WHERE donor_id = ?', [donorId], (err, results) => {
+        if (err) reject(err);
+        else resolve(results);
+      });
+    });
+
+    if (results.length === 0) {
       return res.status(400).json({ success: false, message: 'Donor not found.' });
     }
+
     const dbPassword = results[0].password;
     if (dbPassword !== currentPassword) {
       return res.status(401).json({ success: false, message: 'Current password is incorrect.' });
     }
-    
 
     // Build update query
     let fields = [];
@@ -523,17 +530,22 @@ router.put('/update/:donorId', async (req, res) => {
     }
     values.push(donorId);
 
-    db.query(
-      `UPDATE donor SET ${fields.join(', ')} WHERE donor_id = ?`,
-      values,
-      (err2, result) => {
-        if (err2) {
-          return res.status(500).json({ success: false, message: 'Database error.' });
+    await new Promise((resolve, reject) => {
+      db.query(
+        `UPDATE donor SET ${fields.join(', ')} WHERE donor_id = ?`,
+        values,
+        (err, result) => {
+          if (err) reject(err);
+          else resolve(result);
         }
-        return res.json({ success: true, message: 'Profile updated successfully.' });
-      }
-    );
-  });
+      );
+    });
+
+    res.json({ success: true, message: 'Profile updated successfully.' });
+  } catch (error) {
+    console.error('❌ Donor update error:', error);
+    res.status(500).json({ success: false, message: 'Error updating profile', error: error.message });
+  }
 });
 
 

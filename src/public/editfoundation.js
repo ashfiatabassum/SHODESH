@@ -77,7 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
 console.log("➡️ Endpoint:", `/api/foundation/update/${foundationId}`);
 
     try {
-      const response = await fetch(`http://localhost:3000/api/foundation/update/${foundationId}`, {
+      const response = await fetch(`/api/foundation/update/${foundationId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updates)

@@ -70,16 +70,13 @@ if (!individualId) {
   return;
 }
 
-console.log("➡️ Final Endpoint will be:", `http://localhost:3000/api/individual/update/${individualId}`);
-
-
-
+console.log("➡️ Final Endpoint will be:", `/api/individual/update/${individualId}`);
 
     console.log("➡️ Sending updates:", updates);
 console.log("➡️ Endpoint:", `/api/individual/update/${individualId}`);
 
     try {
-      const response = await fetch(`http://localhost:3000/api/individual/update/${individualId}`, {
+      const response = await fetch(`/api/individual/update/${individualId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updates)
