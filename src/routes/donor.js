@@ -322,7 +322,7 @@ router.post('/signin', async (req, res) => {
     if (donor.password !== password) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid username or password'
+        message: 'Invalid email or password'
       });
     }
 

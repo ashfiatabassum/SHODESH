@@ -113,13 +113,13 @@ async function validateAndSubmit(e) {
         if (response.ok && data.success) {
             showCustomAlert(
                 `🎉 <strong>Registration Successful!</strong><br><br>
-                Your Staff ID: <strong>${data.staffId}</strong><br><br>
-                <small>Awaiting admin verification.</small>`,
+                Your Volunteer Account has been created.<br><br>
+                <small>A confirmation email has been sent. Please wait for admin verification before signing in.</small>`,
                 'success', 4000
             );
             form.reset();
             setTimeout(() => {
-        window.location.href = 'staff_profile.html';
+        window.location.href = 'staffsignin.html';
     }, 2500);
         } else {
             showCustomAlert(data.message || 'Signup failed. Please try again.', 'error');

@@ -158,7 +158,7 @@ router.post('/signin', async (req, res) => {
         return res.status(401).json({ success: false, message: 'Invalid email or password.' });
       }
       if (staff.status !== 'verified') {
-        console.log('Staff not verified:', username);
+        console.log('Staff not verified:', staff.email);
         return res.status(403).json({ success: false, message: 'Your staff account is not verified yet.' });
       }
 

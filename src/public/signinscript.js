@@ -1,4 +1,8 @@
 // Custom aesthetic alert function
+function isValidEmail(email) {
+  return /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email);
+}
+
 function showCustomAlert(message, type = 'info', duration = 5000) {
     // Remove any existing alerts
     const existingAlerts = document.querySelectorAll('.custom-alert');
@@ -128,7 +132,7 @@ function updateInputLabelUI() {
   if (!usernameLabel) return;
 
   if (role === 'admin') {
-    usernameLabel.textContent = 'Enter your username';
+    usernameLabel.textContent = 'Enter admin email';
   } else {
     usernameLabel.textContent = 'Enter your email';
   }
@@ -138,10 +142,9 @@ async function handleRoleBasedSignin(e) {
   if (e && typeof e.preventDefault === 'function') e.preventDefault();
 
   const role = getSelectedRole();
-  const user = document.getElementById("username").value.trim();
+  const user = document.getElementById("loginIdentifier").value.trim();
   const pass = document.getElementById("password").value.trim();
   const roleLabel = getRoleLabel(role);
-  const isAdminRole = role === 'admin';
 
   if (!role) {
     showCustomAlert('Please select a role first', 'warning');
@@ -149,20 +152,17 @@ async function handleRoleBasedSignin(e) {
   }
 
   if (!user || !pass) {
-    const fieldName = isAdminRole ? 'username' : 'email';
-    showCustomAlert(`Please enter both ${fieldName} and password`, 'warning');
+    showCustomAlert('Please enter both email and password', 'warning');
     return;
   }
 
-  if (user.length < 4) {
-    const fieldName = isAdminRole ? 'Username' : 'Email';
-    showCustomAlert(`${fieldName} must be at least 4 characters long`, 'error');
+  if (!isValidEmail(user)) {
+    showCustomAlert('Please enter a valid email address', 'error');
     return;
   }
 
-  const minPasswordLength = role === 'admin' ? 4 : 6;
-  if (pass.length < minPasswordLength) {
-    showCustomAlert(`Password must be at least ${minPasswordLength} characters long`, 'error');
+  if (pass.length < 6) {
+    showCustomAlert('Password must be at least 6 characters long', 'error');
     return;
   }
 
@@ -192,10 +192,8 @@ async function handleRoleBasedSignin(e) {
         return;
     }
 
-    // For non-admin roles, send email; for admin, send username
-    const payload = isAdminRole 
-      ? { username: user, password: pass }
-      : { email: user, password: pass };
+    // All roles send email and password
+    const payload = { email: user, password: pass };
 
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -296,7 +294,7 @@ async function handleRoleBasedSignin(e) {
       }
     }
 
-    let errorMessage = data && data.message ? data.message : `Invalid ${isAdminRole ? 'username' : 'email'} or password.`;
+    let errorMessage = data && data.message ? data.message : 'Invalid email or password.';
     if (response.status >= 500) errorMessage = 'Server error occurred. Please try again later.';
 
     showCustomAlert(
@@ -346,7 +344,7 @@ document.addEventListener('DOMContentLoaded', function() {
   updateInputLabelUI();
 
   const passwordField = document.getElementById("password");
-  const usernameField = document.getElementById("username");
+  const usernameField = document.getElementById("loginIdentifier");
   
   // Enter key functionality
   if (passwordField) {
@@ -373,21 +371,19 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Real-time validation feedback for username/email
+  // Real-time validation feedback for email
   if (usernameField) {
     usernameField.addEventListener('input', function() {
       const value = this.value.trim();
-      const role = getSelectedRole();
-      const fieldName = role === 'admin' ? 'Username' : 'Email';
       
-      if (value.length > 0 && value.length < 4) {
-        this.style.borderColor = '#ff4757';
-        this.style.boxShadow = '0 0 10px rgba(255, 71, 87, 0.3)';
-        this.title = `${fieldName} must be at least 4 characters`;
-      } else if (value.length >= 4) {
-        this.style.borderColor = '#2ed573';
-        this.style.boxShadow = '0 0 10px rgba(46, 213, 115, 0.3)';
-        this.title = `${fieldName} looks good`;
+      if (value.length > 0 && !isValidEmail(value)) {
+        this.style.borderColor = '#d32f2f';
+        this.style.boxShadow = '0 0 10px rgba(211, 47, 47, 0.3)';
+        this.title = 'Please enter a valid email address';
+      } else if (value.length > 0 && isValidEmail(value)) {
+        this.style.borderColor = '#176b3a';
+        this.style.boxShadow = '0 0 10px rgba(23, 107, 58, 0.3)';
+        this.title = 'Email looks good';
       } else {
         this.style.borderColor = '';
         this.style.boxShadow = '';
@@ -452,49 +448,6 @@ document.addEventListener('DOMContentLoaded', function() {
         this.style.boxShadow = '';
       }
     });
-  }
-
-  // Add account type indicator
-  const formContainer = document.querySelector('.signin-form') || document.querySelector('form');
-  if (formContainer && !document.querySelector('.account-types-info')) {
-    const accountTypesInfo = document.createElement('div');
-    accountTypesInfo.className = 'account-types-info';
-    accountTypesInfo.innerHTML = `
-      <div class="account-types-header">
-        <i class="fas fa-info-circle"></i>
-        <span>Supported Account Types</span>
-      </div>
-      <div class="account-types-list">
-        <div class="account-type">
-          <i class="fas fa-user"></i>
-          <span>Seeker</span>
-        </div>
-        <div class="account-type">
-          <i class="fas fa-heart"></i>
-          <span>Donor</span>
-        </div>
-        <div class="account-type">
-          <i class="fas fa-building"></i>
-          <span>NGO</span>
-        </div>
-        <div class="account-type">
-          <i class="fas fa-users"></i>
-          <span>Volunteer</span>
-        </div>
-        <div class="account-type">
-          <i class="fas fa-user-shield"></i>
-          <span>Admin</span>
-        </div>
-      </div>
-    `;
-    
-    // Insert before the form or at the end of the container
-    const insertTarget = formContainer.querySelector('form') || formContainer;
-    if (insertTarget.nextSibling) {
-      formContainer.insertBefore(accountTypesInfo, insertTarget.nextSibling);
-    } else {
-      formContainer.appendChild(accountTypesInfo);
-    }
   }
 });
 

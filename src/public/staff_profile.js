@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function () {
       localStorage.removeItem('staffId');
       localStorage.removeItem('staffData');
       localStorage.removeItem('userType');
-      window.location.href = 'staffsignin.html';
+      window.location.href = 'index.html';
     });
   }
 

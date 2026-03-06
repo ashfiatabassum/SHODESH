@@ -220,22 +220,6 @@ app.get('/api/events/:id/eligibility', async (req, res) => {
   }
 });
 
-// ✅ Admin login/logout
-app.post('/api/admin/login', (req, res) => {
-  const { username, password } = req.body;
-  if (username === 'admin' && password === '1234') {
-    req.session.adminToken = 'admin-authenticated';
-    res.json({ success: true, message: 'Admin login successful', token: 'admin-authenticated' });
-  } else {
-    res.status(401).json({ success: false, message: 'Invalid admin credentials' });
-  }
-});
-
-app.post('/api/admin/logout', (req, res) => {
-  req.session.destroy();
-  res.json({ success: true, message: 'Admin logout successful' });
-});
-
 // ✅ Static HTML routes
 app.get('/signin', (req, res) => res.sendFile(path.join(publicPath, 'signin.html')));
 app.get('/signup', (req, res) => res.sendFile(path.join(publicPath, 'signup.html')));

@@ -21,6 +21,32 @@ const authenticateAdmin = (req, res, next) => {
 };
 
 // =============================
+// ADMIN LOGIN
+// =============================
+router.post('/login', (req, res) => {
+  const { email, password } = req.body;
+
+  if (email === 'shodeshadmin@gmail.com' && password === 'pass1234') {
+    req.session.adminToken = 'admin-authenticated';
+    req.session.adminEmail = email;
+
+    return res.json({
+      success: true,
+      message: 'Admin login successful',
+      token: 'admin-authenticated',
+      admin: {
+        email: 'shodeshadmin@gmail.com'
+      }
+    });
+  }
+
+  return res.status(401).json({
+    success: false,
+    message: 'Invalid admin email or password'
+  });
+});
+
+// =============================
 // DASHBOARD
 // =============================
 router.get('/dashboard/stats', authenticateAdmin, async (req, res) => {

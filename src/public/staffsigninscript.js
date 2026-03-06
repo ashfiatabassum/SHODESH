@@ -72,18 +72,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function handleStaffSignin(e) {
     e.preventDefault();
-    const user = document.getElementById("staffUsername").value.trim();
+    const email = document.getElementById("staffEmail").value.trim();
     const pass = document.getElementById("staffPassword").value.trim();
 
     // Debug: Log input values
-    console.log('Staff Signin Attempt:', { user, pass });
+    console.log('Volunteer Signin Attempt:', { email, pass });
 
-    if (!user || !pass) {
-        showCustomAlert('Please enter both username and password', 'warning');
+    if (!email || !pass) {
+        showCustomAlert('Please enter both email and password', 'warning');
         return;
     }
-    if (user.length < 4) {
-        showCustomAlert('Username must be at least 4 characters long', 'error');
+    if (!email.includes('@')) {
+        showCustomAlert('Please enter a valid email address', 'error');
         return;
     }
     if (pass.length < 6) {
@@ -101,12 +101,12 @@ async function handleStaffSignin(e) {
 
     try {
         // Debug: Log fetch about to be sent
-        console.log('Sending POST /api/staff/signin', { username: user, password: pass });
+        console.log('Sending POST /api/staff/signin', { email, password: pass });
 
         const response = await fetch('/api/staff/signin', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: user, password: pass })
+            body: JSON.stringify({ email, password: pass })
         });
 
         // Debug: Log response status
@@ -133,7 +133,7 @@ async function handleStaffSignin(e) {
 
             showCustomAlert(
                 `🎉 <strong>Welcome back, ${data.staffData.first_name}!</strong><br><br>
-                Successfully signed in as <strong>Staff</strong>.<br><br>
+                Successfully signed in as <strong>Volunteer</strong>.<br><br>
                 <small>Redirecting to your dashboard...</small>`,
                 'success',
                 3000
@@ -145,15 +145,15 @@ async function handleStaffSignin(e) {
             return;
         }
 
-        let errorMessage = data.message || 'Invalid username or password.';
+        let errorMessage = data.message || 'Invalid email or password.';
         if (response.status >= 500) {
-            errorMessage = 'Server error occurred. Please try again later.';
+            errorMessage = 'Server error occurred. Please try again later.'
         }
 
         showCustomAlert(
             `<strong>Sign In Failed</strong><br><br>
             ${errorMessage}<br><br>
-            <small>Make sure your staff account is verified and you are using the correct credentials.</small>`,
+            <small>Make sure your volunteer account is verified by an admin and you are using the correct credentials.</small>`,
             'error',
             8000
         );

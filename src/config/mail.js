@@ -467,6 +467,104 @@ async function sendEventRejectedEmail(email, creatorName, eventTitle, reason) {
   return sendMail(email, subject, html);
 }
 
+/**
+ * Send event created verification email
+ */
+async function sendEventCreatedVerificationEmail(email, eventTitle, userType) {
+  const subject = 'Request Successfully Submitted - SHODESH';
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #176b3a 0%, #0d4020 100%); color: white; padding: 30px; border-radius: 8px; text-align: center; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header p { margin: 10px 0 0 0; font-size: 16px; opacity: 0.95; }
+        .content { padding: 30px; }
+        .success-badge { display: inline-block; background: #176b3a; color: white; padding: 8px 16px; border-radius: 6px; font-size: 14px; margin-bottom: 20px; }
+        .info-box { background: #f0faf7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #176b3a; }
+        .info-box h3 { margin: 0 0 10px 0; color: #176b3a; font-size: 16px; }
+        .info-box p { margin: 8px 0; color: #555; }
+        .timeline { margin: 20px 0; }
+        .timeline-item { display: flex; margin: 15px 0; }
+        .timeline-icon { width: 30px; height: 30px; background: #176b3a; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-right: 15px; flex-shrink: 0; }
+        .timeline-content h4 { margin: 0 0 5px 0; color: #176b3a; font-size: 14px; }
+        .timeline-content p { margin: 0; color: #666; font-size: 13px; }
+        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+        .button { display: inline-block; background: #176b3a; color: white; padding: 12px 30px; border-radius: 6px; text-decoration: none; margin: 20px 0; font-weight: 600; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>✓ Request Submitted Successfully</h1>
+          <p>Your ${userType === 'foundation' ? 'campaign' : 'help request'} is under review</p>
+        </div>
+        
+        <div class="content">
+          <div class="success-badge">Status: Under Review</div>
+          
+          <p>Dear Valued Member,</p>
+          
+          <p>Thank you for submitting your request to SHODESH. We have received your submission and it is now under review by our verification team.</p>
+          
+          <div class="info-box">
+            <h3>📋 Your Request Details</h3>
+            <p><strong>Title:</strong> ${eventTitle}</p>
+            <p><strong>Status:</strong> Under Review</p>
+            <p><strong>Submission Date:</strong> ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          </div>
+          
+          <div class="info-box">
+            <h3>⏱️ What Happens Next?</h3>
+            <div class="timeline">
+              <div class="timeline-item">
+                <div class="timeline-icon">1</div>
+                <div class="timeline-content">
+                  <h4>Initial Review</h4>
+                  <p>Our team verifies your documents and information</p>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-icon">2</div>
+                <div class="timeline-content">
+                  <h4>Verification (2-5 Business Days)</h4>
+                  <p>We conduct thorough verification of your request</p>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-icon">3</div>
+                <div class="timeline-content">
+                  <h4>Decision Notification</h4>
+                  <p>You will receive an email with the verification decision</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <p>You can track the status of your request anytime by logging into your dashboard.</p>
+          
+          <p>If you have any questions or concerns, please contact our support team at <strong>support@shodesh.com</strong></p>
+          
+          <a href="https://localhost:5000/profile${userType === 'foundation' ? 'foundation' : 'individual'}.html" class="button">View Your Dashboard</a>
+          
+          <p>Thank you for using SHODESH.<br><strong>The SHODESH Team</strong></p>
+        </div>
+        
+        <div class="footer">
+          <p>&copy; 2025 SHODESH. All rights reserved.</p>
+          <p>This is an automated email. Please do not reply to this message.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+  
+  return sendMail(email, subject, html);
+}
+
 module.exports = {
   sendMail,
   sendFoundationRegistrationEmail,
@@ -476,5 +574,6 @@ module.exports = {
   sendFoundationApprovedEmail,
   sendStaffApprovedEmail,
   sendEventApprovedEmail,
-  sendEventRejectedEmail
+  sendEventRejectedEmail,
+  sendEventCreatedVerificationEmail
 };

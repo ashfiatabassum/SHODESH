@@ -573,7 +573,7 @@ router.post('/signin', async (req, res) => {
     if (results.length === 0) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid username or password'
+        message: 'Invalid email or password'
       });
     }
 
@@ -583,7 +583,7 @@ router.post('/signin', async (req, res) => {
     if (individual.password !== password) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid username or password'
+        message: 'Invalid email or password'
       });
     }
 

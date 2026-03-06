@@ -7,7 +7,7 @@ function applyAsVolunteer() {
     
     if (!isSignedIn) {
         // If not signed in, redirect to volunteer sign in page
-        window.location.href = 'volunteer_signin.html';
+        window.location.href = 'staffsignin.html';
         return;
     }
     
@@ -17,8 +17,8 @@ function applyAsVolunteer() {
 
 // Function to check if user is signed in (placeholder - implement based on your auth system)
 function checkUserSignInStatus() {
-    // Check if volunteer is signed in
-    return localStorage.getItem('volunteerSignedIn') === 'true';
+    // Check if volunteer/staff is signed in
+    return localStorage.getItem('staffId') !== null;
 }
 
 // Function to show volunteer application form

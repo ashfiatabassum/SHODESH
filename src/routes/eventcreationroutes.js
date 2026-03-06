@@ -4,6 +4,7 @@ const router = express.Router();
 const upload = require('../config/upload'); // memoryStorage
 const db = require('../config/db'); // add DB connection
 const { getCategories, getEventTypes, createEvent } = require('../config/eventController');
+const { sendEventCreatedVerificationEmail } = require('../config/mail');
 
 // Get categories
 router.get('/categories', getCategories);
@@ -48,6 +49,33 @@ router.get('/events/:id/file/:type', (req, res) => {
     res.setHeader('Content-Type', contentType);
     res.send(fileBuffer);
   });
+});
+
+// ✅ Send event verification email
+router.post('/send-event-verification-email', async (req, res) => {
+  const { email, eventTitle, userType } = req.body;
+
+  if (!email || !eventTitle || !userType) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Missing required fields: email, eventTitle, userType' 
+    });
+  }
+
+  try {
+    await sendEventCreatedVerificationEmail(email, eventTitle, userType);
+    return res.json({ 
+      success: true, 
+      message: 'Verification email sent successfully' 
+    });
+  } catch (error) {
+    console.error('❌ Error sending verification email:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Failed to send verification email',
+      error: error.message 
+    });
+  }
 });
 
 module.exports = router;
