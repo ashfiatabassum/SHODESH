@@ -108,8 +108,8 @@
                         <label for="division">Division <span class="required">*</span></label>
                         <select id="division" name="division">
                             <option value="" disabled selected>Select Division</option>
-                            <option value="Barisal">Barisal</option>
-                            <option value="Chittagong">Chittagong</option>
+                            <option value="Barishal">Barishal</option>
+                            <option value="Chattogram">Chattogram</option>
                             <option value="Dhaka">Dhaka</option>
                             <option value="Khulna">Khulna</option>
                             <option value="Mymensingh">Mymensingh</option>
@@ -118,6 +118,20 @@
                             <option value="Sylhet">Sylhet</option>
                         </select>
                         <i class="fas fa-flag field-icon"></i>
+                    </div>
+                    <div class="form-group division-field" id="districtField" style="display:none;">
+                        <label for="district">District <span class="required">*</span></label>
+                        <select id="district" name="district">
+                            <option value="" disabled selected>Select District</option>
+                        </select>
+                        <i class="fas fa-city field-icon"></i>
+                    </div>
+                    <div class="form-group division-field" id="areaField" style="display:none;">
+                        <label for="area">Area/Locality <span class="required">*</span></label>
+                        <select id="area" name="area">
+                            <option value="" disabled selected>Select Area</option>
+                        </select>
+                        <i class="fas fa-map field-icon"></i>
                     </div>
                 </div>
 
@@ -159,24 +173,7 @@
 
     <div id="messageContainer"></div>
 
+    <script src="cascading-location-data.js"></script>
     <script src="donor.js"></script>
-    <script>
-    // Show/hide division field based on country selection
-    document.addEventListener('DOMContentLoaded', function() {
-        const countrySelect = document.getElementById('country');
-        const divisionField = document.getElementById('divisionField');
-        const divisionSelect = document.getElementById('division');
-        countrySelect.addEventListener('change', function() {
-            if (this.value === 'Bangladesh') {
-                divisionField.classList.add('show');
-                divisionSelect.setAttribute('required', 'required');
-            } else {
-                divisionField.classList.remove('show');
-                divisionSelect.removeAttribute('required');
-                divisionSelect.value = '';
-            }
-        });
-    });
-    </script>
 </body>
 </html>

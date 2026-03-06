@@ -7,34 +7,139 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="header.css" />
-    <link rel="stylesheet" href="volunteer.css" />
     <style>
         body {
-        background: #e0ebd5;
-      }
-      .about-banner-row {
-        background: #e0ebd5;
-        padding: 40px 0 0 0;
-        text-align: center;
-      }
-      .about-banner-row img {
-        max-width: 80%;
-        height: auto;
-        border-radius: 12px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-        margin-bottom: 40px;
-        transition: transform 0.35s cubic-bezier(.4,2,.6,1), box-shadow 0.35s;
-        cursor: pointer;
-        background: #e0ebd5;
-      }
-      .about-banner-row img:hover {
-        transform: scale(1.04) rotate(-1.5deg);
-        box-shadow: 0 8px 32px rgba(34,60,80,0.18);
-        z-index: 2;
-      }
-       .volunteer-info-section {
-        background: #e0ebd5;
-      }
+          background: #e0ebd5;
+          font-family: 'Roboto', Arial, sans-serif;
+          margin: 0;
+          padding: 0;
+        }
+        .about-banner-row {
+          background: #e0ebd5;
+          padding: 40px 0 0 0;
+          text-align: center;
+        }
+        .about-banner-row img {
+          max-width: 80%;
+          height: auto;
+          border-radius: 12px;
+          box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+          margin-bottom: 40px;
+          transition: transform 0.35s cubic-bezier(.4,2,.6,1), box-shadow 0.35s;
+          cursor: pointer;
+          background: #e0ebd5;
+        }
+        .about-banner-row img:hover {
+          transform: scale(1.04) rotate(-1.5deg);
+          box-shadow: 0 8px 32px rgba(34,60,80,0.18);
+          z-index: 2;
+        }
+        .volunteer-info-section {
+          background: #e0ebd5;
+        }
+        .info-card {
+          max-width: 900px;
+          margin: 0 auto;
+          padding: 40px;
+        }
+        .info-card h2 {
+          color: #176b3a;
+          font-size: 2rem;
+          font-weight: 700;
+          margin-bottom: 20px;
+          text-align: center;
+        }
+        .info-card > p {
+          font-size: 1.1rem;
+          line-height: 1.8;
+          color: #333;
+          margin-bottom: 15px;
+          text-align: justify;
+        }
+        .features {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 30px;
+          margin-top: 50px;
+        }
+        .feature {
+          background: white;
+          padding: 30px;
+          border-radius: 12px;
+          text-align: center;
+          box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+          transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .feature:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+        .feature-icon {
+          margin-bottom: 15px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          width: 70px;
+          height: 70px;
+          background: #e8f5e9;
+          border-radius: 50%;
+          margin-left: auto;
+          margin-right: auto;
+        }
+        .feature-icon img {
+          width: 40px;
+          height: 40px;
+        }
+        .feature h3 {
+          color: #176b3a;
+          font-size: 1.3rem;
+          font-weight: 600;
+          margin: 15px 0;
+        }
+        .feature p {
+          color: #555;
+          font-size: 0.95rem;
+          line-height: 1.6;
+          margin: 0;
+        }
+        
+        .nav-links a.active {
+          color: #d32f2f !important;
+          text-decoration: underline;
+        }
+        
+        .nav-links a, .nav-links button {
+          color: #176b3a;
+          text-decoration: none;
+          margin: 0 12px;
+          font-weight: 600;
+          font-size: 1.05rem;
+          background: none;
+          border: none;
+          cursor: pointer;
+          transition: color 0.2s;
+          border-radius: 0;
+          padding: 0;
+          box-shadow: none;
+          display: inline;
+        }
+        
+        .nav-links a:hover, .nav-links button:hover {
+          color: #219150;
+          text-decoration: underline;
+          background: none;
+          box-shadow: none;
+        }
+        
+        .profile-btn img {
+          box-shadow: 0 2px 8px rgba(34,60,80,0.10);
+          transition: box-shadow 0.2s, transform 0.2s;
+        }
+        
+        .profile-btn:hover img {
+          box-shadow: 0 6px 18px rgba(34,60,80,0.18);
+          transform: scale(1.08);
+        }
     </style>
     <script defer src="header.js"></script>
   </head>
@@ -46,47 +151,34 @@
       <div class="container">
         <div class="info-card">
           <h2>About Shodesh</h2>
-          <p>
-            Shodesh is a web-based donation management platform that connects
-            donors, staff, foundations, and individuals in need to create a
-            transparent, trackable, and trustworthy donation ecosystem in
-            Bangladesh.
-          </p>
-          <p>
-            Our mission is to bridge the gap between those who want to help and
-            those who need help, ensuring that every donation reaches its
-            intended destination and makes a real impact in people's lives.
-          </p>
+          
+          <p>Shodesh is a web-based donation management platform that connects donors, staff, foundations, and individuals in need to create a transparent, trackable, and trustworthy donation ecosystem in Bangladesh.</p>
+          
+          <p>Our mission is to bridge the gap between those who want to help and those who need help, ensuring that every donation reaches its intended destination and makes a real impact in people's lives.</p>
+          
           <div class="features">
             <div class="feature">
               <div class="feature-icon">
-                <img src="https://img.icons8.com/ios-filled/50/219150/visible--v1.png" alt="Transparency" style="width:40px;height:40px;">
+                <img src="https://img.icons8.com/ios-filled/50/219150/visible--v1.png" alt="Transparency">
               </div>
               <h3>Transparency</h3>
-              <p>
-                Every donation is tracked and verified to ensure complete
-                transparency
-              </p>
+              <p>Every donation is tracked and verified to ensure complete transparency</p>
             </div>
+            
             <div class="feature">
               <div class="feature-icon">
-                <img src="https://img.icons8.com/ios-filled/50/219150/handshake.png" alt="Impact" style="width:40px;height:40px;">
+                <img src="https://img.icons8.com/ios-filled/50/219150/handshake.png" alt="Impact">
               </div>
               <h3>Impact</h3>
-              <p>
-                Direct connection between donors and beneficiaries for maximum
-                impact
-              </p>
+              <p>Direct connection between donors and beneficiaries for maximum impact</p>
             </div>
+            
             <div class="feature">
               <div class="feature-icon">
-                <img src="https://img.icons8.com/ios-filled/50/219150/idea.png" alt="Innovation" style="width:40px;height:40px;">
+                <img src="https://img.icons8.com/ios-filled/50/219150/idea.png" alt="Innovation">
               </div>
               <h3>Innovation</h3>
-              <p>
-                Using technology to revolutionize charitable giving in
-                Bangladesh
-              </p>
+              <p>Using technology to revolutionize charitable giving in Bangladesh</p>
             </div>
           </div>
         </div>
@@ -99,14 +191,7 @@
       <img src="images/shodesh2.png" alt="Shodesh Banner 2">
       <img src="images/shodesh3.png" alt="Shodesh Banner 3">
     </div>
-<script>
-  // Highlight About link only on about page
-  if (
-    window.location.pathname.endsWith("about.html")
-  ) {
-    document.querySelector('.about-link').classList.add('active');
-  }
-</script>
+
     <!-- Footer with volunteer page graphics -->
     <footer class="volunteer-footer">
       <div class="container">

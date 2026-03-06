@@ -2,7 +2,7 @@
 
 // Initialize districts when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    initializeDistricts();
+    setupCascadingDropdowns('#division', '#district', '#area');
     initializeFormValidation();
     initializePasswordToggle();
 });

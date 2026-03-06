@@ -6,10 +6,38 @@
     <title>Discover Campaigns - SHODESH</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="header.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="search.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        .back-nav {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 999;
+            width: 40px;
+            height: 40px;
+            background: #176b3a;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+            text-decoration: none;
+            border: none;
+            padding: 0;
+        }
+        
+        .back-nav:hover {
+            background: #219150;
+            transform: scale(1.1);
+        }
+        
+        .back-nav i {
+            font-size: 18px;
+        }
+        
         /* Autocomplete Dropdown Styles */
         .search-container {
             position: relative;
@@ -164,10 +192,12 @@
             }
         }
     </style>
-    <script defer src="header.js"></script>
+
 </head>
 <body>
-    <div id="site-header"></div>
+    <a href="index.html" class="back-nav" aria-label="Go home" title="Home">
+        <i class="fas fa-arrow-left"></i>
+    </a>
 
     <!-- Hero Section -->
     <div class="search-hero">

@@ -284,6 +284,58 @@ function findProjects() {
   window.location.href = 'search.html';
 }
 
+function confirmLogout() {
+  // Create a toaster confirmation dialog
+  const toasterContainer = document.createElement('div');
+  toasterContainer.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 1002;
+    min-width: 300px;
+    text-align: center;
+  `;
+  toasterContainer.innerHTML = `
+    <h3 style="margin: 0 0 12px 0; color: #1a3c2f; font-size: 18px;">Confirm Logout</h3>
+    <p style="margin: 0 0 20px 0; color: #64748b; font-size: 14px;">Are you really sure you want to log out?</p>
+    <div style="display: flex; gap: 10px; justify-content: center;">
+      <button id="confirmYes" style="padding: 10px 20px; background: #d32f2f; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Yes, Logout</button>
+      <button id="confirmNo" style="padding: 10px 20px; background: #e0e0e0; color: #333; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Cancel</button>
+    </div>
+  `;
+  
+  // Create overlay
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1001;
+  `;
+  
+  document.body.appendChild(overlay);
+  document.body.appendChild(toasterContainer);
+  
+  document.getElementById('confirmYes').addEventListener('click', () => {
+    localStorage.removeItem('donorData');
+    localStorage.removeItem('donorId');
+    window.location.href = 'index.html';
+  });
+  
+  document.getElementById('confirmNo').addEventListener('click', () => {
+    document.body.removeChild(overlay);
+    document.body.removeChild(toasterContainer);
+  });
+}
+
 function logout() {
   if (confirm('Are you sure you want to logout? This will clear your session data.')) {
     localStorage.removeItem('donorData');

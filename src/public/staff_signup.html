@@ -95,44 +95,11 @@
                     
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="house_no">House/Building No. <span class="required">*</span></label>
-                            <input type="text" id="house_no" name="house_no" placeholder="House/Building number" required>
-                            <i class="fas fa-home field-icon"></i>
-                        </div>
-                        <div class="form-group">
-                            <label for="road_no">Road/Street No. <span class="required">*</span></label>
-                            <input type="text" id="road_no" name="road_no" placeholder="Road/Street number" required>
-                            <i class="fas fa-road field-icon"></i>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="area">Area/Locality <span class="required">*</span></label>
-                            <input type="text" id="area" name="area" placeholder="Area or locality name" required>
-                            <i class="fas fa-map field-icon"></i>
-                        </div>
-                        <div class="form-group">
-                            <label for="zip">ZIP Code <span class="required">*</span></label>
-                            <input type="text" id="zip" name="zip" placeholder="1000" maxlength="4" required>
-                            <i class="fas fa-mail-bulk field-icon"></i>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="district">District <span class="required">*</span></label>
-                            <select id="district" name="district" required>
-                                <option value="">Select District</option>
-                            </select>
-                            <i class="fas fa-city field-icon"></i>
-                        </div>
-                        <div class="form-group">
                             <label for="administrative_div">Division <span class="required">*</span></label>
                             <select id="administrative_div" name="administrative_div" required>
-                                <option value="">Select Division</option>
-                                <option value="Barisal">Barisal</option>
-                                <option value="Chittagong">Chittagong</option>
+                                <option value="" disabled selected>Select Division</option>
+                                <option value="Barishal">Barishal</option>
+                                <option value="Chattogram">Chattogram</option>
                                 <option value="Dhaka">Dhaka</option>
                                 <option value="Khulna">Khulna</option>
                                 <option value="Mymensingh">Mymensingh</option>
@@ -141,6 +108,41 @@
                                 <option value="Sylhet">Sylhet</option>
                             </select>
                             <i class="fas fa-flag field-icon"></i>
+                        </div>
+                        <div class="form-group">
+                            <label for="district">District <span class="required">*</span></label>
+                            <select id="district" name="district" required disabled>
+                                <option value="" disabled selected>Select District</option>
+                            </select>
+                            <i class="fas fa-city field-icon"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="area">Area/Locality <span class="required">*</span></label>
+                            <select id="area" name="area" required disabled>
+                                <option value="" disabled selected>Select Area</option>
+                            </select>
+                            <i class="fas fa-map field-icon"></i>
+                        </div>
+                        <div class="form-group">
+                            <label for="house_no">House/Building No. <span class="required">*</span></label>
+                            <input type="text" id="house_no" name="house_no" placeholder="House/Building number" required>
+                            <i class="fas fa-home field-icon"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="road_no">Road/Street No. <span class="required">*</span></label>
+                            <input type="text" id="road_no" name="road_no" placeholder="Road/Street number" required>
+                            <i class="fas fa-road field-icon"></i>
+                        </div>
+                        <div class="form-group">
+                            <label for="zip">ZIP Code <span class="required">*</span></label>
+                            <input type="text" id="zip" name="zip" placeholder="1000" maxlength="5" required>
+                            <i class="fas fa-mail-bulk field-icon"></i>
                         </div>
                     </div>
                 </div>
@@ -207,6 +209,7 @@
     </div>
 
     <div id="messageContainer"></div>
+    <script src="cascading-location-data.js"></script>
     <script src="staff_signup.js"></script>
 </body>
 </html>

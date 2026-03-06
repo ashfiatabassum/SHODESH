@@ -7,7 +7,7 @@
 
 body {
   font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #4a7c59 0%, #2d5a3d 100%);
+  background: #f8f9fa;
   min-height: 100vh;
   color: #333;
   overflow-x: hidden;
@@ -56,7 +56,7 @@ body {
 .profile-avatar {
   position: relative;
   font-size: 80px;
-  color: #4a7c59;
+  color: #176b3a;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
   transition: transform 0.3s ease;
 }
@@ -88,9 +88,9 @@ body {
 .donor-name {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #2d5a3d;
+  color: #0d4020;
   margin-bottom: 8px;
-  background: linear-gradient(45deg, #4a7c59, #2d5a3d);
+  background: linear-gradient(45deg, #176b3a, #0d4020);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -114,16 +114,18 @@ body {
   flex-direction: column;
   align-items: center;
   padding: 15px 20px;
-  background: linear-gradient(135deg, #4a7c59, #5a8c69);
+  background: white;
+  border-left: 4px solid #176b3a;
   border-radius: 12px;
-  color: white;
+  color: #333;
   min-width: 120px;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .stat-item:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(74, 124, 89, 0.3);
+  box-shadow: 0 8px 25px rgba(23, 107, 58, 0.2);
 }
 
 .stat-value {
@@ -162,34 +164,46 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #4a7c59, #5a8c69);
+  background: #176b3a;
   color: white;
-  box-shadow: 0 4px 15px rgba(74, 124, 89, 0.3);
+  box-shadow: 0 4px 15px rgba(23, 107, 58, 0.3);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(74, 124, 89, 0.4);
+  box-shadow: 0 6px 20px rgba(23, 107, 58, 0.4);
+  background: #0d4020;
 }
 
 .btn-secondary {
-  background: #6c757d;
+  background: #d32f2f;
   color: white;
 }
 
 .btn-secondary:hover {
-  background: #5a6268;
+  background: #b71c1c;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(211, 47, 47, 0.4);
+}
+
+.btn-danger {
+  background: #d32f2f;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #b71c1c;
   transform: translateY(-2px);
 }
 
 .btn-outline {
   background: transparent;
-  color: #4a7c59;
-  border: 2px solid #4a7c59;
+  color: #176b3a;
+  border: 2px solid #176b3a;
 }
 
 .btn-outline:hover {
-  background: #4a7c59;
+  background: #176b3a;
   color: white;
   transform: translateY(-2px);
 }
@@ -213,7 +227,7 @@ body {
 }
 
 .card-header {
-  background: linear-gradient(135deg, #4a7c59, #5a8c69);
+  background: linear-gradient(135deg, #176b3a, #219150);
   color: white;
   padding: 20px 25px;
   display: flex;
@@ -275,7 +289,7 @@ body {
   padding: 15px 20px;
   background: #f8f9fa;
   border-radius: 10px;
-  border-left: 4px solid #4a7c59;
+  border-left: 4px solid #176b3a;
   transition: all 0.3s ease;
 }
 
@@ -291,7 +305,7 @@ body {
 
 .info-item .value {
   font-weight: 500;
-  color: #2d5a3d;
+  color: #0d4020;
 }
 
 /* Address Display */
@@ -337,13 +351,13 @@ body {
 
 .stat-card i {
   font-size: 2rem;
-  color: #4a7c59;
+  color: #176b3a;
 }
 
 .stat-number {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #2d5a3d;
+  color: #0d4020;
   display: block;
 }
 
@@ -372,7 +386,7 @@ body {
 .donation-item:hover {
   transform: translateX(10px);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  border-color: #4a7c59;
+  border-color: #176b3a;
 }
 
 .donation-info {
@@ -381,7 +395,7 @@ body {
 
 .donation-title {
   font-weight: 600;
-  color: #2d5a3d;
+  color: #0d4020;
   margin-bottom: 5px;
 }
 
@@ -393,7 +407,7 @@ body {
 .donation-amount {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #4a7c59;
+  color: #176b3a;
 }
 
 .donation-date {
@@ -474,7 +488,7 @@ body {
 }
 
 .modal-header {
-  background: linear-gradient(135deg, #4a7c59, #5a8c69);
+  background: linear-gradient(135deg, #176b3a, #219150);
   color: white;
   padding: 20px 25px;
   display: flex;
@@ -528,7 +542,7 @@ body {
 
 .form-group input:focus {
   outline: none;
-  border-color: #4a7c59;
+  border-color: #176b3a;
 }
 
 .form-actions {
@@ -553,7 +567,7 @@ select {
 }
 
 select option {
-  background: #4a7c59;
+  background: #176b3a;
   color: white;
 }
 
@@ -698,7 +712,7 @@ select option {
 }
 
 .home-btn {
-  background: linear-gradient(135deg, #4a7c59, #5a8c69);
+  background: linear-gradient(135deg, #176b3a, #219150);
   color: white;
   border: none;
   width: 50px;
@@ -716,7 +730,7 @@ select option {
 .home-btn:hover {
   transform: translateY(-3px) scale(1.1);
   box-shadow: 0 8px 25px rgba(74, 124, 89, 0.5);
-  background: linear-gradient(135deg, #5a8c69, #6a9c79);
+  background: linear-gradient(135deg, #219150, #6a9c79);
 }
 
 .home-btn:active {
@@ -740,8 +754,8 @@ select option {
 /* White logout button style */
 .btn-secondary {
   background: #fff !important;
-  color: #4a7c59 !important;
-  border: 2px solid #4a7c59;
+  color: #176b3a !important;
+  border: 2px solid #176b3a;
   font-weight: 600;
   box-shadow: 0 2px 8px rgba(60, 60, 120, 0.08);
   transition: background 0.2s, color 0.2s, border-color 0.2s;
@@ -753,7 +767,7 @@ select option {
   border-color: #2c4a36;
 }
 .btn-danger {
-  background: linear-gradient(135deg, #4a7c59, #5a8c69);
+  background: linear-gradient(135deg, #176b3a, #219150);
   color: white;
   border: none;
   font-weight: 600;
@@ -764,7 +778,7 @@ select option {
 }
 
 .btn-danger:hover {
-  background: linear-gradient(135deg, #2d5a3d, #4a7c59);
+  background: linear-gradient(135deg, #0d4020, #176b3a);
   box-shadow: 0 6px 18px rgba(74, 124, 89, 0.4);
   transform: translateY(-2px);
 }

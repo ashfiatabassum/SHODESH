@@ -41,7 +41,7 @@ async function sendMail(to, subject, html) {
  * Send registration confirmation email to NGO/Foundation
  */
 async function sendFoundationRegistrationEmail(email, foundationName) {
-  const subject = 'Thank You for Registering with SHODESH';
+  const subject = 'Thank You for Registering - SHODESH';
   const html = `
     <!DOCTYPE html>
     <html>
@@ -53,48 +53,34 @@ async function sendFoundationRegistrationEmail(email, foundationName) {
         .header h1 { margin: 0; font-size: 28px; }
         .content { background: #f9f9f9; padding: 30px; border-radius: 8px; }
         .content h2 { color: #176b3a; margin-top: 0; }
-        .highlight { background: #fff; padding: 20px; border-left: 4px solid #176b3a; margin: 20px 0; border-radius: 4px; }
         .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-        .button { display: inline-block; background: #176b3a; color: white; padding: 12px 30px; border-radius: 6px; text-decoration: none; margin: 20px 0; }
       </style>
     </head>
     <body>
       <div class="container">
         <div class="header">
-          <h1>🎉 Welcome to SHODESH</h1>
+          <h1>Welcome to SHODESH</h1>
         </div>
         
         <div class="content">
-          <h2>Thank You for Registering!</h2>
+          <h2>Thank You for Registering</h2>
           
           <p>Dear <strong>${foundationName}</strong>,</p>
           
-          <p>Thank you for registering your organization with SHODESH. We are excited to have you join our community of dedicated organizations making a positive impact across Bangladesh.</p>
+          <p>We have received your registration. Your account is now under review by our verification team.</p>
           
-          <div class="highlight">
-            <strong>📋 What Happens Next?</strong>
-            <p>Your account is currently being verified by our admin team. We conduct a thorough review of all submissions to maintain the integrity and trust of our platform. This process typically takes <strong>2-5 business days</strong>.</p>
-            <p>Once the verification is complete, you will receive a notification email with further instructions on how to access your dashboard and manage your campaigns.</p>
-          </div>
+          <p><strong>What happens next:</strong></p>
+          <p>We are validating your organization details and documents. The verification process typically takes 2-5 business days.</p>
           
-          <p><strong>What to Expect:</strong></p>
-          <ul>
-            <li>Your organization information will be reviewed</li>
-            <li>Your documents will be verified for authenticity</li>
-            <li>Our team will contact you if any additional information is needed</li>
-            <li>You'll be notified of the verification decision via email</li>
-          </ul>
+          <p>Once your account is verified, we will notify you via email with full access instructions.</p>
           
-          <p>If you have any questions or concerns in the meantime, please don't hesitate to reach out to our support team at <strong>support@shodesh.com</strong>.</p>
-          
-          <p>Thank you for your patience and commitment to making a difference!</p>
+          <p>Thank you for your patience.</p>
           
           <p>Best regards,<br><strong>The SHODESH Team</strong></p>
         </div>
         
         <div class="footer">
           <p>&copy; 2025 SHODESH. All rights reserved.</p>
-          <p>This is an automated email. Please do not reply directly to this message.</p>
         </div>
       </div>
     </body>
@@ -108,7 +94,7 @@ async function sendFoundationRegistrationEmail(email, foundationName) {
  * Send registration confirmation email to Staff/Volunteer
  */
 async function sendStaffRegistrationEmail(email, firstName) {
-  const subject = 'Thank You for Registering as a Volunteer - SHODESH';
+  const subject = 'Thank You for Registering - SHODESH';
   const html = `
     <!DOCTYPE html>
     <html>
@@ -120,48 +106,132 @@ async function sendStaffRegistrationEmail(email, firstName) {
         .header h1 { margin: 0; font-size: 28px; }
         .content { background: #f9f9f9; padding: 30px; border-radius: 8px; }
         .content h2 { color: #176b3a; margin-top: 0; }
-        .highlight { background: #fff; padding: 20px; border-left: 4px solid #176b3a; margin: 20px 0; border-radius: 4px; }
         .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-        .button { display: inline-block; background: #176b3a; color: white; padding: 12px 30px; border-radius: 6px; text-decoration: none; margin: 20px 0; }
       </style>
     </head>
     <body>
       <div class="container">
         <div class="header">
-          <h1>🌟 Welcome to SHODESH</h1>
+          <h1>Welcome to SHODESH</h1>
         </div>
         
         <div class="content">
-          <h2>Thank You for Registering as a Volunteer!</h2>
+          <h2>Thank You for Registering</h2>
           
           <p>Dear <strong>${firstName}</strong>,</p>
           
-          <p>Thank you for registering as a volunteer with SHODESH. Your commitment to making a positive impact is truly appreciated. We are excited to have you join our team of dedicated volunteers across Bangladesh.</p>
+          <p>We have received your application to join SHODESH as a volunteer.</p>
           
-          <div class="highlight">
-            <strong>✅ What Happens Next?</strong>
-            <p>Your volunteer account is currently being verified by our admin team. We conduct a thorough review of all applications to ensure quality and compatibility with our mission. This process typically takes <strong>2-5 business days</strong>.</p>
-            <p>Once your verification is complete, you will receive a notification email with information about volunteer opportunities, orientation details, and how to access your volunteer dashboard.</p>
-          </div>
+          <p><strong>What happens next:</strong></p>
+          <p>We are reviewing your application and verifying your information. The verification process typically takes 2-5 business days.</p>
           
-          <p><strong>What to Expect:</strong></p>
-          <ul>
-            <li>Your personal details will be verified for security</li>
-            <li>Your qualifications and background will be reviewed</li>
-            <li>Our team will contact you if additional information is needed</li>
-            <li>You'll be notified of the verification decision via email</li>
-          </ul>
+          <p>Once your account is verified, we will notify you via email with details on how to get started.</p>
           
-          <p>In the meantime, feel free to explore our website to learn more about the campaigns and opportunities available. If you have any questions, please reach out to <strong>volunteers@shodesh.com</strong>.</p>
-          
-          <p>Thank you for your dedication and support!</p>
+          <p>Thank you for your interest in making a difference.</p>
           
           <p>Best regards,<br><strong>The SHODESH Team</strong></p>
         </div>
         
         <div class="footer">
           <p>&copy; 2025 SHODESH. All rights reserved.</p>
-          <p>This is an automated email. Please do not reply directly to this message.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+  
+  return sendMail(email, subject, html);
+}
+
+/**
+ * Send registration confirmation email to Donor
+ */
+async function sendDonorRegistrationEmail(email, donorName) {
+  const subject = 'Welcome to SHODESH';
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #176b3a; color: white; padding: 30px; border-radius: 8px; text-align: center; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .content { padding: 30px; }
+        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>Welcome to SHODESH</h1>
+        </div>
+        
+        <div class="content">
+          <p>Hello <strong>${donorName}</strong>,</p>
+          
+          <p>Thank you for registering with SHODESH. Your account is now active.</p>
+          
+          <p><strong>You can now log in using:</strong></p>
+          <p>
+            Email: <strong>${email}</strong><br>
+            Visit: <a href="https://shodesh.com/login" style="color: #176b3a;">https://shodesh.com/login</a>
+          </p>
+          
+          <p>Best regards,<br>The SHODESH Team</p>
+        </div>
+        
+        <div class="footer">
+          <p>&copy; 2025 SHODESH. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+  
+  return sendMail(email, subject, html);
+}
+
+/**
+ * Send registration confirmation email to Individual
+ */
+async function sendIndividualRegistrationEmail(email, firstName) {
+  const subject = 'Welcome to SHODESH';
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #176b3a; color: white; padding: 30px; border-radius: 8px; text-align: center; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .content { padding: 30px; }
+        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>Welcome to SHODESH</h1>
+        </div>
+        
+        <div class="content">
+          <p>Hello <strong>${firstName}</strong>,</p>
+          
+          <p>Thank you for registering with SHODESH. Your account is now active.</p>
+          
+          <p><strong>You can now log in using:</strong></p>
+          <p>
+            Email: <strong>${email}</strong><br>
+            Visit: <a href="https://shodesh.com/login" style="color: #176b3a;">https://shodesh.com/login</a>
+          </p>
+          
+          <p>Best regards,<br>The SHODESH Team</p>
+        </div>
+        
+        <div class="footer">
+          <p>&copy; 2025 SHODESH. All rights reserved.</p>
         </div>
       </div>
     </body>
@@ -401,6 +471,8 @@ module.exports = {
   sendMail,
   sendFoundationRegistrationEmail,
   sendStaffRegistrationEmail,
+  sendDonorRegistrationEmail,
+  sendIndividualRegistrationEmail,
   sendFoundationApprovedEmail,
   sendStaffApprovedEmail,
   sendEventApprovedEmail,

@@ -24,10 +24,7 @@ function setActiveNav() {
     "index.html": "home",
     "": "home",
     "about.html": "about",
-    "contact.html": "contact",
-    "resources.html": "resources",
     "search.html": "search",
-    "browse.html": "categories",
     "signin.html": "signin",
     "volunteer.html": "join",
   };

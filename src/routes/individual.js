@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const { deleteIndividualProfile } = require('../config/individualController');
+const { sendIndividualRegistrationEmail } = require('../config/mail');
 //const authenticate = require('../middlewares/authenticate');
 
 // Generate individual ID (simple implementation)
@@ -410,6 +411,16 @@ if (req.body.assistingStaffId) {
 }
 
 console.log('🎉 Registration successful for individual:', individualId);
+
+// Send registration confirmation email
+try {
+  await sendIndividualRegistrationEmail(email, firstName);
+  console.log('✅ Registration email sent to:', email);
+} catch (emailError) {
+  console.warn('⚠️ Failed to send registration email:', emailError.message);
+  // Don't fail the registration if email fails
+}
+
 res.status(201).json({
   success: true,
   message: 'Account created successfully! Welcome to SHODESH platform.',

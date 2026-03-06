@@ -7,7 +7,7 @@
 
 body {
   font-family: 'Roboto', sans-serif;
-  background: linear-gradient(135deg, #4a7c59 0%, #2d5a3d 100%);
+  background: #f8f9fa;
   min-height: 100vh;
   color: #333;
 }
@@ -38,7 +38,7 @@ body {
 .individual-avatar {
   position: relative;
   font-size: 80px;
-  color: #4a7c59;
+  color: #176b3a;
   transition: transform 0.3s ease;
 }
 
@@ -69,7 +69,7 @@ body {
 .individual-name {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #2d5a3d;
+  color: #0d4020;
   margin-bottom: 8px;
 }
 
@@ -90,15 +90,18 @@ body {
   flex-direction: column;
   align-items: center;
   padding: 15px 20px;
-  background: linear-gradient(135deg, #4a7c59, #5a8c69);
+  background: white;
+  border-left: 4px solid #176b3a;
   border-radius: 12px;
-  color: white;
+  color: #333;
   min-width: 120px;
   transition: transform 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .stat-item:hover {
   transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(23, 107, 58, 0.2);
 }
 
 .stat-value {
@@ -133,22 +136,36 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #4a7c59, #5a8c69);
+  background: #176b3a;
   color: white;
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(74, 124, 89, 0.4);
+  box-shadow: 0 6px 20px rgba(23, 107, 58, 0.4);
+  background: #0d4020;
 }
 
 .btn-secondary {
-  background: #6c757d;
+  background: #d32f2f;
   color: white;
 }
 
-.btn-secondary:hover {
-  background: #5a6268;
+.btn-secondary:hover, .btn-danger:hover {
+  background: #b71c1c;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(211, 47, 47, 0.4);
+}
+
+.btn-danger {
+  background: #d32f2f;
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 /* Card Styles */
@@ -167,7 +184,7 @@ body {
 }
 
 .card-header {
-  background: linear-gradient(135deg, #4a7c59, #5a8c69);
+  background: linear-gradient(135deg, #176b3a, #219150);
   color: white;
   padding: 20px 25px;
 }
@@ -199,7 +216,7 @@ body {
   padding: 15px 20px;
   background: #f8f9fa;
   border-radius: 10px;
-  border-left: 4px solid #4a7c59;
+  border-left: 4px solid #176b3a;
   transition: all 0.3s ease;
 }
 
@@ -215,7 +232,7 @@ body {
 
 .info-item .value {
   font-weight: 500;
-  color: #2d5a3d;
+  color: #0d4020;
 }
 
 
@@ -249,9 +266,9 @@ body {
 
 .btn-outline {
   padding: 10px 20px;
-  border: 2px solid #4a7c59;
+  border: 2px solid #176b3a;
   background: transparent;
-  color: #4a7c59;
+  color: #176b3a;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
@@ -263,7 +280,7 @@ body {
 }
 
 .btn-outline:hover {
-  background: #4a7c59;
+  background: #176b3a;
   color: white;
   transform: translateY(-2px);
 }
@@ -337,13 +354,13 @@ body {
 
 .stat-card i {
   font-size: 2rem;
-  color: #4a7c59;
+  color: #176b3a;
 }
 
 .stat-number {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #2d5a3d;
+  color: #0d4020;
   display: block;
 }
 
@@ -371,12 +388,12 @@ body {
 
 .contribution-item:hover {
   transform: translateX(10px);
-  border-color: #4a7c59;
+  border-color: #176b3a;
 }
 
 .contribution-info .contribution-title {
   font-weight: 600;
-  color: #2d5a3d;
+  color: #0d4020;
   margin-bottom: 5px;
 }
 
@@ -388,7 +405,7 @@ body {
 .contribution-amount {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #4a7c59;
+  color: #176b3a;
 }
 
 .contribution-date {
@@ -466,7 +483,7 @@ body {
 }
 
 .modal-header {
-  background: linear-gradient(135deg, #4a7c59, #5a8c69);
+  background: linear-gradient(135deg, #176b3a, #219150);
   color: white;
   padding: 20px 25px;
   display: flex;
@@ -524,7 +541,7 @@ body {
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #4a7c59;
+  border-color: #176b3a;
 }
 
 .form-actions {
@@ -606,7 +623,7 @@ body {
 
 .request-title {
   font-weight: 600;
-  color: #2d5a3d;
+  color: #0d4020;
   font-size: 1.1rem;
 }
 
@@ -630,7 +647,7 @@ body {
 .request-category {
   display: inline-block;
   padding: 4px 12px;
-  background: #4a7c59;
+  background: #176b3a;
   color: white;
   border-radius: 20px;
   font-size: 0.8rem;
@@ -656,7 +673,7 @@ body {
 }
 
 .progress-fill {
-  background: linear-gradient(135deg, #4a7c59, #5a8c69);
+  background: linear-gradient(135deg, #176b3a, #219150);
   height: 100%;
   border-radius: 10px;
   transition: width 0.3s ease;
@@ -678,18 +695,18 @@ body {
 
 .request-meta i {
   margin-right: 5px;
-  color: #4a7c59;
+  color: #176b3a;
 }
 
 /* Donation Message */
 .donation-message {
   font-style: italic;
-  color: #4a7c59;
+  color: #176b3a;
   margin-top: 5px;
   padding: 8px 12px;
   background: #f8f9fa;
   border-radius: 8px;
-  border-left: 3px solid #4a7c59;
+  border-left: 3px solid #176b3a;
 }
 
 
@@ -706,7 +723,7 @@ body {
 }
 
 .home-btn {
-  background: linear-gradient(135deg, #4a7c59, #5a8c69);
+  background: linear-gradient(135deg, #176b3a, #219150);
   color: white;
   border: none;
   width: 50px;
@@ -724,7 +741,7 @@ body {
 .home-btn:hover {
   transform: translateY(-3px) scale(1.1);
   box-shadow: 0 8px 25px rgba(74, 124, 89, 0.5);
-  background: linear-gradient(135deg, #5a8c69, #6a9c79);
+  background: linear-gradient(135deg, #219150, #6a9c79);
 }
 
 .home-btn:active {
@@ -747,8 +764,8 @@ body {
 
 .btn-secondary {
   background: #fff !important;
-  color: #4a7c59 !important;
-  border: 2px solid #4a7c59;
+  color: #176b3a !important;
+  border: 2px solid #176b3a;
   font-weight: 600;
   box-shadow: 0 2px 8px rgba(60, 60, 120, 0.08);
   transition: background 0.2s, color 0.2s, border-color 0.2s;
@@ -763,7 +780,7 @@ body {
 }
 
 .project-title-btn {
-  background: linear-gradient(135deg, #4a7c59, #5a8c69);
+  background: linear-gradient(135deg, #176b3a, #219150);
   color: white;
   border: none;
   border-radius: 10px;
@@ -780,7 +797,7 @@ body {
 }
 
 .project-title-btn:hover {
-  background: linear-gradient(135deg, #5a8c69, #6bbf59);
+  background: linear-gradient(135deg, #219150, #6bbf59);
   box-shadow: 0 6px 18px rgba(74,124,89,0.18);
   transform: translateY(-2px) scale(1.02);
 }
@@ -790,9 +807,9 @@ body {
   border-radius: 10px;
   padding: 18px 24px;
   margin-top: 8px;
-  border-left: 5px solid #4a7c59;
+  border-left: 5px solid #176b3a;
   font-size: 1.12rem; /* Slightly larger text */
-  color: #2d5a3d;
+  color: #0d4020;
   box-shadow: 0 2px 8px rgba(74,124,89,0.07);
   line-height: 1.7;
   font-family: 'Roboto', sans-serif;
@@ -806,7 +823,7 @@ body {
 }
 
 .project-details strong {
-  color: #4a7c59;
+  color: #176b3a;
   font-weight: 700;
   font-size: 1.12rem;
 }
@@ -817,7 +834,7 @@ body {
 .donations-section h4 {
   font-size: 1.15rem;
   margin-bottom: 10px;
-  color: #4a7c59;
+  color: #176b3a;
   font-weight: 700;
 }
 
@@ -831,7 +848,7 @@ body {
   align-items: center;
   justify-content: flex-start;
   font-size: 1.08rem;
-  color: #2d5a3d;
+  color: #0d4020;
   background: #f8f9fa;
   border-radius: 6px;
   padding: 8px 12px;
@@ -841,7 +858,7 @@ body {
 /* ...rest of your code... */
 /* Danger Button (for Delete Profile) */
 .btn-danger {
-  background: linear-gradient(135deg, #4a7c59, #5a8c69);
+  background: linear-gradient(135deg, #176b3a, #219150);
   color: white;
   border: none;
   font-weight: 600;
@@ -852,7 +869,7 @@ body {
 }
 
 .btn-danger:hover {
-  background: linear-gradient(135deg, #2d5a3d, #4a7c59);
+  background: linear-gradient(135deg, #0d4020, #176b3a);
   box-shadow: 0 6px 18px rgba(74, 124, 89, 0.4);
   transform: translateY(-2px);
 }

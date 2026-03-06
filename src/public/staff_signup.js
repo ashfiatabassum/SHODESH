@@ -3,7 +3,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Debug: Confirm JS loaded
     console.log('staff_signup.js loaded');
-    initializeDistricts();
+    setupCascadingDropdowns('#administrative_div', '#district', '#area');
     initializePasswordToggle();
 
     const form = document.getElementById('staffSignupForm');

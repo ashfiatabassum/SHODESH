@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const { sendDonorRegistrationEmail } = require('../config/mail');
 
 // Generate donor ID (simple implementation)
 function generateDonorId() {
@@ -203,6 +204,15 @@ router.post('/register', async (req, res) => {
     });
 
     console.log('🎉 Registration successful for donor:', donorId);
+    
+    // Send registration confirmation email
+    try {
+      await sendDonorRegistrationEmail(email, `${firstName} ${lastName}`);
+      console.log('✅ Registration email sent to:', email);
+    } catch (emailError) {
+      console.warn('⚠️ Failed to send registration email:', emailError.message);
+      // Don't fail the registration if email fails
+    }
     
   // Store session (auto sign-in after registration)
   try { if (req.session) { req.session.donorId = donorId; req.session.donorUsername = username; } } catch(e){ console.warn('⚠️ Unable to persist session after registration:', e.message); }
