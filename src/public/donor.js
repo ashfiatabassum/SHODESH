@@ -187,25 +187,15 @@ function validateForm() {
 
     // Validate division field for Bangladesh
     const division = document.getElementById('division').value;
-    const district = document.getElementById('district').value;
-    const area = document.getElementById('area').value;
     
     if (country === 'Bangladesh') {
         if (!division) {
             showCustomAlert('Please select a division for Bangladesh.', 'warning');
             return false;
         }
-        if (!district) {
-            showCustomAlert('Please select a district for Bangladesh.', 'warning');
-            return false;
-        }
-        if (!area) {
-            showCustomAlert('Please select an area/locality for Bangladesh.', 'warning');
-            return false;
-        }
         
         // Validate division is one of the valid Bangladesh divisions
-        const validDivisions = ['Barishal', 'Chattogram', 'Dhaka', 'Khulna', 'Mymensingh', 'Rajshahi', 'Rangpur', 'Sylhet'];
+        const validDivisions = ['Barisal', 'Chittagong', 'Dhaka', 'Khulna', 'Mymensingh', 'Rajshahi', 'Rangpur', 'Sylhet'];
         if (!validDivisions.includes(division)) {
             showCustomAlert('Please select a valid division.', 'error');
             return false;
@@ -221,8 +211,6 @@ function validateForm() {
         email: email,
         country: country,
         division: country === 'Bangladesh' ? division : null,
-        district: country === 'Bangladesh' ? district : null,
-        area: country === 'Bangladesh' ? area : null,
         dateOfBirth: dateOfBirth
     };
 
@@ -248,9 +236,9 @@ function validateForm() {
         console.log('📋 Response data:', data);
         if (data.success) {
             showCustomAlert(
-                `🎉 Account created successfully!<br><br>
-                <strong>Your Donor ID:</strong> ${data.donorId}<br><br>
-                You will now be redirected to the sign-in page.`, 
+                `✅ Account created successfully!<br><br>
+                A verification email has been sent to your email address.<br><br>
+                Please sign in to complete your profile setup.`, 
                 'success', 
                 4000
             );
@@ -308,24 +296,17 @@ function validateForm() {
 // Add real-time validation when page loads
 document.addEventListener('DOMContentLoaded', function() {
     const countrySelect = document.getElementById('country');
-    const divisionField = document.getElementById('divisionField');
-    const districtField = document.getElementById('districtField');
-    const areaField = document.getElementById('areaField');
+    const divisionGroup = document.getElementById('divisionGroup');
     const divisionSelect = document.getElementById('division');
     
     // Show/hide Bangladesh-specific fields based on country selection
     if (countrySelect) {
         countrySelect.addEventListener('change', function() {
             if (this.value === 'Bangladesh') {
-                divisionField.style.display = 'block';
-                districtField.style.display = 'block';
-                areaField.style.display = 'block';
+                divisionGroup.style.display = 'block';
                 divisionSelect.setAttribute('required', 'required');
-                setupCascadingDropdowns('#division', '#district', '#area');
             } else {
-                divisionField.style.display = 'none';
-                districtField.style.display = 'none';
-                areaField.style.display = 'none';
+                divisionGroup.style.display = 'none';
                 divisionSelect.removeAttribute('required');
                 divisionSelect.value = '';
             }

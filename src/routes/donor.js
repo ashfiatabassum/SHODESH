@@ -16,9 +16,20 @@ function validateEmail(email) {
   return emailRegex.test(email);
 }
 
-// Validate name format (only letters and spaces)
+// Validate username (4-20 chars, no spaces)
+function validateUsername(username) {
+  if (username.length < 4 || username.length > 20) {
+    return false;
+  }
+  if (username.includes(' ')) {
+    return false;
+  }
+  return true;
+}
+
+// Validate name format (letters, spaces, apostrophes, hyphens)
 function validateName(name) {
-  const nameRegex = /^[A-Za-z ]+$/;
+  const nameRegex = /^[A-Za-z\s'-]+$/;
   return nameRegex.test(name);
 }
 
@@ -58,15 +69,15 @@ router.post('/register', async (req, res) => {
     if (!validateName(firstName) || !validateName(lastName)) {
       return res.status(400).json({
         success: false,
-        message: 'Names can only contain letters and spaces'
+        message: 'Names can only contain letters, spaces, apostrophes, and hyphens'
       });
     }
 
-    // Validate username length
-    if (username.length > 20) {
+    // Validate username format
+    if (!validateUsername(username)) {
       return res.status(400).json({
         success: false,
-        message: 'Username cannot exceed 20 characters'
+        message: 'Username must be 4-20 characters and cannot contain spaces'
       });
     }
 
@@ -213,36 +224,12 @@ router.post('/register', async (req, res) => {
       console.warn('⚠️ Failed to send registration email:', emailError.message);
       // Don't fail the registration if email fails
     }
-    
-  // Store session (auto sign-in after registration)
-  try { if (req.session) { req.session.donorId = donorId; req.session.donorUsername = username; } } catch(e){ console.warn('⚠️ Unable to persist session after registration:', e.message); }
 
-  // Return donor data for profile page
+  // Return registration confirmation
   res.status(201).json({
       success: true,
-      message: 'Donor registered successfully!',
-      donorId: donorId,
-      donorData: {
-        personalInfo: {
-          firstName,
-          lastName,
-          username,
-          email,
-          dateOfBirth,
-          country,
-          division: country === 'Bangladesh' ? division : null,
-          memberSince: new Date().getFullYear().toString()
-        },
-        donations: [],
-        achievements: [
-          {
-            title: "Welcome to SHODESH",
-            description: "Successfully created your donor account",
-            icon: "fas fa-star",
-            earned: true
-          }
-        ]
-      }
+      message: 'Registration successful! Please check your email to verify your account, then sign in.',
+      redirectUrl: '/signin.html'
     });
 
   } catch (error) {
