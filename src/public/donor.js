@@ -243,9 +243,10 @@ function validateForm() {
                 4000
             );
             
-            // Redirect to signin page after a delay
+            // Redirect to signin page with pre-filled email
             setTimeout(() => {
-                window.location.href = '/signin.html';
+                const email = encodeURIComponent(donorData.email);
+                window.location.href = `/signin.html?email=${email}&role=donor`;
             }, 4000);
         } else {
             // Handle specific error types

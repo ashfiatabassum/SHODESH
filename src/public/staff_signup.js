@@ -119,7 +119,7 @@ async function validateAndSubmit(e) {
             );
             form.reset();
             setTimeout(() => {
-        window.location.href = 'staffsignin.html';
+        window.location.href = 'homepage.html';
     }, 2500);
         } else {
             showCustomAlert(data.message || 'Signup failed. Please try again.', 'error');

@@ -89,7 +89,15 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    // Validate username length
+    // Validate username length (minimum 4 characters)
+    if (username.length < 4) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username must be at least 4 characters long'
+      });
+    }
+
+    // Validate username length (maximum 15 characters)
     if (username.length > 15) {
       return res.status(400).json({
         success: false,
@@ -483,7 +491,7 @@ res.status(201).json({
     
     res.status(500).json({
       success: false,
-      message: 'Internal server error: ' + error.message
+      message: 'Internal server error. Please try again later.'
     });
   }
 });

@@ -284,6 +284,35 @@ select option {
     font-family: inherit;
 }
 
+/* Fixed back button (top-left) */
+.back-nav {
+    position: fixed;
+    top: 18px;
+    left: 18px;
+    z-index: 9999;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.10);
+    color: #176b3a;
+    text-decoration: none;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+    backdrop-filter: blur(6px);
+}
+
+.back-nav:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.22);
+}
+
+.back-nav:active {
+    transform: translateY(0);
+}
+
 /* Submit Button */
 .form-actions {
     text-align: center;

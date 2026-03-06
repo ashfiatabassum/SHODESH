@@ -172,11 +172,7 @@ async function sendDonorRegistrationEmail(email, donorName) {
           
           <p>Thank you for registering with SHODESH. Your account is now active.</p>
           
-          <p><strong>You can now log in using:</strong></p>
-          <p>
-            Email: <strong>${email}</strong><br>
-            Visit: <a href="https://shodesh.com/login" style="color: #176b3a;">https://shodesh.com/login</a>
-          </p>
+          <p>You can sign in using your registered email address and password through the SHODESH login page.</p>
           
           <p>Best regards,<br>The SHODESH Team</p>
         </div>
@@ -221,11 +217,7 @@ async function sendIndividualRegistrationEmail(email, firstName) {
           
           <p>Thank you for registering with SHODESH. Your account is now active.</p>
           
-          <p><strong>You can now log in using:</strong></p>
-          <p>
-            Email: <strong>${email}</strong><br>
-            Visit: <a href="https://shodesh.com/login" style="color: #176b3a;">https://shodesh.com/login</a>
-          </p>
+          <p>You can sign in using your registered email address and password through the SHODESH login page.</p>
           
           <p>Best regards,<br>The SHODESH Team</p>
         </div>
@@ -269,14 +261,7 @@ async function sendFoundationApprovedEmail(email, foundationName) {
         <div class="content">
           <p>Dear <strong>${foundationName}</strong>,</p>
           
-          <p>Your account has been verified and is now active. You can log in and start creating campaigns.</p>
-          
-          <p><strong>Log in at:</strong> <a href="https://shodesh.com" style="color: #176b3a;">https://shodesh.com</a></p>
-          <p><strong>Email:</strong> ${email}</p>
-          
-          <p style="margin: 20px 0;">
-            <a href="https://shodesh.com/login" class="button">Log In Now</a>
-          </p>
+          <p>Your account has been verified and is now active. You can log in using your registered email address and password through the SHODESH login page.</p>
           
           <p>For support, contact <strong>support@shodesh.com</strong></p>
           
@@ -322,14 +307,7 @@ async function sendStaffApprovedEmail(email, firstName) {
         <div class="content">
           <p>Dear <strong>${firstName}</strong>,</p>
           
-          <p>Congratulations! Your volunteer application has been approved. You can now log in and start helping organizations with their campaigns.</p>
-          
-          <p><strong>Log in at:</strong> <a href="https://shodesh.com" style="color: #176b3a;">https://shodesh.com</a></p>
-          <p><strong>Email:</strong> ${email}</p>
-          
-          <p style="margin: 20px 0;">
-            <a href="https://shodesh.com/login" class="button">Log In Now</a>
-          </p>
+          <p>Congratulations! Your volunteer application has been approved. You can now log in using your registered email address and password through the SHODESH login page.</p>
           
           <p>Browse volunteer opportunities and start contributing to causes you care about.</p>
           
@@ -385,11 +363,7 @@ async function sendEventApprovedEmail(email, creatorName, eventTitle) {
             ${eventTitle}
           </div>
           
-          <p>People can now donate to your campaign and volunteers can sign up to help.</p>
-          
-          <p>
-            <a href="https://shodesh.com/dashboard" class="button">View Your Dashboard</a>
-          </p>
+          <p>People can now donate to your campaign and volunteers can sign up to help. You can view your campaign through the SHODESH dashboard.</p>
           
           <p>Thank you for making a difference!<br>The SHODESH Team</p>
         </div>
@@ -448,10 +422,6 @@ async function sendEventRejectedEmail(email, creatorName, eventTitle, reason) {
           </div>` : ''}
           
           <p>Please review the feedback and resubmit your event with the necessary changes. If you have questions, contact us at <strong>support@shodesh.com</strong></p>
-          
-          <p>
-            <a href="https://shodesh.com/dashboard" class="button">Go to Dashboard</a>
-          </p>
           
           <p>Best regards,<br>The SHODESH Team</p>
         </div>
@@ -547,8 +517,6 @@ async function sendEventCreatedVerificationEmail(email, eventTitle, userType) {
           <p>You can track the status of your request anytime by logging into your dashboard.</p>
           
           <p>If you have any questions or concerns, please contact our support team at <strong>support@shodesh.com</strong></p>
-          
-          <a href="https://localhost:5000/profile${userType === 'foundation' ? 'foundation' : 'individual'}.html" class="button">View Your Dashboard</a>
           
           <p>Thank you for using SHODESH.<br><strong>The SHODESH Team</strong></p>
         </div>

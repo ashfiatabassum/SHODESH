@@ -326,6 +326,26 @@ async function handleRoleBasedSignin(e) {
 // ...rest of the code remains the same...
 // Handle Enter key press and add real-time validation
 document.addEventListener('DOMContentLoaded', function() {
+  // Pre-fill form from URL parameters (from signup redirect)
+  const urlParams = new URLSearchParams(window.location.search);
+  const prefilledEmail = urlParams.get('email');
+  const prefilledRole = urlParams.get('role');
+  
+  const roleSelect = document.getElementById('role');
+  const usernameField = document.getElementById('loginIdentifier');
+  
+  if (prefilledEmail) {
+    if (usernameField) {
+      usernameField.value = decodeURIComponent(prefilledEmail);
+    }
+  }
+  
+  if (prefilledRole && roleSelect) {
+    roleSelect.value = prefilledRole;
+    // Trigger change event to update UI
+    roleSelect.dispatchEvent(new Event('change'));
+  }
+  
   // Role-based sign-in wiring
   const form = document.getElementById('loginForm');
   if (form) {
@@ -333,7 +353,6 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Role-based sign-up routing (removes role.html from navigation)
-  const roleSelect = document.getElementById('role');
   if (roleSelect) {
     roleSelect.addEventListener('change', () => {
       updateSignupLinkUI();
@@ -344,7 +363,6 @@ document.addEventListener('DOMContentLoaded', function() {
   updateInputLabelUI();
 
   const passwordField = document.getElementById("password");
-  const usernameField = document.getElementById("loginIdentifier");
   
   // Enter key functionality
   if (passwordField) {

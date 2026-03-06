@@ -41,8 +41,14 @@ router.post('/signup', upload.single('cv'), async (req, res) => {
     if (!validateName(first_name) || !validateName(last_name)) {
       return res.status(400).json({ success: false, message: 'Names can only contain letters and spaces.' });
     }
+    if (username.length < 4) {
+      return res.status(400).json({ success: false, message: 'Username must be at least 4 characters long.' });
+    }
     if (username.length > 20) {
       return res.status(400).json({ success: false, message: 'Username cannot exceed 20 characters.' });
+    }
+    if (!/^[a-zA-Z0-9._]+$/.test(username)) {
+      return res.status(400).json({ success: false, message: 'Username can only contain letters, numbers, dots, and underscores.' });
     }
     if (password.length < 6) {
       return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long.' });
@@ -97,7 +103,6 @@ router.post('/signup', upload.single('cv'), async (req, res) => {
                 console.error('DB error during staff insert:', err);
                 return res.status(500).json({ success: false, message: 'Server error. Please try again.' });
               }
-              try { if (req.session) { req.session.staffId = staff_id; req.session.staffUsername = username; } } catch(e){}
 
               // Send registration confirmation email (non-blocking)
               try {

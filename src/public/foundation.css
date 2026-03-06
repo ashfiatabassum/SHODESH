@@ -619,3 +619,97 @@ select option {
     font-size: 0.98rem;
   }
 }
+
+/* Custom Alert / Toaster Styles */
+.custom-alert {
+  position: fixed;
+  top: 20px;
+  right: -400px;
+  z-index: 10000;
+  max-width: 380px;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transition: right 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+}
+
+.custom-alert.show {
+  right: 20px;
+  opacity: 1;
+}
+
+.custom-alert.success {
+  background: #10b981;
+  color: #fff;
+}
+
+.custom-alert.error {
+  background: #ef4444;
+  color: #fff;
+}
+
+.custom-alert.warning {
+  background: #f59e0b;
+  color: #fff;
+}
+
+.custom-alert.info {
+  background: #3b82f6;
+  color: #fff;
+}
+
+.alert-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 16px;
+}
+
+.alert-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.alert-message {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.alert-close {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 24px;
+  padding: 0;
+  flex-shrink: 0;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.alert-close:hover {
+  opacity: 1;
+}
+
+.alert-progress {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.4);
+  animation: progress linear 5s forwards;
+}
+
+@keyframes progress {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+@media (max-width: 480px) {
+  .custom-alert {
+    max-width: calc(100vw - 20px);
+    right: -100vw;
+  }
+
+  .custom-alert.show {
+    right: 10px;
+  }
+}

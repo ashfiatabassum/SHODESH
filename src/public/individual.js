@@ -5,6 +5,15 @@ document.addEventListener('DOMContentLoaded', function() {
     setupCascadingDropdowns('#division', '#district', '#area');
     initializeFormValidation();
     initializePasswordToggle();
+    
+    // Set up form submit handler
+    const registrationForm = document.getElementById('registrationForm');
+    if (registrationForm) {
+        registrationForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            validateAndSubmit();
+        });
+    }
 });
 
 // Bangladesh districts array
@@ -264,7 +273,7 @@ function validateUsername(input) {
         return true;
     }
     
-    if (value.length < 4 || !usernamePattern.test(value)) {
+    if (value.length < 4 || value.length > 15 || !usernamePattern.test(value)) {
         setFieldState(group, 'error');
         return false;
     }
@@ -356,6 +365,35 @@ async function validateAndSubmit() {
         return;
     }
 
+    // Additional username validation
+    if (formData.username.length < 4) {
+        showCustomAlert('Username must be at least 4 characters long', 'error');
+        return;
+    }
+
+    if (formData.username.length > 15) {
+        showCustomAlert('Username cannot exceed 15 characters', 'error');
+        return;
+    }
+
+    if (!/^[a-zA-Z0-9._]+$/.test(formData.username)) {
+        showCustomAlert('Username can only contain letters, numbers, dots, and underscores', 'error');
+        return;
+    }
+
+    // Additional email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+        showCustomAlert('Please enter a valid email address', 'error');
+        return;
+    }
+
+    // Additional password validation
+    if (formData.password.length < 6) {
+        showCustomAlert('Password must be at least 6 characters long', 'error');
+        return;
+    }
+
     console.log('✅ Basic validation passed, submitting to backend...');
     
     // Submit to backend
@@ -428,17 +466,18 @@ async function submitRegistration(formData, assistingStaffId) {
             sessionStorage.removeItem('assistingStaff');
             console.log('✅ Registration successful!');
             showCustomAlert(
-                `🎉 <strong>Registration Successful!</strong><br><br>
-                Your Individual ID: <strong>${data.individualId}</strong><br><br>
-                <small>Redirecting to sign-in page...</small>`, 
+                `✅ Account created successfully!<br><br>
+                A confirmation email has been sent to your email address.<br><br>
+                Please sign in to continue.`, 
                 'success', 
-                4000
+                3000
             );
             
-            // Redirect to signin page after a delay
+            // Redirect to signin page with pre-filled email
             setTimeout(() => {
-                window.location.href = 'signin.html';
-            }, 4000);
+                const email = encodeURIComponent(document.getElementById('email').value);
+                window.location.href = `/signin.html?email=${email}&role=individual`;
+            }, 3000);
         } else {
             console.log('❌ Registration failed:', data.message);
             

@@ -31,6 +31,10 @@ function validateName(name) {
   return /^[A-Za-z ]+$/.test(name);
 }
 
+function validateFoundationName(name) {
+  return /^[A-Za-z0-9\s&.'-]+$/.test(name);
+}
+
 const validDivisions = ['Barisal', 'Chittagong', 'Dhaka', 'Khulna', 'Mymensingh', 'Rajshahi', 'Rangpur', 'Sylhet'];
 
 // -------------------- REGISTER FOUNDATION --------------------
@@ -47,7 +51,7 @@ router.post('/register', upload.single('certificate'), async (req, res) => {
     }
 
     if (!req.file) return res.status(400).json({ success: false, message: 'Foundation certificate PDF is required' });
-    if (!validateName(foundationName)) return res.status(400).json({ success: false, message: 'Foundation name can only contain letters and spaces' });
+    if (!validateFoundationName(foundationName)) return res.status(400).json({ success: false, message: 'Foundation name can only contain letters, numbers, spaces, ampersands, dots, apostrophes, and hyphens' });
     if (foundationLicense.length > 12) return res.status(400).json({ success: false, message: 'Foundation license cannot exceed 12 characters' });
     if (password.length < 6) return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long' });
 

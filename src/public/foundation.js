@@ -92,6 +92,60 @@ function togglePassword(fieldId) {
     }
 }
 
+// Custom alert function (toaster style)
+function showCustomAlert(message, type = 'info', duration = 5000) {
+    // Remove any existing alerts
+    const existingAlerts = document.querySelectorAll('.custom-alert');
+    existingAlerts.forEach(alert => alert.remove());
+
+    // Create alert container
+    const alertContainer = document.createElement('div');
+    alertContainer.className = `custom-alert ${type}`;
+    
+    // Set icon based on type
+    let icon;
+    switch(type) {
+      case 'success':
+        icon = '✅';
+        break;
+      case 'error':
+        icon = '❌';
+        break;
+      case 'warning':
+        icon = '⚠️';
+        break;
+      case 'info':
+      default:
+        icon = 'ℹ️';
+        break;
+    }
+
+    alertContainer.innerHTML = `
+      <div class="alert-content">
+        <div class="alert-icon">${icon}</div>
+        <div class="alert-message">${message}</div>
+        <button class="alert-close" onclick="this.parentElement.parentElement.remove()">×</button>
+      </div>
+      <div class="alert-progress"></div>
+    `;
+
+    // Add to page
+    document.body.appendChild(alertContainer);
+
+    // Animate in
+    setTimeout(() => {
+      alertContainer.classList.add('show');
+    }, 10);
+
+    // Auto remove
+    if (duration > 0) {
+      setTimeout(() => {
+        alertContainer.classList.remove('show');
+        setTimeout(() => alertContainer.remove(), 300);
+      }, duration);
+    }
+}
+
 // Message display functions
 function showSuccess(message) {
     showAlert(message, 'success');
@@ -324,16 +378,19 @@ function validateForm(event) {
   .then(data => {
     console.log('📋 Response data:', data);
     if (data.success) {
-      showSuccess('🎉 Foundation registration successful!\n\n' + 
-            'Your Foundation ID is: ' + data.foundationId + '\n\n' +
-            data.message + '\n\n' +
-            'Please save your Foundation ID for future reference.');
-      // Redirect to profile or success page
+      showCustomAlert(
+        `✅ Foundation registration successful!<br><br>
+        Your registration is under review.<br><br>
+        You will receive a confirmation email once approved.`,
+        'success',
+        4000
+      );
+      // Redirect to homepage after a delay
       setTimeout(() => {
-        window.location.href = 'signin.html';
-      }, 3000);
+        window.location.href = 'homepage.html';
+      }, 4000);
     } else {
-      showError('❌ Registration failed: ' + data.message);
+      showCustomAlert(data.message || '❌ Registration failed', 'error', 5000);
     }
   })
   .catch(error => {
